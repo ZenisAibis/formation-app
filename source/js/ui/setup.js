@@ -65,20 +65,24 @@ $('#totalEights').addEventListener('change', e => {
   requestRender();
 });
 $('#bpm').addEventListener('change', e => {
+  // 値が同じなら何もしない（曲を読み込んでいると、盛り上がりと長さを作り直すので、積まずに作り直さない）
   const v = Math.min(240, Math.max(40, parseFloat(e.target.value) || 120));
-  if (v !== S.bpm) pushUndo();
+  if (v === S.bpm) return fillSetup();
+  pushUndo();
   S.bpm = v;
   afterTempoChange();
 });
 $('#offset').addEventListener('change', e => {
   const v = Math.max(0, parseFloat(e.target.value) || 0);
-  if (v !== S.offset) pushUndo();
+  if (v === S.offset) return fillSetup();
+  pushUndo();
   S.offset = v;
   afterTempoChange();
 });
 const shiftOff = d => {
   const v = Math.max(0, r2(S.offset + d));
-  if (v !== S.offset) pushUndo();
+  if (v === S.offset) return;
+  pushUndo();
   S.offset = v;
   afterTempoChange();
 };
@@ -92,11 +96,17 @@ $('#btnNowIsOne').addEventListener('click', () => {
     return;
   }
   const v = r2(audio.currentTime);
-  if (v !== S.offset) pushUndo();
-  S.offset = v;
-  afterTempoChange();
+  if (v !== S.offset) {
+    pushUndo();
+    S.offset = v;
+    afterTempoChange();
+  }
   toast('今の時刻を 1-1 にしました');
 });
+// 止まっているとき、音の位置に合わせて ui.count を合わせ直す（offset・BPM・作品を替えたあと）
+function syncCountToAudio() {
+  if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
+}
 function afterTempoChange() {
   if (analysis) {
     S.energy = energyPerEight(analysis);
@@ -106,7 +116,7 @@ function afterTempoChange() {
   fillSetup();
   renderAdvice();
   renderKeyChips();
-  if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
+  syncCountToAudio();
   requestRender();
 }
 let taps = [], tapPushed = false;
@@ -206,16 +216,18 @@ function loadObj(o) {
     toast(`読み込めませんでした（${r.reason}）`, 6000);
     return false;
   }
+  const baseNote = r.baseRemoved ? 'ベースの隊形を読めなかったので外しました' : '';
   if (r.dropped > 0) {
-    ask(`${r.dropped} 個の隊形を読み込めませんでした（人数と座標の数が合わないため）。残りの ${r.state.keys.length} 個で読み込みますか？`,
-      '読み込む', () => {
-        replaceWork(r.state);
-        toast(`読み込みました（${r.dropped} 個の隊形は読み込めませんでした）`, 6000);
-      });
+    ask(`${r.dropped} 個の隊形を読み込めませんでした（人数と座標の数が合わないため）。残りの ${r.state.keys.length} 個で読み込みますか？`
+      + (baseNote ? `（${baseNote}）` : ''),
+    '読み込む', () => {
+      replaceWork(r.state);
+      toast(`読み込みました（${r.dropped} 個の隊形は読み込めませんでした${baseNote ? '。' + baseNote : ''}）`, 6000);
+    });
     return false;
   }
   replaceWork(r.state);
-  toast('読み込みました');
+  toast(baseNote ? `読み込みました（${baseNote}）` : '読み込みました', baseNote ? 6000 : undefined);
   return true;
 }
 // JSON の読み取りだけを try に入れる（読み込みの中のエラーを「JSONとして読めない」にしない）
@@ -348,6 +360,24 @@ try {
 refreshAll();
 setCount(S.keys[0].at);
 requestAnimationFrame(tick);
+// 起動のときに保存の作品を読めなかった場合：元の文字列は別のキーに残してある。知らせて、書き出せるようにする
+function exportUnreadable(text, key) {
+  const stamp = key ? key.slice(UNREADABLE_PREFIX.length) : stampOf(new Date());
+  download(new Blob([text], { type: 'application/json' }), `unreadable_${stamp}.json`);
+}
+function refreshUnreadable() { $('#rowUnreadable').hidden = unreadableKeys().length === 0; }
+$('#btnExportUnreadable').addEventListener('click', () => {
+  const keys = unreadableKeys();
+  if (!keys.length) return;
+  exportUnreadable(localStorage.getItem(keys[keys.length - 1]), keys[keys.length - 1]);
+});
+refreshUnreadable();
+if (startupProblem) {
+  const p = startupProblem;
+  ask(`保存されていた作品を読めませんでした（${p.reason}）。`
+    + (p.key ? '元のデータは別に残してあります' : '元のデータを別に残せませんでした'),
+  '元のデータを書き出す', () => exportUnreadable(p.text, p.key), '閉じる');
+}
 if ('serviceWorker' in navigator && location.protocol === 'https:' && document.querySelector('link[rel=manifest]')) {
   navigator.serviceWorker.register('sw.js').catch(() => { });
 }

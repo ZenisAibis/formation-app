@@ -2,10 +2,14 @@
 let undoStack = [];
 let redoStack = [];
 
-// 操作の「前」の作品を積む。新しい操作をしたらやり直しの積みは空にする
+// 操作の「前」の作品を積む。新しい操作をしたらやり直しの積みは空にする。
+// 積みの一番上が今の作品と同じなら積まない（値の変わらない操作で、同じ物が積み重ならない）
 function pushUndo() {
-  undoStack.push(JSON.stringify(S));
-  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  const now = JSON.stringify(S);
+  if (undoStack[undoStack.length - 1] !== now) {
+    undoStack.push(now);
+    if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  }
   redoStack.length = 0;
 }
 // from の一番上を取り出し、今の作品を to に積む。戻す先の作品を返す（積みが空なら null）

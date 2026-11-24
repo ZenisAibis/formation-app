@@ -39,8 +39,9 @@ const isNum = v => typeof v === 'number' && isFinite(v);
 const clampNum = (v, d, lo, hi) => isNum(v) ? Math.min(hi, Math.max(lo, v)) : d;
 const isColor = c => /^#[0-9a-fA-F]{6}$/.test(c);
 const refuse = reason => ({ ok: false, reason });
-// 使える作品なら { ok: true, state, dropped }、断るなら { ok: false, reason } を返す。
-// dropped は、人数と座標の数が合わず読み込めなかった隊形の数（keys とベースの合計）。
+// 使える作品なら { ok: true, state, dropped, baseRemoved }、断るなら { ok: false, reason } を返す。
+// dropped は、人数と座標の数が合わず読み込めなかった隊形（keys）の数。
+// baseRemoved は、ベースの隊形に悪い物があって、ベースだけを外したとき true（作品全体は断らない）。
 // 断る物：形が違う・人数が範囲外・新しい版（v が SCHEMA_V より大きい）・座標が数でない隊形がある・使える隊形が無い。
 function inspectLoad(o) {
   if (!o || typeof o !== 'object') return refuse('形式が違います');
@@ -48,24 +49,25 @@ function inspectLoad(o) {
   if (!Array.isArray(o.dancers) || !Array.isArray(o.keys) || !o.keys.length) return refuse('形式が違います');
   const n = o.dancers.length;
   if (n < 1 || n > MAX_DANCERS) return refuse(`人数は1〜${MAX_DANCERS}人にしてください`);
-  let dropped = 0, badKey = null;
-  const fixKeys = ks => ks.filter(k => {
-    if (!k || !Array.isArray(k.pos) || k.pos.length !== n) {
-      dropped++;
-      return false;
-    }
-    if (!k.pos.every(p => Array.isArray(p) && isNum(p[0]) && isNum(p[1]))) {
-      if (badKey === null) badKey = String(k.name || '名前なし').slice(0, 20);
-      return false;
-    }
-    return true;
+  let dropped = 0, badKey = null, baseBad = false;
+  const kindOf = k => {
+    if (!k || !Array.isArray(k.pos) || k.pos.length !== n) return 'len';
+    return k.pos.every(p => Array.isArray(p) && isNum(p[0]) && isNum(p[1])) ? 'ok' : 'num';
+  };
+  const fixKeys = (ks, isBase) => ks.filter(k => {
+    const kind = kindOf(k);
+    if (kind === 'ok') return true;
+    if (isBase) baseBad = true;
+    else if (kind === 'len') dropped++;
+    else if (badKey === null) badKey = String((k && k.name) || '名前なし').slice(0, 20);
+    return false;
   }).map((k, i) => ({
     id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20),
     at: Math.max(0, Math.round(clampNum(k.at, i * 32, 0, 4000))),
     move: Math.round(clampNum(k.move, 4, 1, 64)),
     pos: k.pos.map(p => [clampNum(p[0], 0, -50, 50), clampNum(p[1], 0, -50, 50)]) }));
   const keys = fixKeys(o.keys);
-  const base = Array.isArray(o.baseKeys) ? fixKeys(o.baseKeys) : [];
+  const base = Array.isArray(o.baseKeys) ? fixKeys(o.baseKeys, true) : [];
   if (badKey !== null) return refuse(`座標が数でない隊形があります（「${badKey}」）`);
   if (!keys.length) return refuse('人数と座標の数が合う隊形がありません');
   const st = {
@@ -76,7 +78,7 @@ function inspectLoad(o) {
     dancers: o.dancers.map((d, i) => ({
       name: String((typeof d === 'string' ? d : d && d.name) || ('No.' + (i + 1))).slice(0, 16),
       color: isColor(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
-    keys: keys.sort((a, b) => a.at - b.at), baseKeys: base.length ? base : null,
+    keys: keys.sort((a, b) => a.at - b.at), baseKeys: base.length && !baseBad ? base : null,
     energy: Array.isArray(o.energy) ? o.energy.map(x => clampNum(x, 0, 0, 1)) : null };
   st.cues = (Array.isArray(o.cues) ? o.cues : [])
     .filter(q => q && LIGHT_KINDS[q.kind])
@@ -88,12 +90,7 @@ function inspectLoad(o) {
       target: Number.isInteger(q.target) && q.target >= 0 && q.target < n ? q.target : -1,
       fade: Math.round(clampNum(q.fade, 0, 0, 32)) }))
     .sort((a, b) => a.at - b.at);
-  return { ok: true, state: st, dropped };
-}
-// 起動のときに保存を読む用（確かめを通らなければ null）
-function validState(o) {
-  const r = inspectLoad(o);
-  return r.ok ? r.state : null;
+  return { ok: true, state: st, dropped, baseRemoved: baseBad };
 }
 
 /* ===== 保存 ===== */
@@ -118,13 +115,57 @@ function flushSave() {
     saveWarned = true;
   }
 }
-function load() {
+
+/* ===== 起動のときの読み込みと、読めなかった作品の保管 ===== */
+const UNREADABLE_PREFIX = LS_KEY + '.unreadable.';
+const UNREADABLE_KEEP = 3; // 保管は3件まで。古い物から捨てる（アプリの中の掃除）
+// 読めなかった保存の知らせ。起動のあと画面の側が見て知らせる。{ reason, key, text } か null
+let startupProblem = null;
+const pad2 = n => String(n).padStart(2, '0');
+const stampOf = d => `${d.getFullYear()}${pad2(d.getMonth() + 1)}${pad2(d.getDate())}`
+  + `-${pad2(d.getHours())}${pad2(d.getMinutes())}${pad2(d.getSeconds())}`;
+// 保管してある、読めなかった作品のキー（古い順）
+function unreadableKeys() {
+  const keys = [];
   try {
-    const t = localStorage.getItem(LS_KEY);
-    if (t) {
-      const s = validState(JSON.parse(t));
-      if (s) return s;
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && k.startsWith(UNREADABLE_PREFIX)) keys.push(k);
     }
   } catch (e) { }
-  return demoState();
+  return keys.sort();
+}
+// 読めなかった元の文字列を、そのまま別のキーに写す。写したキーを返す（写せなければ null）
+function keepUnreadable(text) {
+  try {
+    const same = unreadableKeys().find(k => localStorage.getItem(k) === text);
+    if (same) return same; // 同じ物は増やさない
+    const key = UNREADABLE_PREFIX + stampOf(new Date());
+    localStorage.setItem(key, text);
+    const all = unreadableKeys();
+    all.slice(0, Math.max(0, all.length - UNREADABLE_KEEP)).forEach(k => localStorage.removeItem(k));
+    return key;
+  } catch (e) {
+    return null;
+  }
+}
+// 起動のとき。読めたらその作品。読めなければ、元の文字列を保管してから見本を返し、startupProblem に残す。
+function load() {
+  let text = null;
+  try { text = localStorage.getItem(LS_KEY); } catch (e) { }
+  if (!text) return demoState();
+  let reason, result = null;
+  try {
+    result = inspectLoad(JSON.parse(text));
+    if (result.ok) {
+      if (!result.baseRemoved) return result.state;
+      reason = 'ベースの隊形を読めなかったので外しました';
+    } else {
+      reason = result.reason;
+    }
+  } catch (e) {
+    reason = 'JSONとして読めません';
+  }
+  startupProblem = { reason, key: keepUnreadable(text), text };
+  return result && result.ok ? result.state : demoState();
 }

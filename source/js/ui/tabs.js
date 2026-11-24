@@ -1,13 +1,28 @@
 // 編集・照明・アドバイス・練習・書き出しの各タブ
 // 戻す・やり直す：作品の全部を置き換え、選びを範囲内に直してから描き直す
+let songNoticed = false; // 「曲は読み込んだ物のまま」の知らせは1回だけ
+// 曲を読み込む前の作品に戻したとき：曲（analysis・audio）は S の外にあるので、作品の盛り上がりと食い違う
+function songMismatch() {
+  try { return !!analysis && JSON.stringify(S.energy) !== JSON.stringify(energyPerEight(analysis)); } catch (e) { return false; }
+}
 function applyHistory(st, msg) {
   S = st;
   ui.drag = null;
   ui.dragMoved = false;
+  taps = []; // タップで測る途中の印を解く
+  tapPushed = false;
+  closeAsk(); // 開いている確認は、置き換えた作品と文が合わなくなるので閉じる
   clampSelection();
   changed(true);
+  fillCueForm();
+  syncCountToAudio();
   if (ui.count > S.totalEights * 8) setCount(S.totalEights * 8);
-  toast(msg);
+  let text = msg;
+  if (!songNoticed && songMismatch()) {
+    songNoticed = true;
+    text += '（曲は読み込んだ物のままです）';
+  }
+  toast(text);
 }
 function undo() {
   const st = undoState();
@@ -161,19 +176,24 @@ function renderCueChips() {
     { class: 'chip' + (q.id === ui.selCue ? ' on' : ''), onclick: () => selectCue(q.id) },
     [`${cLabel(q.at)} ${q.kind === 'memo' ? '♪' : '💡'}${q.name}`])));
 }
+// 照明の入力欄を S から作り直す。選んでいる照明があればその値、無ければ空の入力欄
+function fillCueForm() {
+  const q = S.cues.find(x => x.id === ui.selCue);
+  $('#cKind').value = q ? q.kind : $('#cKind').options[0].value;
+  $('#cName').value = q ? q.name : '';
+  $('#cColor').value = q ? q.color : '#ff3b6b';
+  $('#cTarget').value = q ? String(q.target) : '-1';
+  $('#cFade').value = q ? q.fade : '';
+  $('#cEight').value = q ? Math.floor(q.at / 8) + 1 : '';
+  $('#cCount').value = q ? q.at % 8 + 1 : '';
+}
 function selectCue(id) {
   const q = S.cues.find(x => x.id === id);
   if (!q) return;
   ui.selCue = id;
   pause();
   setCount(q.at);
-  $('#cKind').value = q.kind;
-  $('#cName').value = q.name;
-  $('#cColor').value = q.color;
-  $('#cTarget').value = String(q.target);
-  $('#cFade').value = q.fade;
-  $('#cEight').value = Math.floor(q.at / 8) + 1;
-  $('#cCount').value = q.at % 8 + 1;
+  fillCueForm();
   renderCueChips();
 }
 function cueFromForm(at) {
@@ -424,15 +444,15 @@ async function download(blob, name) {
     a.remove();
   }, 4000);
 }
-function ask(msg, okLabel, fn) { // 画面の中で確かめる（埋め込み先では確認ダイアログが出ないため）
+const closeAsk = () => { $('#askBox').hidden = true; };
+function ask(msg, okLabel, fn, cancelLabel = 'やめる') { // 画面の中で確かめる（埋め込み先では確認ダイアログが出ないため）
   const box = $('#askBox');
   box.textContent = '';
-  const close = () => { box.hidden = true; };
   box.append(el('div', { text: msg, style: 'margin-bottom:8px' }), el('div', { class: 'row', style: 'margin:0' }, [
     el('button', { class: 'primary', text: okLabel, onclick: () => {
-      close();
+      closeAsk();
       fn();
-    } }), el('button', { text: 'やめる', onclick: close })]));
+    } }), el('button', { text: cancelLabel, onclick: closeAsk })]));
   box.hidden = false;
 }
 const safeName = s => (s || 'formation').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 30);
