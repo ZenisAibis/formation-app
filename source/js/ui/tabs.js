@@ -1,18 +1,23 @@
 // 編集・照明・アドバイス・練習・書き出しの各タブ
-function undo() {
-  const t = undoStack.pop();
-  if (!t) {
-    toast('戻せる操作はありません');
-    return;
-  }
-  const o = JSON.parse(t);
-  S.keys = o.keys;
-  S.baseKeys = o.baseKeys;
-  S.dancers = o.dancers;
-  S.cues = o.cues || [];
-  ui.sel = Math.min(ui.sel, S.keys.length - 1);
+// 戻す・やり直す：作品の全部を置き換え、選びを範囲内に直してから描き直す
+function applyHistory(st, msg) {
+  S = st;
+  ui.drag = null;
+  ui.dragMoved = false;
+  clampSelection();
   changed(true);
-  toast('1つ前に戻しました');
+  if (ui.count > S.totalEights * 8) setCount(S.totalEights * 8);
+  toast(msg);
+}
+function undo() {
+  const st = undoState();
+  if (st) applyHistory(st, '1つ前に戻しました');
+  else toast('戻せる操作はありません');
+}
+function redo() {
+  const st = redoState();
+  if (st) applyHistory(st, 'やり直しました');
+  else toast('やり直せる操作はありません');
 }
 function changed(all) {
   sortKeys();
@@ -114,6 +119,8 @@ $('#btnDelKey').addEventListener('click', () => {
 });
 $('#btnUndo').addEventListener('click', undo);
 $('#btnUndo2').addEventListener('click', undo);
+$('#btnRedo').addEventListener('click', redo);
+$('#btnRedo2').addEventListener('click', redo);
 Object.keys(TEMPLATES).forEach(t => $('#tplSel').append(el('option', { value: t, text: t })));
 $('#btnTpl').addEventListener('click', () => {
   const k = S.keys[ui.sel], spots = TEMPLATES[$('#tplSel').value](S.dancers.length, S.stage.w, S.stage.d);

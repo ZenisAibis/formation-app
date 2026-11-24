@@ -33,47 +33,90 @@ function demoState() {
   });
   return st;
 }
-function validState(o) {
-  if (!o || typeof o !== 'object' || !Array.isArray(o.dancers) || !Array.isArray(o.keys) || !o.keys.length) return null;
+
+/* ===== 読み込みの確かめ ===== */
+const isNum = v => typeof v === 'number' && isFinite(v);
+const clampNum = (v, d, lo, hi) => isNum(v) ? Math.min(hi, Math.max(lo, v)) : d;
+const isColor = c => /^#[0-9a-fA-F]{6}$/.test(c);
+const refuse = reason => ({ ok: false, reason });
+// 使える作品なら { ok: true, state, dropped }、断るなら { ok: false, reason } を返す。
+// dropped は、人数と座標の数が合わず読み込めなかった隊形の数（keys とベースの合計）。
+// 断る物：形が違う・人数が範囲外・新しい版（v が SCHEMA_V より大きい）・座標が数でない隊形がある・使える隊形が無い。
+function inspectLoad(o) {
+  if (!o || typeof o !== 'object') return refuse('形式が違います');
+  if (o.v != null && Number(o.v) > SCHEMA_V) return refuse('新しい版のアプリで作った作品です');
+  if (!Array.isArray(o.dancers) || !Array.isArray(o.keys) || !o.keys.length) return refuse('形式が違います');
   const n = o.dancers.length;
-  if (n < 1 || n > 40) return null;
-  const num = (v, d, lo, hi) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
+  if (n < 1 || n > MAX_DANCERS) return refuse(`人数は1〜${MAX_DANCERS}人にしてください`);
+  let dropped = 0, badKey = null;
+  const fixKeys = ks => ks.filter(k => {
+    if (!k || !Array.isArray(k.pos) || k.pos.length !== n) {
+      dropped++;
+      return false;
+    }
+    if (!k.pos.every(p => Array.isArray(p) && isNum(p[0]) && isNum(p[1]))) {
+      if (badKey === null) badKey = String(k.name || '名前なし').slice(0, 20);
+      return false;
+    }
+    return true;
+  }).map((k, i) => ({
+    id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20),
+    at: Math.max(0, Math.round(clampNum(k.at, i * 32, 0, 4000))),
+    move: Math.round(clampNum(k.move, 4, 1, 64)),
+    pos: k.pos.map(p => [clampNum(p[0], 0, -50, 50), clampNum(p[1], 0, -50, 50)]) }));
+  const keys = fixKeys(o.keys);
+  const base = Array.isArray(o.baseKeys) ? fixKeys(o.baseKeys) : [];
+  if (badKey !== null) return refuse(`座標が数でない隊形があります（「${badKey}」）`);
+  if (!keys.length) return refuse('人数と座標の数が合う隊形がありません');
   const st = {
-    v: 1, title: String(o.title || '無題').slice(0, 40), bpm: num(o.bpm, 120, 40, 240), offset: num(o.offset, 0, 0, 600),
-    totalEights: Math.round(num(o.totalEights, 24, 1, 400)),
-    stage: { w: num(o.stage && o.stage.w, 10, 3, 40), d: num(o.stage && o.stage.d, 6, 2, 30) },
+    v: SCHEMA_V, title: String(o.title || '無題').slice(0, 40), bpm: clampNum(o.bpm, 120, 40, 240),
+    offset: clampNum(o.offset, 0, 0, 600), totalEights: Math.round(clampNum(o.totalEights, 24, 1, 400)),
+    stage: { w: clampNum(o.stage && o.stage.w, 10, 3, 40), d: clampNum(o.stage && o.stage.d, 6, 2, 30) },
+    // dancers は { name, color } の配列。名前だけの文字列の配列なら、その文字列を名前に使う
     dancers: o.dancers.map((d, i) => ({
-      name: String((d && d.name) || ('No.' + (i + 1))).slice(0, 16),
-      color: /^#[0-9a-fA-F]{6}$/.test(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
-    keys: [], baseKeys: null, energy: Array.isArray(o.energy) ? o.energy.map(x => num(x, 0, 0, 1)) : null };
-  const fixKeys = ks => ks.filter(k => k && Array.isArray(k.pos) && k.pos.length === n).map((k, i) => ({
-    id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20), at: Math.max(0, Math.round(num(k.at, i * 32, 0, 4000))),
-    move: Math.round(num(k.move, 4, 1, 64)), pos: k.pos.map(p => [num(p && p[0], 0, -50, 50), num(p && p[1], 0, -50, 50)]) }));
-  st.keys = fixKeys(o.keys);
-  if (!st.keys.length) return null;
-  if (Array.isArray(o.baseKeys)) {
-    const b = fixKeys(o.baseKeys);
-    st.baseKeys = b.length ? b : null;
-  }
-  st.keys.sort((a, b) => a.at - b.at);
+      name: String((typeof d === 'string' ? d : d && d.name) || ('No.' + (i + 1))).slice(0, 16),
+      color: isColor(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
+    keys: keys.sort((a, b) => a.at - b.at), baseKeys: base.length ? base : null,
+    energy: Array.isArray(o.energy) ? o.energy.map(x => clampNum(x, 0, 0, 1)) : null };
   st.cues = (Array.isArray(o.cues) ? o.cues : [])
     .filter(q => q && LIGHT_KINDS[q.kind])
     .slice(0, 300)
     .map(q => ({
-      id: newId(), at: Math.max(0, Math.round(num(q.at, 0, 0, 4000))), kind: q.kind,
+      id: newId(), at: Math.max(0, Math.round(clampNum(q.at, 0, 0, 4000))), kind: q.kind,
       name: String(q.name || LIGHT_KINDS[q.kind]).slice(0, 20),
-      color: /^#[0-9a-fA-F]{6}$/.test(q.color) ? q.color : '#ff3b6b',
+      color: isColor(q.color) ? q.color : '#ff3b6b',
       target: Number.isInteger(q.target) && q.target >= 0 && q.target < n ? q.target : -1,
-      fade: Math.round(num(q.fade, 0, 0, 32)) }))
+      fade: Math.round(clampNum(q.fade, 0, 0, 32)) }))
     .sort((a, b) => a.at - b.at);
-  return st;
+  return { ok: true, state: st, dropped };
 }
-let saveT = 0;
+// 起動のときに保存を読む用（確かめを通らなければ null）
+function validState(o) {
+  const r = inspectLoad(o);
+  return r.ok ? r.state : null;
+}
+
+/* ===== 保存 ===== */
+let saveT = 0, savePending = false, saveWarned = false;
+// 保存できなかったときの知らせは画面の側が入れる（core は画面に触らない）
+const saveHooks = { onFail: null };
 function save() {
+  savePending = true;
   clearTimeout(saveT);
-  saveT = setTimeout(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { /* 保存できない環境でも動かす */ }
-  }, 300);
+  saveT = setTimeout(flushSave, SAVE_DELAY_MS);
+}
+// 待っている保存をすぐ行う（閉じる・隠れるときにも呼ぶ）。失敗は続けて何度も知らせない
+function flushSave() {
+  if (!savePending) return;
+  clearTimeout(saveT);
+  savePending = false;
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(S));
+    saveWarned = false;
+  } catch (e) {
+    if (!saveWarned && saveHooks.onFail) saveHooks.onFail(e);
+    saveWarned = true;
+  }
 }
 function load() {
   try {

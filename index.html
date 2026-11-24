@@ -475,6 +475,7 @@ details summary {
       <button id="btnAddKey">＋ 隊形を追加</button>
       <button id="btnDelKey">削除</button>
       <button id="btnUndo">↶ 元に戻す</button>
+      <button id="btnRedo">↷ やり直す</button>
       <label><input type="checkbox" id="snap" checked> 25cm刻み</label>
     </div>
     <div class="row">
@@ -520,6 +521,7 @@ details summary {
       <button class="small" id="btnRestoreBase">ベースに戻す</button>
       <button class="small" id="btnSetBase">今の形をベースにする</button>
       <button class="small" id="btnUndo2">↶ 元に戻す</button>
+      <button class="small" id="btnRedo2">↷ やり直す</button>
     </div>
     <div class="row">
       <button class="small" id="btnAiText">AIに相談する文章をコピー</button>
@@ -615,14 +617,18 @@ const PALETTE = [
   '#ff6b6b','#ffa53d','#ffd93d','#9be15d','#3ddc97','#3dd6d0','#4fb3ff','#7b93ff','#a77bff',
   '#e47bff','#ff7bc0','#d0a77e','#b6c3cc','#f4f4f4','#ff9e9e','#c4e86b','#7fe0ff','#ffc58a'];
 const LS_KEY = 'danceFormation.v1';
+const SCHEMA_V = 1;        // 作品のデータの版。これより大きい版の作品は読み込まない
+const UNDO_LIMIT = 60;     // 元に戻す・やり直すの、積める数
+const SAVE_DELAY_MS = 300; // 編集から保存までの待ち（閉じる・隠れるときは待たずに保存する）
+const MAX_DANCERS = 40;
 const clone = o => JSON.parse(JSON.stringify(o));
 const r2 = v => Math.round(v * 100) / 100;
 const hyp = Math.hypot;
-// 作品の状態 S・画面の選び ui・元に戻す積み・カウントの表示
+// 作品の状態 S・画面の選び ui・カウントの表示
 let S = null;
 const ui = { sel: 0, selDancer: -1, me: -1, view: 'audience', compare: false, playing: false, count: 0,
-  rate: 1, selCue: null, clockT0: 0, clockC0: 0, showNames: true, showPaths: false, drag: null, recording: false };
-let undoStack = [];
+  rate: 1, selCue: null, clockT0: 0, clockC0: 0, showNames: true, showPaths: false, drag: null, dragMoved: false,
+  recording: false };
 
 const beatSec = () => 60 / S.bpm;
 const cLabel = c => {
@@ -883,47 +889,90 @@ function demoState() {
   });
   return st;
 }
-function validState(o) {
-  if (!o || typeof o !== 'object' || !Array.isArray(o.dancers) || !Array.isArray(o.keys) || !o.keys.length) return null;
+
+/* ===== 読み込みの確かめ ===== */
+const isNum = v => typeof v === 'number' && isFinite(v);
+const clampNum = (v, d, lo, hi) => isNum(v) ? Math.min(hi, Math.max(lo, v)) : d;
+const isColor = c => /^#[0-9a-fA-F]{6}$/.test(c);
+const refuse = reason => ({ ok: false, reason });
+// 使える作品なら { ok: true, state, dropped }、断るなら { ok: false, reason } を返す。
+// dropped は、人数と座標の数が合わず読み込めなかった隊形の数（keys とベースの合計）。
+// 断る物：形が違う・人数が範囲外・新しい版（v が SCHEMA_V より大きい）・座標が数でない隊形がある・使える隊形が無い。
+function inspectLoad(o) {
+  if (!o || typeof o !== 'object') return refuse('形式が違います');
+  if (o.v != null && Number(o.v) > SCHEMA_V) return refuse('新しい版のアプリで作った作品です');
+  if (!Array.isArray(o.dancers) || !Array.isArray(o.keys) || !o.keys.length) return refuse('形式が違います');
   const n = o.dancers.length;
-  if (n < 1 || n > 40) return null;
-  const num = (v, d, lo, hi) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
+  if (n < 1 || n > MAX_DANCERS) return refuse(`人数は1〜${MAX_DANCERS}人にしてください`);
+  let dropped = 0, badKey = null;
+  const fixKeys = ks => ks.filter(k => {
+    if (!k || !Array.isArray(k.pos) || k.pos.length !== n) {
+      dropped++;
+      return false;
+    }
+    if (!k.pos.every(p => Array.isArray(p) && isNum(p[0]) && isNum(p[1]))) {
+      if (badKey === null) badKey = String(k.name || '名前なし').slice(0, 20);
+      return false;
+    }
+    return true;
+  }).map((k, i) => ({
+    id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20),
+    at: Math.max(0, Math.round(clampNum(k.at, i * 32, 0, 4000))),
+    move: Math.round(clampNum(k.move, 4, 1, 64)),
+    pos: k.pos.map(p => [clampNum(p[0], 0, -50, 50), clampNum(p[1], 0, -50, 50)]) }));
+  const keys = fixKeys(o.keys);
+  const base = Array.isArray(o.baseKeys) ? fixKeys(o.baseKeys) : [];
+  if (badKey !== null) return refuse(`座標が数でない隊形があります（「${badKey}」）`);
+  if (!keys.length) return refuse('人数と座標の数が合う隊形がありません');
   const st = {
-    v: 1, title: String(o.title || '無題').slice(0, 40), bpm: num(o.bpm, 120, 40, 240), offset: num(o.offset, 0, 0, 600),
-    totalEights: Math.round(num(o.totalEights, 24, 1, 400)),
-    stage: { w: num(o.stage && o.stage.w, 10, 3, 40), d: num(o.stage && o.stage.d, 6, 2, 30) },
+    v: SCHEMA_V, title: String(o.title || '無題').slice(0, 40), bpm: clampNum(o.bpm, 120, 40, 240),
+    offset: clampNum(o.offset, 0, 0, 600), totalEights: Math.round(clampNum(o.totalEights, 24, 1, 400)),
+    stage: { w: clampNum(o.stage && o.stage.w, 10, 3, 40), d: clampNum(o.stage && o.stage.d, 6, 2, 30) },
+    // dancers は { name, color } の配列。名前だけの文字列の配列なら、その文字列を名前に使う
     dancers: o.dancers.map((d, i) => ({
-      name: String((d && d.name) || ('No.' + (i + 1))).slice(0, 16),
-      color: /^#[0-9a-fA-F]{6}$/.test(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
-    keys: [], baseKeys: null, energy: Array.isArray(o.energy) ? o.energy.map(x => num(x, 0, 0, 1)) : null };
-  const fixKeys = ks => ks.filter(k => k && Array.isArray(k.pos) && k.pos.length === n).map((k, i) => ({
-    id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20), at: Math.max(0, Math.round(num(k.at, i * 32, 0, 4000))),
-    move: Math.round(num(k.move, 4, 1, 64)), pos: k.pos.map(p => [num(p && p[0], 0, -50, 50), num(p && p[1], 0, -50, 50)]) }));
-  st.keys = fixKeys(o.keys);
-  if (!st.keys.length) return null;
-  if (Array.isArray(o.baseKeys)) {
-    const b = fixKeys(o.baseKeys);
-    st.baseKeys = b.length ? b : null;
-  }
-  st.keys.sort((a, b) => a.at - b.at);
+      name: String((typeof d === 'string' ? d : d && d.name) || ('No.' + (i + 1))).slice(0, 16),
+      color: isColor(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
+    keys: keys.sort((a, b) => a.at - b.at), baseKeys: base.length ? base : null,
+    energy: Array.isArray(o.energy) ? o.energy.map(x => clampNum(x, 0, 0, 1)) : null };
   st.cues = (Array.isArray(o.cues) ? o.cues : [])
     .filter(q => q && LIGHT_KINDS[q.kind])
     .slice(0, 300)
     .map(q => ({
-      id: newId(), at: Math.max(0, Math.round(num(q.at, 0, 0, 4000))), kind: q.kind,
+      id: newId(), at: Math.max(0, Math.round(clampNum(q.at, 0, 0, 4000))), kind: q.kind,
       name: String(q.name || LIGHT_KINDS[q.kind]).slice(0, 20),
-      color: /^#[0-9a-fA-F]{6}$/.test(q.color) ? q.color : '#ff3b6b',
+      color: isColor(q.color) ? q.color : '#ff3b6b',
       target: Number.isInteger(q.target) && q.target >= 0 && q.target < n ? q.target : -1,
-      fade: Math.round(num(q.fade, 0, 0, 32)) }))
+      fade: Math.round(clampNum(q.fade, 0, 0, 32)) }))
     .sort((a, b) => a.at - b.at);
-  return st;
+  return { ok: true, state: st, dropped };
 }
-let saveT = 0;
+// 起動のときに保存を読む用（確かめを通らなければ null）
+function validState(o) {
+  const r = inspectLoad(o);
+  return r.ok ? r.state : null;
+}
+
+/* ===== 保存 ===== */
+let saveT = 0, savePending = false, saveWarned = false;
+// 保存できなかったときの知らせは画面の側が入れる（core は画面に触らない）
+const saveHooks = { onFail: null };
 function save() {
+  savePending = true;
   clearTimeout(saveT);
-  saveT = setTimeout(() => {
-    try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { /* 保存できない環境でも動かす */ }
-  }, 300);
+  saveT = setTimeout(flushSave, SAVE_DELAY_MS);
+}
+// 待っている保存をすぐ行う（閉じる・隠れるときにも呼ぶ）。失敗は続けて何度も知らせない
+function flushSave() {
+  if (!savePending) return;
+  clearTimeout(saveT);
+  savePending = false;
+  try {
+    localStorage.setItem(LS_KEY, JSON.stringify(S));
+    saveWarned = false;
+  } catch (e) {
+    if (!saveWarned && saveHooks.onFail) saveHooks.onFail(e);
+    saveWarned = true;
+  }
 }
 function load() {
   try {
@@ -935,10 +984,33 @@ function load() {
   } catch (e) { }
   return demoState();
 }
-// 元に戻す
+// 元に戻す・やり直す。単位は作品 S の全部（title・bpm・offset・totalEights・stage・dancers・keys・baseKeys・cues・energy）
+let undoStack = [];
+let redoStack = [];
+
+// 操作の「前」の作品を積む。新しい操作をしたらやり直しの積みは空にする
 function pushUndo() {
-  undoStack.push(JSON.stringify({ keys: S.keys, baseKeys: S.baseKeys, dancers: S.dancers, cues: S.cues }));
-  if (undoStack.length > 60) undoStack.shift();
+  undoStack.push(JSON.stringify(S));
+  if (undoStack.length > UNDO_LIMIT) undoStack.shift();
+  redoStack.length = 0;
+}
+// from の一番上を取り出し、今の作品を to に積む。戻す先の作品を返す（積みが空なら null）
+function stepHistory(from, to) {
+  const t = from.pop();
+  if (!t) return null;
+  to.push(JSON.stringify(S));
+  if (to.length > UNDO_LIMIT) to.shift();
+  return JSON.parse(t);
+}
+const undoState = () => stepHistory(undoStack, redoStack);
+const redoState = () => stepHistory(redoStack, undoStack);
+// 作品を置き換えたあと、画面の選びが範囲を外れていたら直す
+function clampSelection() {
+  const nd = S.dancers.length;
+  ui.sel = Math.max(0, Math.min(ui.sel, S.keys.length - 1));
+  if (ui.selDancer >= nd) ui.selDancer = -1;
+  if (ui.me >= nd) ui.me = -1;
+  if (ui.selCue != null && !(S.cues || []).some(q => q.id === ui.selCue)) ui.selCue = null;
 }
 // アドバイス（ルールで判定）
 /* ===== アドバイス（ルールで判定） ===== */
@@ -1801,14 +1873,14 @@ cv.addEventListener('pointerdown', e => {
     }
   });
   if (best >= 0 && bd < Math.max(R, 22)) {
-    pushUndo();
+    // 押しただけでは履歴に積まない（実際に動いた最初の時に1回だけ積む。下の pointermove）
     ui.drag = best;
+    ui.dragMoved = false;
     ui.selDancer = best;
     cv.setPointerCapture(e.pointerId);
     requestRender();
     e.preventDefault();
-  }
-  else {
+  } else {
     ui.selDancer = -1;
     requestRender();
   }
@@ -1824,30 +1896,44 @@ cv.addEventListener('pointermove', e => {
   const W = S.stage.w, D = S.stage.d;
   mx = Math.min(W / 2, Math.max(-W / 2, mx));
   my = Math.min(D, Math.max(0, my));
-  k.pos[ui.drag] = [r2(mx), r2(my)];
+  const to = [r2(mx), r2(my)], cur = k.pos[ui.drag];
+  if (to[0] === cur[0] && to[1] === cur[1]) return; // 位置が変わらない動きは何もしない
+  if (!ui.dragMoved) {
+    pushUndo(); // 動かす前の作品を、ドラッグ1回につき1回だけ積む
+    ui.dragMoved = true;
+  }
+  k.pos[ui.drag] = to;
   requestRender();
 });
-const endDrag = () => { if (ui.drag != null) {
+const endDrag = () => {
+  if (ui.drag == null) return;
+  const moved = ui.dragMoved;
   ui.drag = null;
-  changed(false);
-} };
+  ui.dragMoved = false;
+  if (moved) changed(false);
+};
 cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', endDrag);
 // 編集・照明・アドバイス・練習・書き出しの各タブ
-function undo() {
-  const t = undoStack.pop();
-  if (!t) {
-    toast('戻せる操作はありません');
-    return;
-  }
-  const o = JSON.parse(t);
-  S.keys = o.keys;
-  S.baseKeys = o.baseKeys;
-  S.dancers = o.dancers;
-  S.cues = o.cues || [];
-  ui.sel = Math.min(ui.sel, S.keys.length - 1);
+// 戻す・やり直す：作品の全部を置き換え、選びを範囲内に直してから描き直す
+function applyHistory(st, msg) {
+  S = st;
+  ui.drag = null;
+  ui.dragMoved = false;
+  clampSelection();
   changed(true);
-  toast('1つ前に戻しました');
+  if (ui.count > S.totalEights * 8) setCount(S.totalEights * 8);
+  toast(msg);
+}
+function undo() {
+  const st = undoState();
+  if (st) applyHistory(st, '1つ前に戻しました');
+  else toast('戻せる操作はありません');
+}
+function redo() {
+  const st = redoState();
+  if (st) applyHistory(st, 'やり直しました');
+  else toast('やり直せる操作はありません');
 }
 function changed(all) {
   sortKeys();
@@ -1949,6 +2035,8 @@ $('#btnDelKey').addEventListener('click', () => {
 });
 $('#btnUndo').addEventListener('click', undo);
 $('#btnUndo2').addEventListener('click', undo);
+$('#btnRedo').addEventListener('click', redo);
+$('#btnRedo2').addEventListener('click', redo);
 Object.keys(TEMPLATES).forEach(t => $('#tplSel').append(el('option', { value: t, text: t })));
 $('#btnTpl').addEventListener('click', () => {
   const k = S.keys[ui.sel], spots = TEMPLATES[$('#tplSel').value](S.dancers.length, S.stage.w, S.stage.d);
@@ -2435,41 +2523,60 @@ function fillSetup() {
     box.append(el('div', { class: 'drow' }, [el('span', { class: 'sw', style: `background:${d.color}` }), inp]));
   });
 }
+// 設定の入力欄は、change のとき（打ち終わったとき）に1回だけ履歴に積む。値が変わらなければ積まない
 $('#title').addEventListener('change', e => {
-  S.title = e.target.value.slice(0, 40) || '無題';
+  const v = e.target.value.slice(0, 40) || '無題';
+  if (v !== S.title) pushUndo();
+  S.title = v;
+  e.target.value = v;
   $('#hdrTitle').textContent = S.title;
   save();
 });
 $('#stW').addEventListener('change', e => {
-  S.stage.w = Math.min(40, Math.max(3, parseFloat(e.target.value) || 10));
+  const v = Math.min(40, Math.max(3, parseFloat(e.target.value) || 10));
+  if (v !== S.stage.w) pushUndo();
+  S.stage.w = v;
+  e.target.value = v;
   save();
   fitCanvas();
   renderAdvice();
   renderKeyChips();
 });
 $('#stD').addEventListener('change', e => {
-  S.stage.d = Math.min(30, Math.max(2, parseFloat(e.target.value) || 6));
+  const v = Math.min(30, Math.max(2, parseFloat(e.target.value) || 6));
+  if (v !== S.stage.d) pushUndo();
+  S.stage.d = v;
+  e.target.value = v;
   save();
   fitCanvas();
   renderAdvice();
   renderKeyChips();
 });
 $('#totalEights').addEventListener('change', e => {
-  S.totalEights = Math.min(400, Math.max(1, parseInt(e.target.value) || 24));
+  const v = Math.min(400, Math.max(1, parseInt(e.target.value) || 24));
+  if (v !== S.totalEights) pushUndo();
+  S.totalEights = v;
+  e.target.value = v;
   save();
   renderAdvice();
   requestRender();
 });
 $('#bpm').addEventListener('change', e => {
-  S.bpm = Math.min(240, Math.max(40, parseFloat(e.target.value) || 120));
+  const v = Math.min(240, Math.max(40, parseFloat(e.target.value) || 120));
+  if (v !== S.bpm) pushUndo();
+  S.bpm = v;
   afterTempoChange();
 });
 $('#offset').addEventListener('change', e => {
-  S.offset = Math.max(0, parseFloat(e.target.value) || 0);
+  const v = Math.max(0, parseFloat(e.target.value) || 0);
+  if (v !== S.offset) pushUndo();
+  S.offset = v;
   afterTempoChange();
 });
 const shiftOff = d => {
-  S.offset = Math.max(0, r2(S.offset + d));
+  const v = Math.max(0, r2(S.offset + d));
+  if (v !== S.offset) pushUndo();
+  S.offset = v;
   afterTempoChange();
 };
 $('#offM1').addEventListener('click', () => shiftOff(-beatSec()));
@@ -2481,7 +2588,9 @@ $('#btnNowIsOne').addEventListener('click', () => {
     toast('先に曲を読み込んでください');
     return;
   }
-  S.offset = r2(audio.currentTime);
+  const v = r2(audio.currentTime);
+  if (v !== S.offset) pushUndo();
+  S.offset = v;
   afterTempoChange();
   toast('今の時刻を 1-1 にしました');
 });
@@ -2497,22 +2606,28 @@ function afterTempoChange() {
   if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
   requestRender();
 }
-let taps = [];
+let taps = [], tapPushed = false;
 $('#btnTap').addEventListener('click', () => {
   const t = performance.now();
-  if (taps.length && t - taps[taps.length - 1] > 2000) taps = [];
+  if (taps.length && t - taps[taps.length - 1] > 2000) {
+    taps = [];
+    tapPushed = false;
+  }
   taps.push(t);
   if (taps.length > 9) taps.shift();
   if (taps.length >= 4) {
+    if (!tapPushed) { // 連続して叩く間の BPM の変更は、1回の操作として1つだけ積む
+      pushUndo();
+      tapPushed = true;
+    }
     const iv = (taps[taps.length - 1] - taps[0]) / (taps.length - 1);
     S.bpm = Math.round(60000 / iv * 10) / 10;
     $('#tapInfo').textContent = `${taps.length}回 → BPM ${S.bpm}`;
     afterTempoChange();
-  }
-  else $('#tapInfo').textContent = `拍に合わせて押してください（${taps.length}回）`;
+  } else $('#tapInfo').textContent = `拍に合わせて押してください（${taps.length}回）`;
 });
 $('#btnAddDancer').addEventListener('click', () => {
-  if (S.dancers.length >= 40) return;
+  if (S.dancers.length >= MAX_DANCERS) return;
   pushUndo();
   const i = S.dancers.length;
   S.dancers.push({ name: `No.${i + 1}`, color: PALETTE[i % PALETTE.length] });
@@ -2554,6 +2669,7 @@ $('#audioFile').addEventListener('change', async e => {
     });
     try { ac.close(); } catch (x) { }
     analysis = analyzeAudio(ab);
+    pushUndo(); // 曲を読み込んで BPM・頭の位置・長さ・盛り上がりが変わるのも、1つの操作
     S.bpm = analysis.bpm;
     S.offset = analysis.offset;
     afterTempoChange();
@@ -2568,39 +2684,57 @@ $('#audioFile').addEventListener('change', async e => {
 /* 保存・読み込み */
 $('#btnSave').addEventListener('click',
   () => download(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), safeName(S.title) + '.json'));
-function loadObj(o) {
-  const s = validState(o);
-  if (!s) {
-    toast('読み込めませんでした（形式が違います）');
-    return false;
-  }
+// 作品を丸ごと置き換える（読み込み・見本に戻す）。元に戻すと置き換える前の作品が丸ごと戻る（1つの単位）
+function replaceWork(st, count) {
   pushUndo();
-  S = s;
+  S = st;
   ui.sel = 0;
+  ui.selDancer = -1;
+  ui.selCue = null;
   ui.me = -1;
   refreshAll();
-  setCount(S.keys[0].at);
+  setCount(count == null ? S.keys[0].at : count);
   save();
+}
+// 読み込み：確かめて、断るなら理由を知らせる。読めなかった隊形があるときは、何が起きるかを知らせて、押されてから読み込む
+function loadObj(o) {
+  const r = inspectLoad(o);
+  if (!r.ok) {
+    toast(`読み込めませんでした（${r.reason}）`, 6000);
+    return false;
+  }
+  if (r.dropped > 0) {
+    ask(`${r.dropped} 個の隊形を読み込めませんでした（人数と座標の数が合わないため）。残りの ${r.state.keys.length} 個で読み込みますか？`,
+      '読み込む', () => {
+        replaceWork(r.state);
+        toast(`読み込みました（${r.dropped} 個の隊形は読み込めませんでした）`, 6000);
+      });
+    return false;
+  }
+  replaceWork(r.state);
   toast('読み込みました');
   return true;
+}
+// JSON の読み取りだけを try に入れる（読み込みの中のエラーを「JSONとして読めない」にしない）
+function parseJson(text) {
+  try { return { ok: true, value: JSON.parse(text) }; } catch (x) { return { ok: false }; }
 }
 $('#loadFile').addEventListener('change', async e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
-  try { loadObj(JSON.parse(await f.text())); } catch (x) { toast('読み込めませんでした'); }
+  const p = parseJson(await f.text());
+  if (p.ok) loadObj(p.value);
+  else toast('読み込めませんでした');
   e.target.value = '';
 });
 $('#btnPasteLoad').addEventListener('click', () => {
   const t = $('#pasteJson').value, i = t.indexOf('{'), j = t.lastIndexOf('}');
-  try { loadObj(JSON.parse(t.slice(i, j + 1))); } catch (x) { toast('JSONとして読めませんでした'); }
+  const p = parseJson(t.slice(i, j + 1));
+  if (p.ok) loadObj(p.value);
+  else toast('JSONとして読めませんでした');
 });
 $('#btnDemo').addEventListener('click', () => ask('今の内容を消して見本に戻しますか？（「元に戻す」で戻せます）', '見本に戻す', () => {
-  pushUndo();
-  S = demoState();
-  ui.sel = 0;
-  refreshAll();
-  setCount(0);
-  save();
+  replaceWork(demoState(), 0);
 }));
 
 /* ===== タブ・全体 ===== */
@@ -2658,12 +2792,30 @@ document.addEventListener('fullscreenchange', () => {
     fitCanvas();
   }
 });
+// 文字を打つ欄。ここでは Ctrl+Z を文字の取り消しに任せる（アプリの元に戻すは効かせない）
+function isTypingTarget(t) {
+  if (!t || !t.tagName) return false;
+  if (t.isContentEditable || t.tagName === 'TEXTAREA') return true;
+  return t.tagName === 'INPUT' && !/^(checkbox|radio|button|submit|reset|range|color|file|image)$/.test(t.type);
+}
 document.addEventListener('keydown', e => {
   if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) {
     e.preventDefault();
     toggle();
   }
   if (e.key === 'Escape' && document.body.classList.contains('proj')) $('#projExit').click();
+  // Ctrl/Cmd+Z＝元に戻す、Ctrl/Cmd+Shift+Z と Ctrl+Y＝やり直す
+  if ((e.ctrlKey || e.metaKey) && !e.altKey && !isTypingTarget(e.target)) {
+    const key = String(e.key).toLowerCase();
+    if (key === 'z') {
+      e.preventDefault();
+      if (e.shiftKey) redo();
+      else undo();
+    } else if (key === 'y' && e.ctrlKey) {
+      e.preventDefault();
+      redo();
+    }
+  }
 });
 window.addEventListener('resize', fitCanvas);
 if (window.ResizeObserver) new ResizeObserver(fitCanvas).observe($('#stageWrap'));
@@ -2674,6 +2826,11 @@ document.addEventListener('visibilitychange', async () => {
     } catch (e) { }
   }
 });
+// 閉じる・隠れるときは、待っている保存をすぐ行う（300ms の待ちの間に閉じても消えない）
+window.addEventListener('pagehide', flushSave);
+document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden') flushSave(); });
+// 保存に失敗したら黙らず知らせる（続けて失敗しても、同じ知らせは1回。成功すると、次の失敗でまた知らせる）
+saveHooks.onFail = () => toast('この端末に保存できませんでした。「ファイルに保存」で作品を書き出してください', 8000);
 
 S = load();
 try {

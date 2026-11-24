@@ -1,8 +1,8 @@
-// 作品の状態 S・画面の選び ui・元に戻す積み・カウントの表示
+// 作品の状態 S・画面の選び ui・カウントの表示
 let S = null;
 const ui = { sel: 0, selDancer: -1, me: -1, view: 'audience', compare: false, playing: false, count: 0,
-  rate: 1, selCue: null, clockT0: 0, clockC0: 0, showNames: true, showPaths: false, drag: null, recording: false };
-let undoStack = [];
+  rate: 1, selCue: null, clockT0: 0, clockC0: 0, showNames: true, showPaths: false, drag: null, dragMoved: false,
+  recording: false };
 
 const beatSec = () => 60 / S.bpm;
 const cLabel = c => {
