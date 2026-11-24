@@ -1,0 +1,24 @@
+<!-- 練習 -->
+<section class="tab" id="tab-practice">
+  <div class="card">
+    <div class="row">
+      <label>自分 <select id="meSel"></select></label>
+      <label>向き <select id="viewSel"><option value="audience">客席から見る（正面が下）</option><option value="dancer">ダンサー目線（正面が上）</option></select></label>
+    </div>
+    <div class="row">
+      <label><input type="checkbox" id="showNames" checked> 名前を表示</label>
+      <label><input type="checkbox" id="showPaths"> 次の位置への矢印（全員）</label>
+      <label><input type="checkbox" id="clickOn"> カウント音（1拍ごとにクリック）</label>
+    </div>
+    <div class="muted">「自分」を選ぶと、自分の丸が大きくなり、次の立ち位置と移動の向きが出ます。プロジェクターに映すときは「大きく表示」を使ってください（スペースキーで再生・停止）。</div>
+  </div>
+  <div class="card">
+    <h3>書き出し</h3>
+    <div class="row">
+      <button id="btnSheet">全隊形を1枚の画像に</button>
+      <button id="btnKeyPng">今の隊形を画像に</button>
+      <button id="btnVideo">動画に書き出す</button>
+    </div>
+    <div class="muted" id="videoNote">動画は最初から最後まで実際の速さで再生しながら作ります。曲を読み込んでいると音も入ります。</div>
+  </div>
+</section>

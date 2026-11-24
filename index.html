@@ -14,76 +14,422 @@
 <meta name="apple-mobile-web-app-title" content="立ち位置">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-:root{
-  --bg:#11151d;--panel:#1a202b;--panel2:#222a37;--line:#2e3848;--text:#e8ecf3;--muted:#9aa5b8;
-  --accent:#4fb3ff;--accent2:#1a63d6;--red:#ff6b6b;--amber:#ffb547;--green:#3ddc97;
-  color-scheme:dark;
+/* 色・基準の値 */
+:root {
+  --bg: #11151d;
+  --panel: #1a202b;
+  --panel2: #222a37;
+  --line: #2e3848;
+  --text: #e8ecf3;
+  --muted: #9aa5b8;
+  --accent: #4fb3ff;
+  --accent2: #1a63d6;
+  --red: #ff6b6b;
+  --amber: #ffb547;
+  --green: #3ddc97;
+  color-scheme: dark;
 }
-*{box-sizing:border-box}
-html,body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;line-height:1.55;-webkit-text-size-adjust:100%}
-body{padding-bottom:env(safe-area-inset-bottom)}
-main{max-width:980px;margin:0 auto;padding:calc(8px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 40px max(12px, env(safe-area-inset-left))}
-header{display:flex;align-items:baseline;gap:10px;padding:6px 0}
-header h1{font-size:17px;margin:0}
-header #hdrTitle{color:var(--muted);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-button,select,input{font-family:inherit;font-size:15px}
-button{background:var(--panel2);color:var(--text);border:1px solid var(--line);border-radius:8px;padding:8px 12px;min-height:40px;cursor:pointer}
-button:active{transform:translateY(1px)}
-button.primary{background:var(--accent2);border-color:var(--accent2);color:#fff;font-weight:700}
-button.small{min-height:32px;padding:4px 10px;font-size:13px}
-button:disabled{opacity:.45}
-select,input[type=text],input[type=number],textarea{background:#0d1118;color:var(--text);border:1px solid var(--line);border-radius:8px;padding:7px 8px;min-height:38px}
-input[type=number]{width:72px}
-textarea{width:100%;min-height:90px;font-size:13px}
-label{font-size:13px;color:var(--muted)}
-#stageWrap{position:relative;background:#0b0e14;border-radius:12px;overflow:hidden;touch-action:none}
-#stage{display:block;width:100%}
-#meInfo{background:var(--panel);border-top:1px solid var(--line);padding:6px 10px;font-size:14px;display:none}
-body.proj #meInfo{position:absolute;left:12px;top:10px;max-width:60vw;background:rgba(10,14,20,.86);border:1px solid var(--line);border-radius:10px;font-size:min(3vh,22px)}
-#countBig{position:absolute;right:12px;top:6px;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums;color:#fff;text-shadow:0 1px 4px #000;pointer-events:none}
-#projExit{position:absolute;right:10px;bottom:10px;display:none;z-index:3}
-#projPlay{position:absolute;left:10px;bottom:10px;display:none;z-index:3}
-body.proj main>*:not(#stageWrap){display:none}
-body.proj main{max-width:none;padding:0}
-body.proj #stageWrap{position:fixed;inset:0;border-radius:0}
-body.proj #stage{width:100vw;height:100vh}
-body.proj #countBig{font-size:min(12vh,90px);right:3vw;top:1vh}
-body.proj #projExit,body.proj #projPlay{display:block}
-#transport{display:flex;align-items:center;gap:8px;margin:8px 0;flex-wrap:wrap}
-#countDisp{font-size:26px;font-weight:800;min-width:76px;text-align:center;font-variant-numeric:tabular-nums}
-#timeDisp{color:var(--muted);font-size:12px;min-width:44px}
-#timeline{display:block;width:100%;height:64px;background:var(--panel);border-radius:10px;touch-action:none;cursor:pointer}
-nav#tabs{display:flex;gap:4px;margin:12px 0 8px;border-bottom:1px solid var(--line)}
-nav#tabs button{border:none;border-bottom:3px solid transparent;border-radius:0;background:none;color:var(--muted);flex:1;font-weight:700}
-nav#tabs button.on{color:var(--text);border-bottom-color:var(--accent)}
-section.tab{display:none}
-section.tab.on{display:block}
-.row{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin:8px 0}
-.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:8px 0}
-.card h3{margin:0 0 6px;font-size:14px}
-.muted{color:var(--muted);font-size:13px}
-.chips{display:flex;gap:6px;overflow-x:auto;padding:4px 0 8px;scrollbar-width:thin}
-.chip{flex:0 0 auto;background:var(--panel2);border:1px solid var(--line);border-radius:999px;padding:6px 12px;font-size:13px;min-height:34px;white-space:nowrap}
-.chip.on{background:var(--accent2);border-color:var(--accent2);color:#fff}
-.chip .bad{display:inline-block;min-width:16px;height:16px;line-height:16px;border-radius:8px;background:var(--red);color:#fff;font-size:11px;text-align:center;margin-left:6px;padding:0 4px}
-.adv{display:flex;gap:10px;align-items:flex-start;background:var(--panel);border:1px solid var(--line);border-left:4px solid var(--muted);border-radius:8px;padding:8px 10px;margin:6px 0}
-.adv.l0{border-left-color:var(--red)}.adv.l1{border-left-color:var(--amber)}.adv.l2{border-left-color:#6b7890}
-.adv .tag{font-size:11px;font-weight:700;border-radius:4px;padding:1px 6px;white-space:nowrap}
-.adv.l0 .tag{background:var(--red);color:#fff}.adv.l1 .tag{background:var(--amber);color:#1a1200}.adv.l2 .tag{background:#3a4456;color:#dde}
-.adv .body{flex:1;font-size:14px}
-.adv .where{color:var(--accent);font-size:12px;cursor:pointer;text-decoration:underline}
-.summary{display:flex;gap:10px;flex-wrap:wrap;font-size:14px}
-.summary b{font-size:18px}
-.dlist{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:6px}
-.drow{display:flex;align-items:center;gap:6px}
-.drow .sw{width:18px;height:18px;border-radius:50%;flex:0 0 auto;border:1px solid #0006}
-.drow input{flex:1;min-width:0}
-#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#000c;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;transition:opacity .25s;pointer-events:none;z-index:20;max-width:90vw}
-#toast.on{opacity:1}
-#askBox{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:var(--panel2);border:1px solid var(--accent);color:var(--text);padding:12px 14px;border-radius:12px;font-size:14px;z-index:30;width:min(92vw,420px);box-shadow:0 6px 24px #0008}
-[hidden]{display:none!important}
-details summary{cursor:pointer;color:var(--muted);font-size:13px}
-.kv{display:grid;grid-template-columns:auto 1fr;gap:4px 10px;font-size:13px}
+/* 画面の形 */
+* {
+  box-sizing: border-box;
+}
+html,body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
+  line-height: 1.55;
+  -webkit-text-size-adjust: 100%;
+}
+body {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+main {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: calc(8px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 40px max(12px, env(safe-area-inset-left));
+}
+header {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  padding: 6px 0;
+}
+header h1 {
+  font-size: 17px;
+  margin: 0;
+}
+header #hdrTitle {
+  color: var(--muted);
+  font-size: 13px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+button,select,input {
+  font-family: inherit;
+  font-size: 15px;
+}
+button {
+  background: var(--panel2);
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 8px 12px;
+  min-height: 40px;
+  cursor: pointer;
+}
+button:active {
+  transform: translateY(1px);
+}
+button.primary {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+  font-weight: 700;
+}
+button.small {
+  min-height: 32px;
+  padding: 4px 10px;
+  font-size: 13px;
+}
+button:disabled {
+  opacity: .45;
+}
+select,input[type=text],input[type=number],textarea {
+  background: #0d1118;
+  color: var(--text);
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 8px;
+  min-height: 38px;
+}
+input[type=number] {
+  width: 72px;
+}
+textarea {
+  width: 100%;
+  min-height: 90px;
+  font-size: 13px;
+}
+label {
+  font-size: 13px;
+  color: var(--muted);
+}
+#stageWrap {
+  position: relative;
+  background: #0b0e14;
+  border-radius: 12px;
+  overflow: hidden;
+  touch-action: none;
+}
+#stage {
+  display: block;
+  width: 100%;
+}
+#meInfo {
+  background: var(--panel);
+  border-top: 1px solid var(--line);
+  padding: 6px 10px;
+  font-size: 14px;
+  display: none;
+}
+body.proj #meInfo {
+  position: absolute;
+  left: 12px;
+  top: 10px;
+  max-width: 60vw;
+  background: rgba(10,14,20,.86);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  font-size: min(3vh,22px);
+}
+#countBig {
+  position: absolute;
+  right: 12px;
+  top: 6px;
+  font-size: 22px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  color: #fff;
+  text-shadow: 0 1px 4px #000;
+  pointer-events: none;
+}
+#projExit {
+  position: absolute;
+  right: 10px;
+  bottom: 10px;
+  display: none;
+  z-index: 3;
+}
+#projPlay {
+  position: absolute;
+  left: 10px;
+  bottom: 10px;
+  display: none;
+  z-index: 3;
+}
+body.proj main>*:not(#stageWrap) {
+  display: none;
+}
+body.proj main {
+  max-width: none;
+  padding: 0;
+}
+body.proj #stageWrap {
+  position: fixed;
+  inset: 0;
+  border-radius: 0;
+}
+body.proj #stage {
+  width: 100vw;
+  height: 100vh;
+}
+body.proj #countBig {
+  font-size: min(12vh,90px);
+  right: 3vw;
+  top: 1vh;
+}
+body.proj #projExit,body.proj #projPlay {
+  display: block;
+}
+#transport {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 8px 0;
+  flex-wrap: wrap;
+}
+#countDisp {
+  font-size: 26px;
+  font-weight: 800;
+  min-width: 76px;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+#timeDisp {
+  color: var(--muted);
+  font-size: 12px;
+  min-width: 44px;
+}
+#timeline {
+  display: block;
+  width: 100%;
+  height: 64px;
+  background: var(--panel);
+  border-radius: 10px;
+  touch-action: none;
+  cursor: pointer;
+}
+nav#tabs {
+  display: flex;
+  gap: 4px;
+  margin: 12px 0 8px;
+  border-bottom: 1px solid var(--line);
+}
+nav#tabs button {
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 0;
+  background: none;
+  color: var(--muted);
+  flex: 1;
+  font-weight: 700;
+}
+nav#tabs button.on {
+  color: var(--text);
+  border-bottom-color: var(--accent);
+}
+section.tab {
+  display: none;
+}
+section.tab.on {
+  display: block;
+}
+.row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 8px 0;
+}
+.card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 10px 12px;
+  margin: 8px 0;
+}
+.card h3 {
+  margin: 0 0 6px;
+  font-size: 14px;
+}
+.muted {
+  color: var(--muted);
+  font-size: 13px;
+}
+.chips {
+  display: flex;
+  gap: 6px;
+  overflow-x: auto;
+  padding: 4px 0 8px;
+  scrollbar-width: thin;
+}
+.chip {
+  flex: 0 0 auto;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 6px 12px;
+  font-size: 13px;
+  min-height: 34px;
+  white-space: nowrap;
+}
+.chip.on {
+  background: var(--accent2);
+  border-color: var(--accent2);
+  color: #fff;
+}
+.chip .bad {
+  display: inline-block;
+  min-width: 16px;
+  height: 16px;
+  line-height: 16px;
+  border-radius: 8px;
+  background: var(--red);
+  color: #fff;
+  font-size: 11px;
+  text-align: center;
+  margin-left: 6px;
+  padding: 0 4px;
+}
+.adv {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--muted);
+  border-radius: 8px;
+  padding: 8px 10px;
+  margin: 6px 0;
+}
+.adv.l0 {
+  border-left-color: var(--red);
+}
+.adv.l1 {
+  border-left-color: var(--amber);
+}
+.adv.l2 {
+  border-left-color: #6b7890;
+}
+.adv .tag {
+  font-size: 11px;
+  font-weight: 700;
+  border-radius: 4px;
+  padding: 1px 6px;
+  white-space: nowrap;
+}
+.adv.l0 .tag {
+  background: var(--red);
+  color: #fff;
+}
+.adv.l1 .tag {
+  background: var(--amber);
+  color: #1a1200;
+}
+.adv.l2 .tag {
+  background: #3a4456;
+  color: #dde;
+}
+.adv .body {
+  flex: 1;
+  font-size: 14px;
+}
+.adv .where {
+  color: var(--accent);
+  font-size: 12px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+.summary {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 14px;
+}
+.summary b {
+  font-size: 18px;
+}
+.dlist {
+  display: grid;
+  grid-template-columns: repeat(auto-fill,minmax(150px,1fr));
+  gap: 6px;
+}
+.drow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.drow .sw {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  border: 1px solid #0006;
+}
+.drow input {
+  flex: 1;
+  min-width: 0;
+}
+#toast {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: #000c;
+  color: #fff;
+  padding: 10px 16px;
+  border-radius: 10px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity .25s;
+  pointer-events: none;
+  z-index: 20;
+  max-width: 90vw;
+}
+#toast.on {
+  opacity: 1;
+}
+#askBox {
+  position: fixed;
+  left: 50%;
+  bottom: 24px;
+  transform: translateX(-50%);
+  background: var(--panel2);
+  border: 1px solid var(--accent);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: 12px;
+  font-size: 14px;
+  z-index: 30;
+  width: min(92vw,420px);
+  box-shadow: 0 6px 24px #0008;
+}
+[hidden] {
+  display: none!important;
+}
+details summary {
+  cursor: pointer;
+  color: var(--muted);
+  font-size: 13px;
+}
+.kv {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 4px 10px;
+  font-size: 13px;
+}
 </style>
 </head>
 <body>
@@ -261,37 +607,143 @@ details summary{cursor:pointer;color:var(--muted);font-size:13px}
 <audio id="audio" preload="auto"></audio>
 
 <script>
+// 基本の部品と定数（画面に触らない）
 'use strict';
 /* ===== 基本 ===== */
 const $ = s => document.querySelector(s);
-const PALETTE = ['#ff6b6b','#ffa53d','#ffd93d','#9be15d','#3ddc97','#3dd6d0','#4fb3ff','#7b93ff','#a77bff','#e47bff','#ff7bc0','#d0a77e','#b6c3cc','#f4f4f4','#ff9e9e','#c4e86b','#7fe0ff','#ffc58a'];
+const PALETTE = [
+  '#ff6b6b','#ffa53d','#ffd93d','#9be15d','#3ddc97','#3dd6d0','#4fb3ff','#7b93ff','#a77bff',
+  '#e47bff','#ff7bc0','#d0a77e','#b6c3cc','#f4f4f4','#ff9e9e','#c4e86b','#7fe0ff','#ffc58a'];
 const LS_KEY = 'danceFormation.v1';
 const clone = o => JSON.parse(JSON.stringify(o));
 const r2 = v => Math.round(v * 100) / 100;
 const hyp = Math.hypot;
+// 作品の状態 S・画面の選び ui・元に戻す積み・カウントの表示
 let S = null;
 const ui = { sel: 0, selDancer: -1, me: -1, view: 'audience', compare: false, playing: false, count: 0,
   rate: 1, selCue: null, clockT0: 0, clockC0: 0, showNames: true, showPaths: false, drag: null, recording: false };
 let undoStack = [];
-let audioReady = false, analysis = null, wakeLock = null;
-const audio = $('#audio');
 
-function toast(msg, ms = 2600) {
-  const t = $('#toast'); t.textContent = msg; t.classList.add('on');
-  clearTimeout(toast._t); toast._t = setTimeout(() => t.classList.remove('on'), ms);
-}
-function el(tag, props = {}, kids = []) {
-  const e = document.createElement(tag);
-  for (const [k, v] of Object.entries(props)) {
-    if (k === 'class') e.className = v; else if (k === 'text') e.textContent = v;
-    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v); else e.setAttribute(k, v);
-  }
-  for (const c of [].concat(kids)) if (c != null) e.append(c);
-  return e;
-}
 const beatSec = () => 60 / S.bpm;
-const cLabel = c => { if (c < 0) return '準備'; const i = Math.floor(c + 1e-6); return `${Math.floor(i / 8) + 1}-${i % 8 + 1}`; };
+const cLabel = c => {
+  if (c < 0) return '準備';
+  const i = Math.floor(c + 1e-6);
+  return `${Math.floor(i / 8) + 1}-${i % 8 + 1}`;
+};
 
+/* ===== 状態・保存 ===== */
+let idSeq = 1;
+const newId = () => 'k' + Date.now().toString(36) + (idSeq++);
+// 時間と位置・クロス・割り当て（計算だけ）
+/* ===== クロス（移動の道が交わる所） ===== */
+function segX(p1, p2, p3, p4) {
+  const d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0]);
+  if (Math.abs(d) < 1e-9) return null;
+  const t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d;
+  const s = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d;
+  if (t <= 0.02 || t >= 0.98 || s <= 0.02 || s >= 0.98) return null;
+  return [p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t];
+}
+function crossesInto(i) { // 隊形 i-1 → i の移動で起きるクロス
+  if (i <= 0 || i >= S.keys.length) return [];
+  const a = S.keys[i - 1], k = S.keys[i], ms = Math.max(a.at, k.at - k.move), dur = k.at - ms, out = [];
+  for (let x = 0; x < k.pos.length; x++) for (let y = x + 1; y < k.pos.length; y++) {
+    const pt = segX(a.pos[x], k.pos[x], a.pos[y], k.pos[y]);
+    if (!pt) continue;
+    let bt = 0, bd = 1e9, front = x;
+    for (let s = 0; s <= 32; s++) {
+      const t = s / 32, u = ease(t);
+      const px = [a.pos[x][0] + (k.pos[x][0] - a.pos[x][0]) * u, a.pos[x][1] + (k.pos[x][1] - a.pos[x][1]) * u];
+      const py = [a.pos[y][0] + (k.pos[y][0] - a.pos[y][0]) * u, a.pos[y][1] + (k.pos[y][1] - a.pos[y][1]) * u];
+      const d = hyp(px[0] - py[0], px[1] - py[1]);
+      if (d < bd) {
+        bd = d;
+        bt = t;
+        front = px[1] <= py[1] ? x : y;
+      }
+    }
+    out.push({ a: x, b: y, pt, count: ms + bt * dur, front, gap: bd });
+  }
+  return out.sort((p, q) => p.count - q.count);
+}
+
+/* ===== 割り当て（ハンガリー法） ===== */
+function hungarian(cost) {
+  const n = cost.length, INF = 1e18;
+  const u = Array(n + 1).fill(0), v = Array(n + 1).fill(0), p = Array(n + 1).fill(0), way = Array(n + 1).fill(0);
+  for (let i = 1; i <= n; i++) {
+    p[0] = i;
+    let j0 = 0;
+    const minv = Array(n + 1).fill(INF), used = Array(n + 1).fill(false);
+    do {
+      used[j0] = true;
+      const i0 = p[j0];
+      let delta = INF, j1 = 0;
+      for (let j = 1; j <= n; j++) if (!used[j]) {
+        const cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
+        if (cur < minv[j]) {
+          minv[j] = cur;
+          way[j] = j0;
+        }
+        if (minv[j] < delta) {
+          delta = minv[j];
+          j1 = j;
+        }
+      }
+      for (let j = 0; j <= n; j++) {
+        if (used[j]) {
+          u[p[j]] += delta;
+          v[j] -= delta;
+        } else minv[j] -= delta;
+      }
+      j0 = j1;
+    } while (p[j0] !== 0);
+    do {
+      const j1 = way[j0];
+      p[j0] = p[j1];
+      j0 = j1;
+    } while (j0);
+  }
+  const ans = Array(n);
+  for (let j = 1; j <= n; j++) ans[p[j] - 1] = j - 1;
+  return ans;
+}
+function assignSpots(from, spots) {
+  const cost = from.map(a => spots.map(b => hyp(a[0] - b[0], a[1] - b[1])));
+  const ans = hungarian(cost);
+  return from.map((_, i) => [spots[ans[i]][0], spots[ans[i]][1]]);
+}
+
+const totalDist = (a, b) => a.reduce((s, p, i) => s + hyp(p[0] - b[i][0], p[1] - b[i][1]), 0);
+
+/* ===== 時間と位置 ===== */
+function sortKeys() {
+  const id = S.keys[ui.sel] && S.keys[ui.sel].id;
+  S.keys.sort((a, b) => a.at - b.at);
+  const i = S.keys.findIndex(k => k.id === id);
+  ui.sel = i < 0 ? 0 : i;
+}
+const ease = u => u * u * (3 - 2 * u);
+function positionsAt(keys, c) {
+  if (!keys.length) return [];
+  if (c <= keys[0].at) return keys[0].pos;
+  for (let i = 0; i < keys.length - 1; i++) {
+    const a = keys[i], b = keys[i + 1];
+    if (c < b.at) {
+      const ms = Math.max(a.at, b.at - b.move);
+      if (c < ms) return a.pos;
+      const u = ease(Math.min(1, (c - ms) / Math.max(1e-6, b.at - ms)));
+      return a.pos.map((p, j) => [p[0] + (b.pos[j][0] - p[0]) * u, p[1] + (b.pos[j][1] - p[1]) * u]);
+    }
+  }
+  return keys[keys.length - 1].pos;
+}
+const keyIndexAt = c => {
+  let k = 0;
+  S.keys.forEach((x, i) => { if (x.at <= c + 1e-6) k = i; });
+  return k;
+};
+// 隊形の形（テンプレート）
 /* ===== 隊形の形（テンプレート） ===== */
 function rowsTpl(counts, W, D, stagger) {
   const maxC = Math.max(...counts);
@@ -312,25 +764,65 @@ function splitRows(n, k) { // n人をk列に、隣の列と人数が1違いに�
   return out;
 }
 const TEMPLATES = {
-  '2列（千鳥）': (n, W, D) => { const a = Math.ceil(n / 2); return rowsTpl([a, n - a], W, D, a === n - a); },
+  '2列（千鳥）': (n, W, D) => {
+    const a = Math.ceil(n / 2);
+    return rowsTpl([a, n - a], W, D, a === n - a);
+  },
   '3列（千鳥）': (n, W, D) => rowsTpl(splitRows(n, 3), W, D, false),
   '4列（千鳥）': (n, W, D) => rowsTpl(splitRows(n, 4), W, D, false),
-  'ピラミッド': (n, W, D) => { const rows = []; let k = 2, left = n; while (left > 0) { const c = Math.min(k, left); rows.push(c); left -= c; k++; } return rowsTpl(rows, W, D, false); },
-  '逆ピラミッド': (n, W, D) => { const rows = []; let k = 2, left = n; while (left > 0) { const c = Math.min(k, left); rows.push(c); left -= c; k++; } return rowsTpl(rows.reverse(), W, D, false); },
+  'ピラミッド': (n, W, D) => {
+    const rows = [];
+    let k = 2, left = n;
+    while (left > 0) {
+      const c = Math.min(k, left);
+      rows.push(c);
+      left -= c;
+      k++;
+    }
+    return rowsTpl(rows, W, D, false);
+  },
+  '逆ピラミッド': (n, W, D) => {
+    const rows = [];
+    let k = 2, left = n;
+    while (left > 0) {
+      const c = Math.min(k, left);
+      rows.push(c);
+      left -= c;
+      k++;
+    }
+    return rowsTpl(rows.reverse(), W, D, false);
+  },
   'V字': (n, W, D) => vTpl(n, W, D, false),
   '逆V字': (n, W, D) => vTpl(n, W, D, true),
-  '円': (n, W, D) => { const rx = W * 0.36, ry = D * 0.34, pts = []; for (let i = 0; i < n; i++) { const a = Math.PI / 2 + i * 2 * Math.PI / n; pts.push([rx * Math.cos(a), D / 2 - ry * Math.sin(a)]); } return pts; },
-  '斜め': (n, W, D) => { const pts = []; for (let i = 0; i < n; i++) { const t = n > 1 ? i / (n - 1) : .5; pts.push([(-0.42 + 0.84 * t) * W, D * (0.18 + 0.64 * t)]); } return pts; },
+  '円': (n, W, D) => {
+    const rx = W * 0.36, ry = D * 0.34, pts = [];
+    for (let i = 0; i < n; i++) {
+      const a = Math.PI / 2 + i * 2 * Math.PI / n;
+      pts.push([rx * Math.cos(a), D / 2 - ry * Math.sin(a)]);
+    }
+    return pts;
+  },
+  '斜め': (n, W, D) => {
+    const pts = [];
+    for (let i = 0; i < n; i++) {
+      const t = n > 1 ? i / (n - 1) : .5;
+      pts.push([(-0.42 + 0.84 * t) * W, D * (0.18 + 0.64 * t)]);
+    }
+    return pts;
+  },
   '横一列': (n, W, D) => rowsTpl([n], W, D, false),
 };
 function vTpl(n, W, D, inv) {
   const pts = [], apexY = inv ? D * 0.82 : D * 0.2, endY = inv ? D * 0.2 : D * 0.82, half = W * 0.42;
   if (n % 2) pts.push([0, apexY]);
   const k = Math.floor(n / 2);
-  for (let i = 1; i <= k; i++) { const t = i / k, y = apexY + (endY - apexY) * t; pts.push([-half * t, y], [half * t, y]); }
+  for (let i = 1; i <= k; i++) {
+    const t = i / k, y = apexY + (endY - apexY) * t;
+    pts.push([-half * t, y], [half * t, y]);
+  }
   return pts;
 }
-
+// 照明・きっかけの計算
 /* ===== 照明 ===== */
 const LIGHT_KINDS = { full: '明るく（全体）', color: '色の照明', spot: 'スポット', black: '暗転', memo: '音などのきっかけ' };
 function lightTarget(q) {
@@ -344,99 +836,34 @@ function lightAt(c) {
   for (const q of (S.cues || [])) {
     if (q.kind === 'memo' || q.at > c) continue;
     const t = lightTarget(q), u = q.fade > 0 ? Math.min(1, (c - q.at) / q.fade) : 1;
-    const tint = t.tint === st.tint ? { tint: t.tint, tintA: st.tintA + (t.tintA - st.tintA) * u } : (u < 0.5 ? { tint: st.tint, tintA: st.tintA * (1 - 2 * u) } : { tint: t.tint, tintA: t.tintA * (2 * u - 1) });
+    const tint = t.tint === st.tint
+      ? { tint: t.tint, tintA: st.tintA + (t.tintA - st.tintA) * u }
+      : (u < 0.5
+        ? { tint: st.tint, tintA: st.tintA * (1 - 2 * u) }
+        : { tint: t.tint, tintA: t.tintA * (2 * u - 1) });
     st = { dark: st.dark + (t.dark - st.dark) * u, tint: tint.tint, tintA: tint.tintA, spot: u < 0.5 ? st.spot : t.spot, name: q.name };
   }
   return st;
 }
-function nextCue(c, within = 1e9) { return (S.cues || []).find(q => q.at > c + 1e-6 && q.at - c <= within) || null; }
-
-/* ===== クロス（移動の道が交わる所） ===== */
-function segX(p1, p2, p3, p4) {
-  const d = (p2[0] - p1[0]) * (p4[1] - p3[1]) - (p2[1] - p1[1]) * (p4[0] - p3[0]);
-  if (Math.abs(d) < 1e-9) return null;
-  const t = ((p3[0] - p1[0]) * (p4[1] - p3[1]) - (p3[1] - p1[1]) * (p4[0] - p3[0])) / d;
-  const s = ((p3[0] - p1[0]) * (p2[1] - p1[1]) - (p3[1] - p1[1]) * (p2[0] - p1[0])) / d;
-  if (t <= 0.02 || t >= 0.98 || s <= 0.02 || s >= 0.98) return null;
-  return [p1[0] + (p2[0] - p1[0]) * t, p1[1] + (p2[1] - p1[1]) * t];
+function nextCue(c, within = 1e9) {
+  return (S.cues || []).find(q => q.at > c + 1e-6 && q.at - c <= within) || null;
 }
-function crossesInto(i) { // 隊形 i-1 → i の移動で起きるクロス
-  if (i <= 0 || i >= S.keys.length) return [];
-  const a = S.keys[i - 1], k = S.keys[i], ms = Math.max(a.at, k.at - k.move), dur = k.at - ms, out = [];
-  for (let x = 0; x < k.pos.length; x++) for (let y = x + 1; y < k.pos.length; y++) {
-    const pt = segX(a.pos[x], k.pos[x], a.pos[y], k.pos[y]); if (!pt) continue;
-    let bt = 0, bd = 1e9, front = x;
-    for (let s = 0; s <= 32; s++) {
-      const t = s / 32, u = ease(t);
-      const px = [a.pos[x][0] + (k.pos[x][0] - a.pos[x][0]) * u, a.pos[x][1] + (k.pos[x][1] - a.pos[x][1]) * u];
-      const py = [a.pos[y][0] + (k.pos[y][0] - a.pos[y][0]) * u, a.pos[y][1] + (k.pos[y][1] - a.pos[y][1]) * u];
-      const d = hyp(px[0] - py[0], px[1] - py[1]); if (d < bd) { bd = d; bt = t; front = px[1] <= py[1] ? x : y; }
-    }
-    out.push({ a: x, b: y, pt, count: ms + bt * dur, front, gap: bd });
-  }
-  return out.sort((p, q) => p.count - q.count);
-}
-
-/* ===== 割り当て（ハンガリー法） ===== */
-function hungarian(cost) {
-  const n = cost.length, INF = 1e18;
-  const u = Array(n + 1).fill(0), v = Array(n + 1).fill(0), p = Array(n + 1).fill(0), way = Array(n + 1).fill(0);
-  for (let i = 1; i <= n; i++) {
-    p[0] = i; let j0 = 0; const minv = Array(n + 1).fill(INF), used = Array(n + 1).fill(false);
-    do {
-      used[j0] = true; const i0 = p[j0]; let delta = INF, j1 = 0;
-      for (let j = 1; j <= n; j++) if (!used[j]) {
-        const cur = cost[i0 - 1][j - 1] - u[i0] - v[j];
-        if (cur < minv[j]) { minv[j] = cur; way[j] = j0; }
-        if (minv[j] < delta) { delta = minv[j]; j1 = j; }
-      }
-      for (let j = 0; j <= n; j++) { if (used[j]) { u[p[j]] += delta; v[j] -= delta; } else minv[j] -= delta; }
-      j0 = j1;
-    } while (p[j0] !== 0);
-    do { const j1 = way[j0]; p[j0] = p[j1]; j0 = j1; } while (j0);
-  }
-  const ans = Array(n); for (let j = 1; j <= n; j++) ans[p[j] - 1] = j - 1; return ans;
-}
-function assignSpots(from, spots) {
-  const cost = from.map(a => spots.map(b => hyp(a[0] - b[0], a[1] - b[1])));
-  const ans = hungarian(cost); return from.map((_, i) => [spots[ans[i]][0], spots[ans[i]][1]]);
-}
-const totalDist = (a, b) => a.reduce((s, p, i) => s + hyp(p[0] - b[i][0], p[1] - b[i][1]), 0);
-
-/* ===== 時間と位置 ===== */
-function sortKeys() {
-  const id = S.keys[ui.sel] && S.keys[ui.sel].id;
-  S.keys.sort((a, b) => a.at - b.at);
-  const i = S.keys.findIndex(k => k.id === id); ui.sel = i < 0 ? 0 : i;
-}
-const ease = u => u * u * (3 - 2 * u);
-function positionsAt(keys, c) {
-  if (!keys.length) return [];
-  if (c <= keys[0].at) return keys[0].pos;
-  for (let i = 0; i < keys.length - 1; i++) {
-    const a = keys[i], b = keys[i + 1];
-    if (c < b.at) {
-      const ms = Math.max(a.at, b.at - b.move);
-      if (c < ms) return a.pos;
-      const u = ease(Math.min(1, (c - ms) / Math.max(1e-6, b.at - ms)));
-      return a.pos.map((p, j) => [p[0] + (b.pos[j][0] - p[0]) * u, p[1] + (b.pos[j][1] - p[1]) * u]);
-    }
-  }
-  return keys[keys.length - 1].pos;
-}
-const keyIndexAt = c => { let k = 0; S.keys.forEach((x, i) => { if (x.at <= c + 1e-6) k = i; }); return k; };
-
-/* ===== 状態・保存 ===== */
-let idSeq = 1;
-const newId = () => 'k' + Date.now().toString(36) + (idSeq++);
+// 見本・読み込みの確かめ・保存
 function demoState() {
   const names = ['あおい', 'いつき', 'うた', 'えま', 'おと', 'かい', 'きら', 'くう', 'けい', 'こはる', 'さな', 'しゅん', 'すず', 'せな'];
   const W = 10, D = 6, n = names.length;
   const st = { v: 1, title: '見本：14人のベース', bpm: 120, offset: 0, totalEights: 24, stage: { w: W, d: D },
     dancers: names.map((nm, i) => ({ name: nm, color: PALETTE[i % PALETTE.length] })), keys: [], baseKeys: null, energy: null, cues: [] };
-  const cue = (eight, count, kind, name, o = {}) => ({ id: newId(), at: (eight - 1) * 8 + count - 1, kind, name, color: o.color || '#ff3b6b', target: o.target == null ? -1 : o.target, fade: o.fade || 0 });
-  st.cues = [cue(1, 1, 'full', '明転'), cue(8, 5, 'memo', 'ドラムが入る'), cue(13, 1, 'color', '赤の照明', { color: '#ff2d55', fade: 2 }),
-    cue(17, 1, 'spot', 'スポット', { target: 0, fade: 1 }), cue(20, 5, 'black', '暗転', { fade: 2 }), cue(21, 1, 'full', '明転')];
+  const cue = (eight, count, kind, name, o = {}) => ({
+    id: newId(), at: (eight - 1) * 8 + count - 1, kind, name,
+    color: o.color || '#ff3b6b', target: o.target == null ? -1 : o.target, fade: o.fade || 0 });
+  st.cues = [
+    cue(1, 1, 'full', '明転'),
+    cue(8, 5, 'memo', 'ドラムが入る'),
+    cue(13, 1, 'color', '赤の照明', { color: '#ff2d55', fade: 2 }),
+    cue(17, 1, 'spot', 'スポット', { target: 0, fade: 1 }),
+    cue(20, 5, 'black', '暗転', { fade: 2 }),
+    cue(21, 1, 'full', '明転')];
   // わざと直すところがある「ベース」
   const line = names.map((_, i) => [(i - (n - 1) / 2) * 0.6, 1.2]);                        // 間隔が狭い横一列
   const grid = names.map((_, i) => [((i % 7) - 3) * 1.2, i < 7 ? 2 : 3.2]);                  // 前後が重なる2列
@@ -446,49 +873,74 @@ function demoState() {
   const blk = names.map((_, i) => [((i % 5) - 2) * 0.9 + 1.6, 2 + Math.floor(i / 5) * 0.9]); // 上手に寄った小さい塊
   const mk = (name, eight, move, pos) => ({ id: newId(), name, at: (eight - 1) * 8, move, pos: pos.map(p => [r2(p[0]), r2(p[1])]) });
   let prev = line;
-  const seq = [['横一列', 1, 4, line], ['2列', 5, 4, grid], ['ピラミッド', 9, 4, pyr], ['V字', 13, 2, vv], ['円', 17, 4, circ], ['かたまり', 21, 4, blk]];
+  const seq = [
+    ['横一列', 1, 4, line], ['2列', 5, 4, grid], ['ピラミッド', 9, 4, pyr],
+    ['V字', 13, 2, vv], ['円', 17, 4, circ], ['かたまり', 21, 4, blk]];
   seq.forEach(([nm, e, m, pos], idx) => {
     const p = idx === 0 || idx === 1 || idx === 5 ? pos : assignSpots(prev, pos);
-    st.keys.push(mk(nm, e, m, p)); prev = p;
+    st.keys.push(mk(nm, e, m, p));
+    prev = p;
   });
   return st;
 }
 function validState(o) {
   if (!o || typeof o !== 'object' || !Array.isArray(o.dancers) || !Array.isArray(o.keys) || !o.keys.length) return null;
-  const n = o.dancers.length; if (n < 1 || n > 40) return null;
+  const n = o.dancers.length;
+  if (n < 1 || n > 40) return null;
   const num = (v, d, lo, hi) => (typeof v === 'number' && isFinite(v)) ? Math.min(hi, Math.max(lo, v)) : d;
-  const st = { v: 1, title: String(o.title || '無題').slice(0, 40), bpm: num(o.bpm, 120, 40, 240), offset: num(o.offset, 0, 0, 600),
-    totalEights: Math.round(num(o.totalEights, 24, 1, 400)), stage: { w: num(o.stage && o.stage.w, 10, 3, 40), d: num(o.stage && o.stage.d, 6, 2, 30) },
-    dancers: o.dancers.map((d, i) => ({ name: String((d && d.name) || ('No.' + (i + 1))).slice(0, 16), color: /^#[0-9a-fA-F]{6}$/.test(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
+  const st = {
+    v: 1, title: String(o.title || '無題').slice(0, 40), bpm: num(o.bpm, 120, 40, 240), offset: num(o.offset, 0, 0, 600),
+    totalEights: Math.round(num(o.totalEights, 24, 1, 400)),
+    stage: { w: num(o.stage && o.stage.w, 10, 3, 40), d: num(o.stage && o.stage.d, 6, 2, 30) },
+    dancers: o.dancers.map((d, i) => ({
+      name: String((d && d.name) || ('No.' + (i + 1))).slice(0, 16),
+      color: /^#[0-9a-fA-F]{6}$/.test(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
     keys: [], baseKeys: null, energy: Array.isArray(o.energy) ? o.energy.map(x => num(x, 0, 0, 1)) : null };
   const fixKeys = ks => ks.filter(k => k && Array.isArray(k.pos) && k.pos.length === n).map((k, i) => ({
     id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20), at: Math.max(0, Math.round(num(k.at, i * 32, 0, 4000))),
     move: Math.round(num(k.move, 4, 1, 64)), pos: k.pos.map(p => [num(p && p[0], 0, -50, 50), num(p && p[1], 0, -50, 50)]) }));
-  st.keys = fixKeys(o.keys); if (!st.keys.length) return null;
-  if (Array.isArray(o.baseKeys)) { const b = fixKeys(o.baseKeys); st.baseKeys = b.length ? b : null; }
+  st.keys = fixKeys(o.keys);
+  if (!st.keys.length) return null;
+  if (Array.isArray(o.baseKeys)) {
+    const b = fixKeys(o.baseKeys);
+    st.baseKeys = b.length ? b : null;
+  }
   st.keys.sort((a, b) => a.at - b.at);
-  st.cues = (Array.isArray(o.cues) ? o.cues : []).filter(q => q && LIGHT_KINDS[q.kind]).slice(0, 300).map(q => ({ id: newId(), at: Math.max(0, Math.round(num(q.at, 0, 0, 4000))), kind: q.kind,
-    name: String(q.name || LIGHT_KINDS[q.kind]).slice(0, 20), color: /^#[0-9a-fA-F]{6}$/.test(q.color) ? q.color : '#ff3b6b',
-    target: Number.isInteger(q.target) && q.target >= 0 && q.target < n ? q.target : -1, fade: Math.round(num(q.fade, 0, 0, 32)) })).sort((a, b) => a.at - b.at);
+  st.cues = (Array.isArray(o.cues) ? o.cues : [])
+    .filter(q => q && LIGHT_KINDS[q.kind])
+    .slice(0, 300)
+    .map(q => ({
+      id: newId(), at: Math.max(0, Math.round(num(q.at, 0, 0, 4000))), kind: q.kind,
+      name: String(q.name || LIGHT_KINDS[q.kind]).slice(0, 20),
+      color: /^#[0-9a-fA-F]{6}$/.test(q.color) ? q.color : '#ff3b6b',
+      target: Number.isInteger(q.target) && q.target >= 0 && q.target < n ? q.target : -1,
+      fade: Math.round(num(q.fade, 0, 0, 32)) }))
+    .sort((a, b) => a.at - b.at);
   return st;
 }
 let saveT = 0;
 function save() {
   clearTimeout(saveT);
-  saveT = setTimeout(() => { try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { /* 保存できない環境でも動かす */ } }, 300);
+  saveT = setTimeout(() => {
+    try { localStorage.setItem(LS_KEY, JSON.stringify(S)); } catch (e) { /* 保存できない環境でも動かす */ }
+  }, 300);
 }
 function load() {
-  try { const t = localStorage.getItem(LS_KEY); if (t) { const s = validState(JSON.parse(t)); if (s) return s; } } catch (e) { }
+  try {
+    const t = localStorage.getItem(LS_KEY);
+    if (t) {
+      const s = validState(JSON.parse(t));
+      if (s) return s;
+    }
+  } catch (e) { }
   return demoState();
 }
-function pushUndo() { undoStack.push(JSON.stringify({ keys: S.keys, baseKeys: S.baseKeys, dancers: S.dancers, cues: S.cues })); if (undoStack.length > 60) undoStack.shift(); }
-function undo() {
-  const t = undoStack.pop(); if (!t) { toast('戻せる操作はありません'); return; }
-  const o = JSON.parse(t); S.keys = o.keys; S.baseKeys = o.baseKeys; S.dancers = o.dancers; S.cues = o.cues || [];
-  ui.sel = Math.min(ui.sel, S.keys.length - 1); changed(true); toast('1つ前に戻しました');
+// 元に戻す
+function pushUndo() {
+  undoStack.push(JSON.stringify({ keys: S.keys, baseKeys: S.baseKeys, dancers: S.dancers, cues: S.cues }));
+  if (undoStack.length > 60) undoStack.shift();
 }
-function changed(all) { sortKeys(); save(); if (all) refreshAll(); else { renderKeyChips(); renderAdvice(); } requestRender(); }
-
+// アドバイス（ルールで判定）
 /* ===== アドバイス（ルールで判定） ===== */
 const TH = { space: 0.8, hideDx: 0.45, hideDy: 0.3, hideFar: 1.5, speed: 1.5, comfy: 1.2, crash: 0.42, margin: 0.25 };
 function hiddenOf(pos) {
@@ -496,17 +948,27 @@ function hiddenOf(pos) {
   for (let i = 0; i < pos.length; i++) for (let j = 0; j < pos.length; j++) {
     if (i === j) continue;
     const dyy = pos[j][1] - pos[i][1];
-    if (dyy > TH.hideDy && dyy <= TH.hideFar && Math.abs(pos[i][0] - pos[j][0]) < TH.hideDx && !hid.has(j)) { hid.add(j); pairs.push([i, j]); }
+    if (dyy > TH.hideDy && dyy <= TH.hideFar && Math.abs(pos[i][0] - pos[j][0]) < TH.hideDx && !hid.has(j)) {
+      hid.add(j);
+      pairs.push([i, j]);
+    }
   }
   return pairs; // [前の人, 隠れる人]
 }
 function tightPairs(pos) {
   const out = [];
-  for (let i = 0; i < pos.length; i++) for (let j = i + 1; j < pos.length; j++) if (hyp(pos[i][0] - pos[j][0], pos[i][1] - pos[j][1]) < TH.space) out.push([i, j]);
+  for (let i = 0; i < pos.length; i++) for (let j = i + 1; j < pos.length; j++)
+    if (hyp(pos[i][0] - pos[j][0], pos[i][1] - pos[j][1]) < TH.space) out.push([i, j]);
   return out;
 }
-function outOf(pos) { const W = S.stage.w, D = S.stage.d; return pos.map((p, i) => (Math.abs(p[0]) > W / 2 - 0.15 || p[1] < 0.15 || p[1] > D - 0.15) ? i : -1).filter(i => i >= 0); }
-const spreadOf = pos => { const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length, cy = pos.reduce((s, p) => s + p[1], 0) / pos.length; return Math.sqrt(pos.reduce((s, p) => s + (p[0] - cx) ** 2 + (p[1] - cy) ** 2, 0) / pos.length); };
+function outOf(pos) {
+  const W = S.stage.w, D = S.stage.d;
+  return pos.map((p, i) => (Math.abs(p[0]) > W / 2 - 0.15 || p[1] < 0.15 || p[1] > D - 0.15) ? i : -1).filter(i => i >= 0);
+}
+const spreadOf = pos => {
+  const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length, cy = pos.reduce((s, p) => s + p[1], 0) / pos.length;
+  return Math.sqrt(pos.reduce((s, p) => s + (p[0] - cx) ** 2 + (p[1] - cy) ** 2, 0) / pos.length);
+};
 function minPathGap(a, b) {
   let best = 1e9, pair = null, at = 0;
   for (let s = 0; s <= 24; s++) {
@@ -514,7 +976,11 @@ function minPathGap(a, b) {
     const p = a.map((q, j) => [q[0] + (b[j][0] - q[0]) * u, q[1] + (b[j][1] - q[1]) * u]);
     for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) {
       const d = hyp(p[i][0] - p[j][0], p[i][1] - p[j][1]);
-      if (d < best) { best = d; pair = [i, j]; at = u; }
+      if (d < best) {
+        best = d;
+        pair = [i, j];
+        at = u;
+      }
     }
   }
   return { d: best, pair, u: at };
@@ -523,28 +989,140 @@ function keyEnergy(i) {
   if (!S.energy || !S.energy.length) return null;
   const a = S.keys[i].at, b = i + 1 < S.keys.length ? S.keys[i + 1].at : S.totalEights * 8;
   const e0 = Math.floor(a / 8), e1 = Math.max(e0 + 1, Math.ceil(b / 8));
-  const xs = S.energy.slice(e0, e1); return xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null;
+  const xs = S.energy.slice(e0, e1);
+  return xs.length ? xs.reduce((s, x) => s + x, 0) / xs.length : null;
 }
 const nm = i => S.dancers[i] ? S.dancers[i].name : '?';
-const names = arr => { const u = [...new Set(arr)]; return u.slice(0, 4).map(nm).join('・') + (u.length > 4 ? ` ほか${u.length - 4}人` : ''); };
+const names = arr => {
+  const u = [...new Set(arr)];
+  return u.slice(0, 4).map(nm).join('・') + (u.length > 4 ? ` ほか${u.length - 4}人` : '');
+};
 
+function analyze() {
+  const out = [], K = S.keys, W = S.stage.w;
+  const add = (lv, key, msg, fixLabel, fix) => out.push({ lv, key, msg, fixLabel, fix });
+  const energies = K.map((_, i) => keyEnergy(i)), spreads = K.map(k => spreadOf(k.pos));
+  const eSorted = energies.filter(e => e != null).sort((a, b) => a - b);
+  const eHigh = eSorted.length ? eSorted[Math.floor(eSorted.length * 0.7)] : null;
+  const sMed = [...spreads].sort((a, b) => a - b)[Math.floor(spreads.length / 2)];
+  K.forEach((k, i) => {
+    const o = outOf(k.pos);
+    if (o.length) add(0, i, `${names(o)} がステージの端からはみ出しています。`, '内側に入れる', () => { k.pos = clampPos(k.pos); });
+    const hid = hiddenOf(k.pos);
+    if (hid.length) add(0, i,
+      `${names(hid.map(h => h[1]))} がすぐ前の人の真後ろにいて、客席から見えません。前の列と半人分ずらす（千鳥にする）と全員が見えます。`,
+      '千鳥にずらす', () => { k.pos = fixFormation(k.pos); });
+    const tp = tightPairs(k.pos);
+    if (tp.length) add(0, i,
+      `${tp.length}組の間隔が${TH.space * 100}cmより狭く、腕を広げるとぶつかります（例：${nm(tp[0][0])}と${nm(tp[0][1])}）。`,
+      '間隔を広げる', () => { k.pos = fixFormation(k.pos); });
+    const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length;
+    if (Math.abs(cx) > W * 0.12) add(1, i,
+      `全体が${cx > 0 ? '上手（客席から見て右）' : '下手（客席から見て左）'}に${Math.abs(cx).toFixed(1)}m寄っています。意図した演出でなければ中央に寄せると見栄えが安定します。`,
+      '中央に寄せる', () => { k.pos = centerPos(k.pos); });
+    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreads[i] < sMed * 0.95)
+      add(1, i, `曲が盛り上がる所なのに、隊形がこぢんまりしています。ステージを広く使うと迫力が出ます。`, 'ステージ全体に広げる', () => { k.pos = fixFormation(spreadOut(k.pos)); });
+    if (i > 0) {
+      const p = K[i - 1], gap = k.at - p.at, nd = neededMove(p.pos, k.pos);
+      if (k.move > gap) add(0, i, `移動が${k.move}カウントですが、前の隊形からここまで${gap}カウントしかありません。`, `移動を${gap}カウントにする`, () => { k.move = gap; });
+      const dists = p.pos.map((q, j) => hyp(q[0] - k.pos[j][0], q[1] - k.pos[j][1]));
+      const maxD = Math.max(...dists), who = dists.indexOf(maxD), v = maxD / (Math.min(k.move, gap) * beatSec());
+      if (v > TH.speed) {
+        const can = Math.min(gap, nd);
+        add(0, i,
+          `${nm(who)} は${Math.min(k.move, gap)}カウントで${maxD.toFixed(1)}m動く必要があり、走らないと間に合いません（秒速${v.toFixed(1)}m）。`
+          + (nd <= gap
+            ? `移動を${nd}カウントにすると歩く速さで間に合います。`
+            : '移動を長くしても足りないので、入れ替えで距離を短くするのがおすすめです。'),
+          can > k.move ? `移動を${can}カウントにする` : null,
+          can > k.move ? () => { k.move = can; } : null);
+      }
+      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
+      const g = minPathGap(p.pos, k.pos);
+      if (g.d < TH.crash) {
+        const g2 = minPathGap(p.pos, opt);
+        const c = Math.round(k.at - k.move * (1 - g.u));
+        add(0, i,
+          `移動の途中（${cLabel(c)}ごろ）で ${nm(g.pair[0])} と ${nm(g.pair[1])} がぶつかります。`
+          + (g2.d >= TH.crash
+            ? '行き先を入れ替えると、ぶつからずに済みます。'
+            : '通る道を前後にずらすか、移動のタイミングを1カウントずらしてください。'),
+          g2.d >= TH.crash ? '行き先を入れ替える' : null,
+          g2.d >= TH.crash ? () => { k.pos = opt; } : null);
+      } else if (cur - best > Math.max(2, cur * 0.15)) {
+        add(1, i,
+          `行き先を入れ替えると、全員の移動の合計が${cur.toFixed(1)}m → ${best.toFixed(1)}mに減ります（センターや見せ場の人が変わることがあります）。`,
+          '行き先を入れ替える', () => { k.pos = opt; });
+      }
+      const crs = crossesInto(i).filter(x => x.gap >= TH.crash);
+      if (crs.length) add(2, i,
+        `この移動で${crs.length}組がクロスします（練習で合わせる所）：`
+        + crs.slice(0, 4).map(x => `${nm(x.a)}×${nm(x.b)}（${cLabel(x.count)}ごろ、${nm(x.front)}が前）`).join('、')
+        + (crs.length > 4 ? ` ほか${crs.length - 4}組` : '') + '。');
+      const md = cur / k.pos.length;
+      if (md < 0.3 && gap >= 16) add(2, i, `前の隊形（${p.name}）とほとんど同じ形です。見ている人には変化が伝わりにくいので、形を変えるか、レベル（高さ）や向きで変化を付けると良くなります。`);
+    }
+    const next = K[i + 1], hold = (next ? next.at - next.move : S.totalEights * 8) - k.at;
+    if (hold >= 40) add(2, i, `この隊形のまま${(hold / 8).toFixed(0)}×8カウント止まっています。途中で列の入れ替えや前後の動きを入れると飽きさせません。`);
+  });
+  if (K.length >= 4) {
+    const cnt = {};
+    K.forEach(k => {
+      let b = -1, bv = 1e9;
+      k.pos.forEach((p, j) => {
+        const v = Math.abs(p[0]) + 0.5 * p[1];
+        if (v < bv) {
+          bv = v;
+          b = j;
+        }
+      });
+      cnt[b] = (cnt[b] || 0) + 1;
+    });
+    for (const [j, c] of Object.entries(cnt)) if (c / K.length >= 0.6) add(2, -1,
+      `センター（前の真ん中）がほとんど ${nm(+j)} です（${K.length}回中${c}回）。サビごとにセンターを替えると全員が目立ちます。`);
+  }
+  const last = K[K.length - 1];
+  if (last.at < S.totalEights * 8 - 48) add(2, -1,
+    `曲の最後の${((S.totalEights * 8 - last.at) / 8).toFixed(0)}×8カウントに新しい隊形がありません。終わりの決めポーズの隊形を入れると締まります。`);
+  if (!S.energy) add(2, -1, '曲を読み込むと、盛り上がる所に合わせた広がりのアドバイスも出せます（設定タブ）。');
+  return out.sort((a, b) => a.lv - b.lv || a.key - b.key);
+}
+// アドバイスの直し方
 /* 直し方 */
-function clampPos(pos) { const W = S.stage.w, D = S.stage.d, m = 0.3; return pos.map(p => [r2(Math.min(W / 2 - m, Math.max(-W / 2 + m, p[0]))), r2(Math.min(D - m, Math.max(m, p[1])))]); }
+function clampPos(pos) {
+  const W = S.stage.w, D = S.stage.d, m = 0.3;
+  return pos.map(p => [r2(Math.min(W / 2 - m, Math.max(-W / 2 + m, p[0]))), r2(Math.min(D - m, Math.max(m, p[1])))]);
+}
 function relax(pos0) {
   const W = S.stage.w, D = S.stage.d, m = 0.3, DMIN = 0.95, OCC = 0.58, n = pos0.length;
   const p = clampPos(pos0).map(a => [a[0], a[1]]), anchor = p.map(a => [a[0], a[1]]);
   for (let it = 0; it < 500; it++) {
     const g = p.map(() => [0, 0]);
-    for (let i = 0; i < n; i++) { g[i][0] += 0.04 * (anchor[i][0] - p[i][0]); g[i][1] += 0.04 * (anchor[i][1] - p[i][1]); }
+    for (let i = 0; i < n; i++) {
+      g[i][0] += 0.04 * (anchor[i][0] - p[i][0]);
+      g[i][1] += 0.04 * (anchor[i][1] - p[i][1]);
+    }
     for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
       const dx = p[j][0] - p[i][0], dy = p[j][1] - p[i][1], d = hyp(dx, dy);
       if (d < DMIN) {
-        let ux, uy; if (d < 1e-6) { ux = (i + j) % 2 ? 1 : -1; uy = 0; } else { ux = dx / d; uy = dy / d; }
-        const f = (DMIN - d) * 0.5; g[i][0] -= ux * f; g[i][1] -= uy * f; g[j][0] += ux * f; g[j][1] += uy * f;
+        let ux, uy;
+        if (d < 1e-6) {
+          ux = (i + j) % 2 ? 1 : -1;
+          uy = 0;
+        } else {
+          ux = dx / d;
+          uy = dy / d;
+        }
+        const f = (DMIN - d) * 0.5;
+        g[i][0] -= ux * f;
+        g[i][1] -= uy * f;
+        g[j][0] += ux * f;
+        g[j][1] += uy * f;
       }
       if (Math.abs(dy) > TH.hideDy - 0.05 && Math.abs(dy) < TH.hideFar + 0.1 && Math.abs(dx) < OCC) {
         const sx = Math.abs(dx) < 1e-6 ? ((i + j) % 2 ? 1 : -1) : Math.sign(dx), f = (OCC - Math.abs(dx)) * 0.5;
-        g[i][0] -= sx * f; g[j][0] += sx * f;
+        g[i][0] -= sx * f;
+        g[j][0] += sx * f;
       }
     }
     for (let i = 0; i < n; i++) {
@@ -556,7 +1134,11 @@ function relax(pos0) {
 }
 function groupRows(pos) {
   const idx = pos.map((_, i) => i).sort((a, b) => pos[a][1] - pos[b][1]), rows = [];
-  idx.forEach(i => { const r = rows[rows.length - 1]; if (r && pos[i][1] - pos[r[0]][1] < TH.hideDy) r.push(i); else rows.push([i]); });
+  idx.forEach(i => {
+    const r = rows[rows.length - 1];
+    if (r && pos[i][1] - pos[r[0]][1] < TH.hideDy) r.push(i);
+    else rows.push([i]);
+  });
   return rows;
 }
 function zigzag(pos) { // 1列に入りきらない列を互い違いにする
@@ -565,7 +1147,10 @@ function zigzag(pos) { // 1列に入りきらない列を互い違いにする
     if (r.length < 3 || (r.length - 1) * 0.95 <= W - 0.6) return;
     const s = r.slice().sort((a, b) => p[a][0] - p[b][0]), span = W - 0.8;
     const y0 = Math.min(D - 0.75, Math.max(0.75, p[r[0]][1]));
-    s.forEach((i, k) => { p[i][0] = -span / 2 + span * k / (s.length - 1); p[i][1] = y0 + (k % 2 ? 0.45 : -0.45); });
+    s.forEach((i, k) => {
+      p[i][0] = -span / 2 + span * k / (s.length - 1);
+      p[i][1] = y0 + (k % 2 ? 0.45 : -0.45);
+    });
   });
   return p;
 }
@@ -577,10 +1162,17 @@ function staggerRows(pos) { // 後ろの列を横にずらして、すぐ前の�
     for (let d = -0.8; d <= 0.801; d += 0.05) {
       let sc = Math.abs(d);
       for (const i of rows[r]) {
-        const x = p[i][0] + d; if (Math.abs(x) > W / 2 - 0.3) sc += 100;
-        for (const j of front) { const dy = p[i][1] - p[j][1]; if (dy > TH.hideDy && dy <= TH.hideFar && Math.abs(x - p[j][0]) < 0.6) sc += 10; }
+        const x = p[i][0] + d;
+        if (Math.abs(x) > W / 2 - 0.3) sc += 100;
+        for (const j of front) {
+          const dy = p[i][1] - p[j][1];
+          if (dy > TH.hideDy && dy <= TH.hideFar && Math.abs(x - p[j][0]) < 0.6) sc += 10;
+        }
       }
-      if (sc < bs) { bs = sc; best = d; }
+      if (sc < bs) {
+        bs = sc;
+        best = d;
+      }
     }
     rows[r].forEach(i => { p[i][0] += best; });
   }
@@ -594,93 +1186,129 @@ function spreadOut(pos) {
   const f = Math.max(1, Math.min(1.5, (W / 2 - 0.5) / mx, (D / 2 - 0.5) / my));
   return clampPos(pos.map(p => [(p[0] - cx) * f, cy + (p[1] - cy) * f]));
 }
-const centerPos = pos => { const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length; return clampPos(pos.map(p => [p[0] - cx, p[1]])); };
-function optimalNext(prev, next) { const cost = prev.map(a => next.map(b => hyp(a[0] - b[0], a[1] - b[1]))); const ans = hungarian(cost); return prev.map((_, i) => [next[ans[i]][0], next[ans[i]][1]]); }
-function neededMove(prev, next) { const maxD = Math.max(...prev.map((p, j) => hyp(p[0] - next[j][0], p[1] - next[j][1]))); return Math.max(1, Math.ceil(maxD / TH.comfy / beatSec())); }
-
-function analyze() {
-  const out = [], K = S.keys, W = S.stage.w;
-  const add = (lv, key, msg, fixLabel, fix) => out.push({ lv, key, msg, fixLabel, fix });
-  const energies = K.map((_, i) => keyEnergy(i)), spreads = K.map(k => spreadOf(k.pos));
-  const eSorted = energies.filter(e => e != null).sort((a, b) => a - b);
-  const eHigh = eSorted.length ? eSorted[Math.floor(eSorted.length * 0.7)] : null;
-  const sMed = [...spreads].sort((a, b) => a - b)[Math.floor(spreads.length / 2)];
-  K.forEach((k, i) => {
-    const o = outOf(k.pos);
-    if (o.length) add(0, i, `${names(o)} がステージの端からはみ出しています。`, '内側に入れる', () => { k.pos = clampPos(k.pos); });
-    const hid = hiddenOf(k.pos);
-    if (hid.length) add(0, i, `${names(hid.map(h => h[1]))} がすぐ前の人の真後ろにいて、客席から見えません。前の列と半人分ずらす（千鳥にする）と全員が見えます。`, '千鳥にずらす', () => { k.pos = fixFormation(k.pos); });
-    const tp = tightPairs(k.pos);
-    if (tp.length) add(0, i, `${tp.length}組の間隔が${TH.space * 100}cmより狭く、腕を広げるとぶつかります（例：${nm(tp[0][0])}と${nm(tp[0][1])}）。`, '間隔を広げる', () => { k.pos = fixFormation(k.pos); });
-    const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length;
-    if (Math.abs(cx) > W * 0.12) add(1, i, `全体が${cx > 0 ? '上手（客席から見て右）' : '下手（客席から見て左）'}に${Math.abs(cx).toFixed(1)}m寄っています。意図した演出でなければ中央に寄せると見栄えが安定します。`, '中央に寄せる', () => { k.pos = centerPos(k.pos); });
-    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreads[i] < sMed * 0.95)
-      add(1, i, `曲が盛り上がる所なのに、隊形がこぢんまりしています。ステージを広く使うと迫力が出ます。`, 'ステージ全体に広げる', () => { k.pos = fixFormation(spreadOut(k.pos)); });
-    if (i > 0) {
-      const p = K[i - 1], gap = k.at - p.at, nd = neededMove(p.pos, k.pos);
-      if (k.move > gap) add(0, i, `移動が${k.move}カウントですが、前の隊形からここまで${gap}カウントしかありません。`, `移動を${gap}カウントにする`, () => { k.move = gap; });
-      const dists = p.pos.map((q, j) => hyp(q[0] - k.pos[j][0], q[1] - k.pos[j][1]));
-      const maxD = Math.max(...dists), who = dists.indexOf(maxD), v = maxD / (Math.min(k.move, gap) * beatSec());
-      if (v > TH.speed) {
-        const can = Math.min(gap, nd);
-        add(0, i, `${nm(who)} は${Math.min(k.move, gap)}カウントで${maxD.toFixed(1)}m動く必要があり、走らないと間に合いません（秒速${v.toFixed(1)}m）。` + (nd <= gap ? `移動を${nd}カウントにすると歩く速さで間に合います。` : '移動を長くしても足りないので、入れ替えで距離を短くするのがおすすめです。'),
-          can > k.move ? `移動を${can}カウントにする` : null, can > k.move ? () => { k.move = can; } : null);
-      }
-      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
-      const g = minPathGap(p.pos, k.pos);
-      if (g.d < TH.crash) {
-        const g2 = minPathGap(p.pos, opt);
-        const c = Math.round(k.at - k.move * (1 - g.u));
-        add(0, i, `移動の途中（${cLabel(c)}ごろ）で ${nm(g.pair[0])} と ${nm(g.pair[1])} がぶつかります。` + (g2.d >= TH.crash ? '行き先を入れ替えると、ぶつからずに済みます。' : '通る道を前後にずらすか、移動のタイミングを1カウントずらしてください。'),
-          g2.d >= TH.crash ? '行き先を入れ替える' : null, g2.d >= TH.crash ? () => { k.pos = opt; } : null);
-      } else if (cur - best > Math.max(2, cur * 0.15)) {
-        add(1, i, `行き先を入れ替えると、全員の移動の合計が${cur.toFixed(1)}m → ${best.toFixed(1)}mに減ります（センターや見せ場の人が変わることがあります）。`, '行き先を入れ替える', () => { k.pos = opt; });
-      }
-      const crs = crossesInto(i).filter(x => x.gap >= TH.crash);
-      if (crs.length) add(2, i, `この移動で${crs.length}組がクロスします（練習で合わせる所）：` + crs.slice(0, 4).map(x => `${nm(x.a)}×${nm(x.b)}（${cLabel(x.count)}ごろ、${nm(x.front)}が前）`).join('、') + (crs.length > 4 ? ` ほか${crs.length - 4}組` : '') + '。');
-      const md = cur / k.pos.length;
-      if (md < 0.3 && gap >= 16) add(2, i, `前の隊形（${p.name}）とほとんど同じ形です。見ている人には変化が伝わりにくいので、形を変えるか、レベル（高さ）や向きで変化を付けると良くなります。`);
-    }
-    const next = K[i + 1], hold = (next ? next.at - next.move : S.totalEights * 8) - k.at;
-    if (hold >= 40) add(2, i, `この隊形のまま${(hold / 8).toFixed(0)}×8カウント止まっています。途中で列の入れ替えや前後の動きを入れると飽きさせません。`);
-  });
-  if (K.length >= 4) {
-    const cnt = {};
-    K.forEach(k => { let b = -1, bv = 1e9; k.pos.forEach((p, j) => { const v = Math.abs(p[0]) + 0.5 * p[1]; if (v < bv) { bv = v; b = j; } }); cnt[b] = (cnt[b] || 0) + 1; });
-    for (const [j, c] of Object.entries(cnt)) if (c / K.length >= 0.6) add(2, -1, `センター（前の真ん中）がほとんど ${nm(+j)} です（${K.length}回中${c}回）。サビごとにセンターを替えると全員が目立ちます。`);
-  }
-  const last = K[K.length - 1];
-  if (last.at < S.totalEights * 8 - 48) add(2, -1, `曲の最後の${((S.totalEights * 8 - last.at) / 8).toFixed(0)}×8カウントに新しい隊形がありません。終わりの決めポーズの隊形を入れると締まります。`);
-  if (!S.energy) add(2, -1, '曲を読み込むと、盛り上がる所に合わせた広がりのアドバイスも出せます（設定タブ）。');
-  return out.sort((a, b) => a.lv - b.lv || a.key - b.key);
+const centerPos = pos => {
+  const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length;
+  return clampPos(pos.map(p => [p[0] - cx, p[1]]));
+};
+function optimalNext(prev, next) {
+  const cost = prev.map(a => next.map(b => hyp(a[0] - b[0], a[1] - b[1])));
+  const ans = hungarian(cost);
+  return prev.map((_, i) => [next[ans[i]][0], next[ans[i]][1]]);
 }
-
-function autoImprove() {
-  const before = analyze(); const nb = before.filter(a => a.lv === 0).length, ns = before.filter(a => a.lv === 1).length;
-  pushUndo(); if (!S.baseKeys) S.baseKeys = clone(S.keys);
-  const allowSwap = $('#allowSwap').checked;
-  const energies = S.keys.map((_, i) => keyEnergy(i)), eS = energies.filter(e => e != null).sort((a, b) => a - b);
-  const eHigh = eS.length ? eS[Math.floor(eS.length * 0.7)] : null, sMed = [...S.keys.map(k => spreadOf(k.pos))].sort((a, b) => a - b)[Math.floor(S.keys.length / 2)];
-  S.keys.forEach((k, i) => {
-    k.pos = clampPos(k.pos);
-    const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length; if (Math.abs(cx) > S.stage.w * 0.12) k.pos = centerPos(k.pos);
-    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreadOf(k.pos) < sMed * 0.95) k.pos = spreadOut(k.pos);
-    k.pos = fixFormation(k.pos);
-  });
-  for (let i = 1; i < S.keys.length; i++) {
-    const p = S.keys[i - 1], k = S.keys[i], gap = k.at - p.at;
-    if (allowSwap) {
-      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
-      const crash = minPathGap(p.pos, k.pos).d < TH.crash, crash2 = minPathGap(p.pos, opt).d < TH.crash;
-      if ((crash && !crash2) || cur - best > Math.max(2, cur * 0.15)) k.pos = opt;
+function neededMove(prev, next) {
+  const maxD = Math.max(...prev.map((p, j) => hyp(p[0] - next[j][0], p[1] - next[j][1])));
+  return Math.max(1, Math.ceil(maxD / TH.comfy / beatSec()));
+}
+// 曲の解析（BPM・頭の位置・盛り上がり）
+function analyzeAudio(ab) {
+  const sr = ab.sampleRate, ch0 = ab.getChannelData(0), ch1 = ab.numberOfChannels > 1 ? ab.getChannelData(1) : null;
+  const hop = 512, nF = Math.floor(ch0.length / hop), fr = sr / hop;
+  const rms = new Float32Array(nF), on = new Float32Array(nF);
+  let prev = 0, lp = 0;
+  for (let f = 0; f < nF; f++) {
+    let s = 0, sl = 0;
+    const b = f * hop;
+    for (let i = 0; i < hop; i++) {
+      const v = ch1 ? (ch0[b + i] + ch1[b + i]) * 0.5 : ch0[b + i];
+      s += v * v;
+      lp += 0.08 * (v - lp);
+      sl += lp * lp;
     }
-    if (k.move > gap) k.move = gap;
-    const v = Math.max(...p.pos.map((q, j) => hyp(q[0] - k.pos[j][0], q[1] - k.pos[j][1]))) / (k.move * beatSec());
-    if (v > TH.speed) k.move = Math.min(gap, Math.max(k.move, neededMove(p.pos, k.pos)));
+    const e = Math.sqrt(s / hop);
+    rms[f] = e;
+    const le = Math.log(1 + 200 * Math.sqrt(sl / hop)) + 0.5 * Math.log(1 + 200 * e);
+    on[f] = Math.max(0, le - prev);
+    prev = le;
   }
-  changed(true);
-  const after = analyze(); const na = after.filter(a => a.lv === 0).length, sa = after.filter(a => a.lv === 1).length;
-  toast(`要修正 ${nb}→${na}件、提案 ${ns}→${sa}件になりました。気に入らなければ「元に戻す」で戻せます。`, 4200);
+  // 平均を引く
+  const win = Math.round(fr * 0.4);
+  const ons = new Float32Array(nF);
+  let acc = 0;
+  for (let f = 0; f < nF; f++) {
+    acc += on[f];
+    if (f >= win) acc -= on[f - win];
+    ons[f] = Math.max(0, on[f] - acc / Math.min(f + 1, win));
+  }
+  const N = Math.min(nF, Math.round(fr * 150)), lag = b => fr * 60 / b;
+  const acAt = L => {
+    const l0 = Math.floor(L), t = L - l0;
+    let s0 = 0, s1 = 0;
+    for (let i = 0; i + l0 + 1 < N; i++) {
+      s0 += ons[i] * ons[i + l0];
+      s1 += ons[i] * ons[i + l0 + 1];
+    }
+    return s0 * (1 - t) + s1 * t;
+  };
+  let best = 120, bs = -1;
+  for (let b = 78; b <= 170; b += 0.5) {
+    const L = lag(b);
+    const sc = acAt(L) + 0.5 * acAt(2 * L) + 0.25 * acAt(4 * L);
+    if (sc > bs) {
+      bs = sc;
+      best = b;
+    }
+  }
+  let fb = best, fphase = 0, fs = -1;
+  for (let b = best - 1; b <= best + 1; b += 0.02) {
+    const L = lag(b);
+    for (let ph = 0; ph < L; ph += 1) {
+      let s = 0;
+      for (let x = ph; x < nF - 1; x += L) {
+        const i = Math.round(x);
+        s += ons[i] + 0.5 * (ons[i + 1] || 0);
+      }
+      if (s > fs) {
+        fs = s;
+        fb = b;
+        fphase = ph;
+      }
+    }
+  }
+  const beat = 60 / fb, phaseT = fphase / fr;
+  let mx = 0;
+  for (let f = 0; f < nF; f++) mx = Math.max(mx, rms[f]);
+  let t0 = 0;
+  for (let f = 0; f < nF; f++) if (rms[f] > mx * 0.15) {
+    t0 = f / fr;
+    break;
+  }
+  let k = Math.ceil((t0 - phaseT) / beat - 0.5);
+  if (k < 0) k = 0;
+  return { bpm: Math.round(fb * 10) / 10, offset: r2(phaseT + k * beat), duration: ab.duration, rms, fr };
+}
+function energyPerEight(a) {
+  const n = Math.max(1, Math.ceil((a.duration - S.offset) / (8 * beatSec()))), out = [];
+  for (let e = 0; e < n; e++) {
+    const t0 = S.offset + e * 8 * beatSec(), t1 = t0 + 8 * beatSec();
+    const f0 = Math.max(0, Math.floor(t0 * a.fr)), f1 = Math.min(a.rms.length, Math.floor(t1 * a.fr));
+    let s = 0;
+    for (let f = f0; f < f1; f++) s += a.rms[f];
+    out.push(f1 > f0 ? s / (f1 - f0) : 0);
+  }
+  const mx = Math.max(...out, 1e-9);
+  return out.map(v => r2(v / mx));
+}
+// 画面の土台・ステージの描画・タイムライン・再生・ドラッグ
+let audioReady = false, analysis = null, wakeLock = null;
+const audio = $('#audio');
+
+function toast(msg, ms = 2600) {
+  const t = $('#toast');
+  t.textContent = msg;
+  t.classList.add('on');
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => t.classList.remove('on'), ms);
+}
+function el(tag, props = {}, kids = []) {
+  const e = document.createElement(tag);
+  for (const [k, v] of Object.entries(props)) {
+    if (k === 'class') e.className = v;
+    else if (k === 'text') e.textContent = v;
+    else if (k.startsWith('on')) e.addEventListener(k.slice(2), v);
+    else e.setAttribute(k, v);
+  }
+  for (const c of [].concat(kids)) if (c != null) e.append(c);
+  return e;
 }
 
 /* ===== 描画 ===== */
@@ -697,28 +1325,62 @@ function stageLayout(w, h, view) {
 }
 function drawStage(c, w, h, count, o) {
   const L = stageLayout(w, h, o.view), W = S.stage.w, D = S.stage.d, { map, sc } = L;
-  c.fillStyle = '#0b0e14'; c.fillRect(0, 0, w, h);
-  c.fillStyle = '#18202d'; c.fillRect(L.ox, L.oy, L.sw, L.sd);
+  c.fillStyle = '#0b0e14';
+  c.fillRect(0, 0, w, h);
+  c.fillStyle = '#18202d';
+  c.fillRect(L.ox, L.oy, L.sw, L.sd);
   c.lineWidth = 1;
-  for (let x = Math.ceil(-W / 2); x <= W / 2; x++) { const [a, b] = map(x, 0), [, d] = map(x, D); c.strokeStyle = x === 0 ? '#3a4a63' : '#232d3d'; c.beginPath(); c.moveTo(a, b); c.lineTo(a, d); c.stroke(); }
-  for (let y = 1; y < D; y++) { const [a, b] = map(-W / 2, y), [e] = map(W / 2, y); c.strokeStyle = '#232d3d'; c.beginPath(); c.moveTo(a, b); c.lineTo(e, b); c.stroke(); }
+  for (let x = Math.ceil(-W / 2); x <= W / 2; x++) {
+    const [a, b] = map(x, 0), [, d] = map(x, D);
+    c.strokeStyle = x === 0 ? '#3a4a63' : '#232d3d';
+    c.beginPath();
+    c.moveTo(a, b);
+    c.lineTo(a, d);
+    c.stroke();
+  }
+  for (let y = 1; y < D; y++) {
+    const [a, b] = map(-W / 2, y), [e] = map(W / 2, y);
+    c.strokeStyle = '#232d3d';
+    c.beginPath();
+    c.moveTo(a, b);
+    c.lineTo(e, b);
+    c.stroke();
+  }
   // 客席側の線と文字
   const [fx1, fy] = map(-W / 2, 0), [fx2] = map(W / 2, 0);
-  c.strokeStyle = '#ffd93d'; c.lineWidth = Math.max(2, sc * 0.05); c.beginPath(); c.moveTo(fx1, fy); c.lineTo(fx2, fy); c.stroke();
+  c.strokeStyle = '#ffd93d';
+  c.lineWidth = Math.max(2, sc * 0.05);
+  c.beginPath();
+  c.moveTo(fx1, fy);
+  c.lineTo(fx2, fy);
+  c.stroke();
   const fs = Math.max(11, Math.min(L.lab * 0.55, 22));
-  c.font = `700 ${fs}px sans-serif`; c.fillStyle = '#ffd93d'; c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.font = `700 ${fs}px sans-serif`;
+  c.fillStyle = '#ffd93d';
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
   c.fillText('客席（正面）', w / 2, o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55);
-  c.font = `${fs * 0.8}px sans-serif`; c.fillStyle = '#7d8aa0';
+  c.font = `${fs * 0.8}px sans-serif`;
+  c.fillStyle = '#7d8aa0';
   const [kx] = map(W / 2 - 0.1, 0), [sx] = map(-W / 2 + 0.1, 0);
   const ly = o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55;
-  c.textAlign = kx > sx ? 'right' : 'left'; c.fillText('上手', kx, ly);
-  c.textAlign = kx > sx ? 'left' : 'right'; c.fillText('下手', sx, ly);
+  c.textAlign = kx > sx ? 'right' : 'left';
+  c.fillText('上手', kx, ly);
+  c.textAlign = kx > sx ? 'left' : 'right';
+  c.fillText('下手', sx, ly);
   const pos = positionsAt(S.keys, count), R = Math.max(8, 0.27 * sc), n = pos.length;
   // ベースの比較
   if (o.compare && S.baseKeys) {
     const bp = positionsAt(S.baseKeys, count);
-    c.setLineDash([4, 4]); c.lineWidth = 1.5;
-    bp.forEach((p, i) => { const [x, y] = map(p[0], p[1]); c.strokeStyle = S.dancers[i].color; c.beginPath(); c.arc(x, y, R * 0.9, 0, 7); c.stroke(); });
+    c.setLineDash([4, 4]);
+    c.lineWidth = 1.5;
+    bp.forEach((p, i) => {
+      const [x, y] = map(p[0], p[1]);
+      c.strokeStyle = S.dancers[i].color;
+      c.beginPath();
+      c.arc(x, y, R * 0.9, 0, 7);
+      c.stroke();
+    });
     c.setLineDash([]);
   }
   // 編集中：前の隊形から
@@ -727,8 +1389,17 @@ function drawStage(c, w, h, count, o) {
     c.lineWidth = 1.5;
     prev.pos.forEach((p, i) => {
       const [x, y] = map(p[0], p[1]), [x2, y2] = map(pos[i][0], pos[i][1]);
-      c.globalAlpha = 0.3; c.fillStyle = S.dancers[i].color; c.beginPath(); c.arc(x, y, R * 0.6, 0, 7); c.fill();
-      c.globalAlpha = 0.45; c.strokeStyle = S.dancers[i].color; c.beginPath(); c.moveTo(x, y); c.lineTo(x2, y2); c.stroke();
+      c.globalAlpha = 0.3;
+      c.fillStyle = S.dancers[i].color;
+      c.beginPath();
+      c.arc(x, y, R * 0.6, 0, 7);
+      c.fill();
+      c.globalAlpha = 0.45;
+      c.strokeStyle = S.dancers[i].color;
+      c.beginPath();
+      c.moveTo(x, y);
+      c.lineTo(x2, y2);
+      c.stroke();
     });
     c.globalAlpha = 1;
   }
@@ -740,11 +1411,32 @@ function drawStage(c, w, h, count, o) {
   arrowsFor.forEach(i => {
     const [x, y] = map(pos[i][0], pos[i][1]), [x2, y2] = map(nextK.pos[i][0], nextK.pos[i][1]);
     if (hyp(x2 - x, y2 - y) < R * 0.8) return;
-    const isMe = i === o.me; c.strokeStyle = S.dancers[i].color; c.globalAlpha = isMe ? 0.95 : 0.4; c.lineWidth = isMe ? 3 : 1.5;
-    c.setLineDash(isMe ? [] : [5, 4]); c.beginPath(); c.moveTo(x, y); c.lineTo(x2, y2); c.stroke(); c.setLineDash([]);
+    const isMe = i === o.me;
+    c.strokeStyle = S.dancers[i].color;
+    c.globalAlpha = isMe ? 0.95 : 0.4;
+    c.lineWidth = isMe ? 3 : 1.5;
+    c.setLineDash(isMe ? [] : [5, 4]);
+    c.beginPath();
+    c.moveTo(x, y);
+    c.lineTo(x2, y2);
+    c.stroke();
+    c.setLineDash([]);
     const a = Math.atan2(y2 - y, x2 - x), hs = isMe ? 12 : 7;
-    c.beginPath(); c.moveTo(x2, y2); c.lineTo(x2 - hs * Math.cos(a - 0.45), y2 - hs * Math.sin(a - 0.45)); c.lineTo(x2 - hs * Math.cos(a + 0.45), y2 - hs * Math.sin(a + 0.45)); c.closePath(); c.fillStyle = S.dancers[i].color; c.fill();
-    if (isMe) { c.globalAlpha = 0.5; c.beginPath(); c.arc(x2, y2, R * 1.05, 0, 7); c.setLineDash([3, 3]); c.stroke(); c.setLineDash([]); }
+    c.beginPath();
+    c.moveTo(x2, y2);
+    c.lineTo(x2 - hs * Math.cos(a - 0.45), y2 - hs * Math.sin(a - 0.45));
+    c.lineTo(x2 - hs * Math.cos(a + 0.45), y2 - hs * Math.sin(a + 0.45));
+    c.closePath();
+    c.fillStyle = S.dancers[i].color;
+    c.fill();
+    if (isMe) {
+      c.globalAlpha = 0.5;
+      c.beginPath();
+      c.arc(x2, y2, R * 1.05, 0, 7);
+      c.setLineDash([3, 3]);
+      c.stroke();
+      c.setLineDash([]);
+    }
     c.globalAlpha = 1;
   });
   // クロスの場所
@@ -753,18 +1445,34 @@ function drawStage(c, w, h, count, o) {
     const mine = o.me >= 0 && (cr.a === o.me || cr.b === o.me);
     if (o.me >= 0 && !mine && !o.ghostPrev) return;
     const [x, y] = map(cr.pt[0], cr.pt[1]), z = mine ? 9 : 6;
-    c.strokeStyle = '#ffd93d'; c.lineWidth = mine ? 3 : 2; c.globalAlpha = mine ? 1 : 0.8;
-    c.beginPath(); c.moveTo(x - z, y - z); c.lineTo(x + z, y + z); c.moveTo(x + z, y - z); c.lineTo(x - z, y + z); c.stroke(); c.globalAlpha = 1;
+    c.strokeStyle = '#ffd93d';
+    c.lineWidth = mine ? 3 : 2;
+    c.globalAlpha = mine ? 1 : 0.8;
+    c.beginPath();
+    c.moveTo(x - z, y - z);
+    c.lineTo(x + z, y + z);
+    c.moveTo(x + z, y - z);
+    c.lineTo(x - z, y + z);
+    c.stroke();
+    c.globalAlpha = 1;
   });
   // ダンサー
   const order = [...Array(n).keys()].sort((a, b) => (a === o.me) - (b === o.me));
   order.forEach(i => {
     const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, rr = isMe ? R * 1.35 : R;
     c.globalAlpha = o.me >= 0 && !isMe ? 0.55 : 1;
-    c.fillStyle = d.color; c.beginPath(); c.arc(x, y, rr, 0, 7); c.fill();
-    c.lineWidth = isMe || i === o.selDancer ? 3 : 1; c.strokeStyle = isMe || i === o.selDancer ? '#fff' : '#0008'; c.stroke();
+    c.fillStyle = d.color;
+    c.beginPath();
+    c.arc(x, y, rr, 0, 7);
+    c.fill();
+    c.lineWidth = isMe || i === o.selDancer ? 3 : 1;
+    c.strokeStyle = isMe || i === o.selDancer ? '#fff' : '#0008';
+    c.stroke();
     if (o.names) {
-      c.fillStyle = '#111'; c.font = `700 ${Math.max(9, rr * 0.78)}px sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      c.fillStyle = '#111';
+      c.font = `700 ${Math.max(9, rr * 0.78)}px sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
       c.fillText(d.name.slice(0, 2), x, y + 0.5);
     }
     c.globalAlpha = 1;
@@ -772,24 +1480,49 @@ function drawStage(c, w, h, count, o) {
   // 照明
   if (o.lights !== false) {
     const Lt = lightAt(count);
-    if (Lt.tint && Lt.tintA > 0.01) { c.globalAlpha = Lt.tintA; c.fillStyle = Lt.tint; c.fillRect(L.ox, L.oy, L.sw, L.sd); c.globalAlpha = 1; }
+    if (Lt.tint && Lt.tintA > 0.01) {
+      c.globalAlpha = Lt.tintA;
+      c.fillStyle = Lt.tint;
+      c.fillRect(L.ox, L.oy, L.sw, L.sd);
+      c.globalAlpha = 1;
+    }
     if (Lt.dark > 0.01) {
-      c.fillStyle = `rgba(0,0,0,${Lt.dark})`; c.beginPath(); c.rect(L.ox, L.oy, L.sw, L.sd);
-      if (Lt.spot >= 0 && pos[Lt.spot]) { const [x, y] = map(pos[Lt.spot][0], pos[Lt.spot][1]), sr = R * 2.6; c.moveTo(x + sr, y); c.arc(x, y, sr, 0, Math.PI * 2, true); }
+      c.fillStyle = `rgba(0,0,0,${Lt.dark})`;
+      c.beginPath();
+      c.rect(L.ox, L.oy, L.sw, L.sd);
+      if (Lt.spot >= 0 && pos[Lt.spot]) {
+        const [x, y] = map(pos[Lt.spot][0], pos[Lt.spot][1]), sr = R * 2.6;
+        c.moveTo(x + sr, y);
+        c.arc(x, y, sr, 0, Math.PI * 2, true);
+      }
       c.fill('evenodd');
       if (Lt.dark > 0.5) pos.forEach((p, i) => { // 暗転中も立ち位置は線で見せる
-        if (i === Lt.spot) return; const [x, y] = map(p[0], p[1]);
-        c.globalAlpha = i === o.me ? 0.95 : 0.5; c.strokeStyle = S.dancers[i].color; c.lineWidth = i === o.me ? 3 : 1.5; c.beginPath(); c.arc(x, y, i === o.me ? R * 1.35 : R, 0, 7); c.stroke();
+        if (i === Lt.spot) return;
+        const [x, y] = map(p[0], p[1]);
+        c.globalAlpha = i === o.me ? 0.95 : 0.5;
+        c.strokeStyle = S.dancers[i].color;
+        c.lineWidth = i === o.me ? 3 : 1.5;
+        c.beginPath();
+        c.arc(x, y, i === o.me ? R * 1.35 : R, 0, 7);
+        c.stroke();
       });
       c.globalAlpha = 1;
     }
     const fs2 = Math.max(11, Math.min(sc * 0.32, 26));
-    c.font = `700 ${fs2}px sans-serif`; c.textBaseline = 'top'; c.textAlign = 'left';
-    if (Lt.name) { c.fillStyle = '#ffd93d'; c.fillText('💡 ' + Lt.name, L.ox + 6, L.oy + 6); }
+    c.font = `700 ${fs2}px sans-serif`;
+    c.textBaseline = 'top';
+    c.textAlign = 'left';
+    if (Lt.name) {
+      c.fillStyle = '#ffd93d';
+      c.fillText('💡 ' + Lt.name, L.ox + 6, L.oy + 6);
+    }
     const nq = nextCue(count, 8);
     if (nq && count >= 0) {
-      const left = Math.ceil(nq.at - count - 1e-6); c.textAlign = 'center'; c.fillStyle = nq.kind === 'memo' ? '#7fe0ff' : '#ffb547';
-      c.font = `800 ${fs2 * 1.15}px sans-serif`; c.fillText(`あと${left}：${nq.name}`, L.ox + L.sw / 2, L.oy + 6);
+      const left = Math.ceil(nq.at - count - 1e-6);
+      c.textAlign = 'center';
+      c.fillStyle = nq.kind === 'memo' ? '#7fe0ff' : '#ffb547';
+      c.font = `800 ${fs2 * 1.15}px sans-serif`;
+      c.fillText(`あと${left}：${nq.name}`, L.ox + L.sw / 2, L.oy + 6);
     }
   }
   return L;
@@ -797,10 +1530,20 @@ function drawStage(c, w, h, count, o) {
 function fitCanvas() {
   const wrap = $('#stageWrap'), dpr = window.devicePixelRatio || 1;
   let w, h;
-  if (document.body.classList.contains('proj')) { w = window.innerWidth; h = window.innerHeight; }
-  else { w = wrap.clientWidth; const aspect = (S.stage.d + 1.3) / (S.stage.w + 0.6); h = Math.round(Math.min(w * aspect, window.innerHeight * 0.58)); }
+  if (document.body.classList.contains('proj')) {
+    w = window.innerWidth;
+    h = window.innerHeight;
+  }
+  else {
+    w = wrap.clientWidth;
+    const aspect = (S.stage.d + 1.3) / (S.stage.w + 0.6);
+    h = Math.round(Math.min(w * aspect, window.innerHeight * 0.58));
+  }
   cv.style.height = h + 'px';
-  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) { cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr); }
+  if (cv.width !== Math.round(w * dpr) || cv.height !== Math.round(h * dpr)) {
+    cv.width = Math.round(w * dpr);
+    cv.height = Math.round(h * dpr);
+  }
   requestRender();
 }
 let lastLayout = null;
@@ -814,17 +1557,27 @@ function render() {
   });
   $('#countDisp').textContent = cLabel(ui.count);
   $('#countBig').textContent = document.body.classList.contains('proj') ? cLabel(ui.count) : '';
-  const t = S.offset + ui.count * beatSec(); $('#timeDisp').textContent = t >= 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : '';
-  renderMeInfo(); renderTimeline();
-  $('#btnPlay').textContent = ui.playing ? '⏸ 停止' : '▶ 再生'; $('#projPlay').textContent = ui.playing ? '⏸' : '▶';
+  const t = S.offset + ui.count * beatSec();
+  $('#timeDisp').textContent = t >= 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : '';
+  renderMeInfo();
+  renderTimeline();
+  $('#btnPlay').textContent = ui.playing ? '⏸ 停止' : '▶ 再生';
+  $('#projPlay').textContent = ui.playing ? '⏸' : '▶';
 }
 function renderMeInfo() {
   const box = $('#meInfo');
-  if (ui.me < 0) { box.style.display = 'none'; return; }
+  if (ui.me < 0) {
+    box.style.display = 'none';
+    return;
+  }
   const i = keyIndexAt(ui.count), nk = S.keys[i + 1], pos = positionsAt(S.keys, ui.count)[ui.me];
-  box.style.display = 'block'; box.textContent = '';
+  box.style.display = 'block';
+  box.textContent = '';
   const nameEl = el('b', { text: S.dancers[ui.me].name, style: `color:${S.dancers[ui.me].color}` });
-  if (!nk) { box.append(nameEl, ` ／ 最後の隊形（${S.keys[i].name}）です`); return; }
+  if (!nk) {
+    box.append(nameEl, ` ／ 最後の隊形（${S.keys[i].name}）です`);
+    return;
+  }
   const dx = nk.pos[ui.me][0] - pos[0], dy = nk.pos[ui.me][1] - pos[1], d = hyp(dx, dy);
   const parts = [];
   if (Math.abs(dx) >= 0.1) parts.push(`${dx > 0 ? '上手' : '下手'}へ${Math.abs(dx).toFixed(1)}m`);
@@ -835,77 +1588,165 @@ function renderMeInfo() {
   const extra = [];
   for (let j = i + 1; j <= Math.min(i + 2, S.keys.length - 1) && extra.length < 2; j++) {
     const cr = crossesInto(j).find(x => (x.a === ui.me || x.b === ui.me) && x.count >= ui.count - 0.5);
-    if (cr) { const other = cr.a === ui.me ? cr.b : cr.a; extra.push(`✕ ${cLabel(cr.count)}ごろ ${S.dancers[other].name} とクロス（${cr.front === ui.me ? 'あなたが前' : 'あなたが後ろ'}を通る）`); }
+    if (cr) {
+      const other = cr.a === ui.me ? cr.b : cr.a;
+      extra.push(`✕ ${cLabel(cr.count)}ごろ ${S.dancers[other].name} とクロス（${cr.front === ui.me ? 'あなたが前' : 'あなたが後ろ'}を通る）`);
+    }
   }
   const nq = nextCue(ui.count);
   if (nq) extra.push(`💡 次のきっかけ ${cLabel(nq.at)}「${nq.name}」（あと${Math.ceil(nq.at - ui.count - 1e-6)}カウント）`);
   extra.forEach(t => box.append(el('div', { text: t, style: 'font-size:13px;color:var(--muted)' })));
 }
-function isEditable() { const k = S.keys[ui.sel]; return !ui.playing && currentTab === 'edit' && k && Math.abs(ui.count - k.at) < 0.01; }
+function isEditable() {
+  const k = S.keys[ui.sel];
+  return !ui.playing && currentTab === 'edit' && k && Math.abs(ui.count - k.at) < 0.01;
+}
 
 /* ===== タイムライン ===== */
 const tl = $('#timeline'), tctx = tl.getContext('2d');
 function renderTimeline() {
   const dpr = window.devicePixelRatio || 1, w = tl.clientWidth, h = tl.clientHeight;
-  if (tl.width !== Math.round(w * dpr) || tl.height !== Math.round(h * dpr)) { tl.width = Math.round(w * dpr); tl.height = Math.round(h * dpr); }
-  const c = tctx; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+  if (tl.width !== Math.round(w * dpr) || tl.height !== Math.round(h * dpr)) {
+    tl.width = Math.round(w * dpr);
+    tl.height = Math.round(h * dpr);
+  }
+  const c = tctx;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.clearRect(0, 0, w, h);
   const total = S.totalEights * 8, px = w / total;
   for (let e = 0; e < S.totalEights; e++) {
-    c.fillStyle = e % 2 ? '#1d2532' : '#202937'; c.fillRect(e * 8 * px, 0, 8 * px, h);
-    if (S.energy && S.energy[e] != null) { const eh = S.energy[e] * (h - 30); c.fillStyle = '#3b4f6d'; c.fillRect(e * 8 * px + 1, h - 4 - eh, 8 * px - 2, eh); }
+    c.fillStyle = e % 2 ? '#1d2532' : '#202937';
+    c.fillRect(e * 8 * px, 0, 8 * px, h);
+    if (S.energy && S.energy[e] != null) {
+      const eh = S.energy[e] * (h - 30);
+      c.fillStyle = '#3b4f6d';
+      c.fillRect(e * 8 * px + 1, h - 4 - eh, 8 * px - 2, eh);
+    }
     const step = S.totalEights > 48 ? 8 : S.totalEights > 24 ? 4 : 2;
-    if (e % step === 0) { c.fillStyle = '#8a96aa'; c.font = '10px sans-serif'; c.textAlign = 'left'; c.textBaseline = 'top'; c.fillText(String(e + 1), e * 8 * px + 2, 2); }
+    if (e % step === 0) {
+      c.fillStyle = '#8a96aa';
+      c.font = '10px sans-serif';
+      c.textAlign = 'left';
+      c.textBaseline = 'top';
+      c.fillText(String(e + 1), e * 8 * px + 2, 2);
+    }
   }
   S.keys.forEach((k, i) => {
     const x = k.at * px, y = 30;
-    if (i > 0) { const ms = Math.max(S.keys[i - 1].at, k.at - k.move); c.strokeStyle = '#ffb547'; c.lineWidth = 3; c.beginPath(); c.moveTo(ms * px, y); c.lineTo(x, y); c.stroke(); }
-    c.fillStyle = i === ui.sel ? '#4fb3ff' : '#e8ecf3'; c.beginPath(); c.arc(x, y, i === ui.sel ? 6 : 4.5, 0, 7); c.fill();
+    if (i > 0) {
+      const ms = Math.max(S.keys[i - 1].at, k.at - k.move);
+      c.strokeStyle = '#ffb547';
+      c.lineWidth = 3;
+      c.beginPath();
+      c.moveTo(ms * px, y);
+      c.lineTo(x, y);
+      c.stroke();
+    }
+    c.fillStyle = i === ui.sel ? '#4fb3ff' : '#e8ecf3';
+    c.beginPath();
+    c.arc(x, y, i === ui.sel ? 6 : 4.5, 0, 7);
+    c.fill();
   });
   (S.cues || []).forEach(q => {
     const x = q.at * px, y = 50, z = q.id === ui.selCue ? 6 : 4.5;
     c.fillStyle = q.kind === 'memo' ? '#7fe0ff' : q.kind === 'black' ? '#000' : q.kind === 'color' ? q.color : '#ffd93d';
-    c.beginPath(); c.moveTo(x, y - z); c.lineTo(x + z, y); c.lineTo(x, y + z); c.lineTo(x - z, y); c.closePath(); c.fill();
-    c.strokeStyle = q.id === ui.selCue ? '#4fb3ff' : '#fff8'; c.lineWidth = 1; c.stroke();
+    c.beginPath();
+    c.moveTo(x, y - z);
+    c.lineTo(x + z, y);
+    c.lineTo(x, y + z);
+    c.lineTo(x - z, y);
+    c.closePath();
+    c.fill();
+    c.strokeStyle = q.id === ui.selCue ? '#4fb3ff' : '#fff8';
+    c.lineWidth = 1;
+    c.stroke();
   });
-  const x = Math.max(0, ui.count) * px; c.strokeStyle = '#ff6b6b'; c.lineWidth = 2; c.beginPath(); c.moveTo(x, 0); c.lineTo(x, h); c.stroke();
+  const x = Math.max(0, ui.count) * px;
+  c.strokeStyle = '#ff6b6b';
+  c.lineWidth = 2;
+  c.beginPath();
+  c.moveTo(x, 0);
+  c.lineTo(x, h);
+  c.stroke();
 }
 function tlSeek(ev) {
   const r = tl.getBoundingClientRect(), total = S.totalEights * 8, c = ((ev.clientX - r.left) / r.width) * total;
   let hit = -1;
-  S.keys.forEach((k, i) => { if (Math.abs(k.at - c) * r.width / total < 12 && Math.abs(ev.clientY - r.top - 30) < 18) hit = i; });
-  if (hit >= 0) { selectKey(hit); return; }
+  S.keys.forEach((k, i) => {
+    if (Math.abs(k.at - c) * r.width / total < 12 && Math.abs(ev.clientY - r.top - 30) < 18) hit = i;
+  });
+  if (hit >= 0) {
+    selectKey(hit);
+    return;
+  }
   const cq = (S.cues || []).find(q => Math.abs(q.at - c) * r.width / total < 12 && Math.abs(ev.clientY - r.top - 50) < 12);
-  if (cq) { selectCue(cq.id); return; }
+  if (cq) {
+    selectCue(cq.id);
+    return;
+  }
   setCount(Math.max(0, Math.min(total, Math.round(c))));
-  if (!ui.playing) { ui.sel = keyIndexAt(ui.count); renderKeyChips(); fillKeyForm(); }
+  if (!ui.playing) {
+    ui.sel = keyIndexAt(ui.count);
+    renderKeyChips();
+    fillKeyForm();
+  }
 }
 let tlDown = false;
-tl.addEventListener('pointerdown', e => { tlDown = true; tl.setPointerCapture(e.pointerId); tlSeek(e); });
-tl.addEventListener('pointermove', e => { if (tlDown) { const r = tl.getBoundingClientRect(); setCount(Math.max(0, Math.round(((e.clientX - r.left) / r.width) * S.totalEights * 8))); } });
+tl.addEventListener('pointerdown', e => {
+  tlDown = true;
+  tl.setPointerCapture(e.pointerId);
+  tlSeek(e);
+});
+tl.addEventListener('pointermove', e => {
+  if (tlDown) {
+    const r = tl.getBoundingClientRect();
+    setCount(Math.max(0, Math.round(((e.clientX - r.left) / r.width) * S.totalEights * 8)));
+  }
+});
 tl.addEventListener('pointerup', () => { tlDown = false; });
 
 /* ===== 再生 ===== */
 function setCount(c) {
   ui.count = c;
-  if (audioReady) { const t = S.offset + c * beatSec(); audio.currentTime = Math.max(0, t); }
-  if (ui.playing) { ui.clockT0 = performance.now(); ui.clockC0 = c; }
+  if (audioReady) {
+    const t = S.offset + c * beatSec();
+    audio.currentTime = Math.max(0, t);
+  }
+  if (ui.playing) {
+    ui.clockT0 = performance.now();
+    ui.clockC0 = c;
+  }
   requestRender();
 }
 async function play() {
   if (ui.playing) return;
   if (ui.count >= S.totalEights * 8 - 0.5) setCount(0);
-  ui.playing = true; ui.clockT0 = performance.now(); ui.clockC0 = ui.count; lastBeat = null;
+  ui.playing = true;
+  ui.clockT0 = performance.now();
+  ui.clockC0 = ui.count;
+  lastBeat = null;
   if (audioReady) {
-    audio.playbackRate = ui.rate; const t = S.offset + ui.count * beatSec();
+    audio.playbackRate = ui.rate;
+    const t = S.offset + ui.count * beatSec();
     if (t < 0) { audio.currentTime = 0; } else audio.currentTime = t;
-    try { await audio.play(); } catch (e) { toast('曲を再生できませんでした。もう一度押してください'); ui.playing = false; }
+    try { await audio.play(); } catch (e) {
+      toast('曲を再生できませんでした。もう一度押してください');
+      ui.playing = false;
+    }
   }
-  try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { }
+  try {
+    if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen');
+  } catch (e) { }
   requestRender();
 }
 function pause() {
-  if (!ui.playing) return; ui.playing = false; if (audioReady) audio.pause();
-  try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
+  if (!ui.playing) return;
+  ui.playing = false;
+  if (audioReady) audio.pause();
+  try { if (wakeLock) {
+    wakeLock.release();
+    wakeLock = null;
+  } } catch (e) { }
   if (ui.recording) stopRecording();
   requestRender();
 }
@@ -917,16 +1758,33 @@ function tick() {
     const bi = Math.floor(ui.count);
     if ($('#clickOn').checked && bi >= 0 && lastBeat !== null && bi !== lastBeat) clickSound(bi % 8 === 0);
     lastBeat = bi;
-    if (ui.count >= S.totalEights * 8 || (audioReady && audio.ended)) { ui.count = Math.min(ui.count, S.totalEights * 8); pause(); }
-    if (!isEditable() && currentTab === 'edit') { const k = keyIndexAt(ui.count); if (k !== ui.sel) { ui.sel = k; renderKeyChips(); fillKeyForm(); } }
+    if (ui.count >= S.totalEights * 8 || (audioReady && audio.ended)) {
+      ui.count = Math.min(ui.count, S.totalEights * 8);
+      pause();
+    }
+    if (!isEditable() && currentTab === 'edit') {
+      const k = keyIndexAt(ui.count);
+      if (k !== ui.sel) {
+        ui.sel = k;
+        renderKeyChips();
+        fillKeyForm();
+      }
+    }
     needRender = true;
   }
-  if (needRender) { needRender = false; render(); if (ui.recording) drawRecFrame(); }
+  if (needRender) {
+    needRender = false;
+    render();
+    if (ui.recording) drawRecFrame();
+  }
   requestAnimationFrame(tick);
 }
 
 /* ===== ステージ上のドラッグ ===== */
-function ptr(e) { const r = cv.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; }
+function ptr(e) {
+  const r = cv.getBoundingClientRect();
+  return [e.clientX - r.left, e.clientY - r.top];
+}
 cv.addEventListener('pointerdown', e => {
   if (!isEditable()) {
     if (currentTab === 'edit' && !ui.playing) { toast('上の一覧で隊形を選ぶと動かせます'); }
@@ -934,166 +1792,448 @@ cv.addEventListener('pointerdown', e => {
   }
   const [x, y] = ptr(e), k = S.keys[ui.sel], R = Math.max(8, 0.27 * lastLayout.sc) * 1.6;
   let best = -1, bd = 1e9;
-  k.pos.forEach((p, i) => { const [sx, sy] = lastLayout.map(p[0], p[1]); const d = hyp(sx - x, sy - y); if (d < bd) { bd = d; best = i; } });
-  if (best >= 0 && bd < Math.max(R, 22)) { pushUndo(); ui.drag = best; ui.selDancer = best; cv.setPointerCapture(e.pointerId); requestRender(); e.preventDefault(); }
-  else { ui.selDancer = -1; requestRender(); }
+  k.pos.forEach((p, i) => {
+    const [sx, sy] = lastLayout.map(p[0], p[1]);
+    const d = hyp(sx - x, sy - y);
+    if (d < bd) {
+      bd = d;
+      best = i;
+    }
+  });
+  if (best >= 0 && bd < Math.max(R, 22)) {
+    pushUndo();
+    ui.drag = best;
+    ui.selDancer = best;
+    cv.setPointerCapture(e.pointerId);
+    requestRender();
+    e.preventDefault();
+  }
+  else {
+    ui.selDancer = -1;
+    requestRender();
+  }
 });
 cv.addEventListener('pointermove', e => {
   if (ui.drag == null) return;
-  const [x, y] = ptr(e), k = S.keys[ui.sel]; let [mx, my] = lastLayout.inv(x, y);
-  if ($('#snap').checked) { mx = Math.round(mx * 4) / 4; my = Math.round(my * 4) / 4; }
-  const W = S.stage.w, D = S.stage.d; mx = Math.min(W / 2, Math.max(-W / 2, mx)); my = Math.min(D, Math.max(0, my));
-  k.pos[ui.drag] = [r2(mx), r2(my)]; requestRender();
+  const [x, y] = ptr(e), k = S.keys[ui.sel];
+  let [mx, my] = lastLayout.inv(x, y);
+  if ($('#snap').checked) {
+    mx = Math.round(mx * 4) / 4;
+    my = Math.round(my * 4) / 4;
+  }
+  const W = S.stage.w, D = S.stage.d;
+  mx = Math.min(W / 2, Math.max(-W / 2, mx));
+  my = Math.min(D, Math.max(0, my));
+  k.pos[ui.drag] = [r2(mx), r2(my)];
+  requestRender();
 });
-const endDrag = () => { if (ui.drag != null) { ui.drag = null; changed(false); } };
-cv.addEventListener('pointerup', endDrag); cv.addEventListener('pointercancel', endDrag);
+const endDrag = () => { if (ui.drag != null) {
+  ui.drag = null;
+  changed(false);
+} };
+cv.addEventListener('pointerup', endDrag);
+cv.addEventListener('pointercancel', endDrag);
+// 編集・照明・アドバイス・練習・書き出しの各タブ
+function undo() {
+  const t = undoStack.pop();
+  if (!t) {
+    toast('戻せる操作はありません');
+    return;
+  }
+  const o = JSON.parse(t);
+  S.keys = o.keys;
+  S.baseKeys = o.baseKeys;
+  S.dancers = o.dancers;
+  S.cues = o.cues || [];
+  ui.sel = Math.min(ui.sel, S.keys.length - 1);
+  changed(true);
+  toast('1つ前に戻しました');
+}
+function changed(all) {
+  sortKeys();
+  save();
+  if (all) refreshAll();
+  else {
+    renderKeyChips();
+    renderAdvice();
+  }
+  requestRender();
+}
 
 /* ===== 編集タブ ===== */
 let currentTab = 'edit';
-function selectKey(i) { ui.sel = i; pause(); setCount(S.keys[i].at); renderKeyChips(); fillKeyForm(); }
+function selectKey(i) {
+  ui.sel = i;
+  pause();
+  setCount(S.keys[i].at);
+  renderKeyChips();
+  fillKeyForm();
+}
 function renderKeyChips() {
-  const box = $('#keyChips'); box.textContent = '';
-  const adv = analyze(), bad = {}; adv.forEach(a => { if (a.lv === 0 && a.key >= 0) bad[a.key] = (bad[a.key] || 0) + 1; });
+  const box = $('#keyChips');
+  box.textContent = '';
+  const adv = analyze(), bad = {};
+  adv.forEach(a => { if (a.lv === 0 && a.key >= 0) bad[a.key] = (bad[a.key] || 0) + 1; });
   S.keys.forEach((k, i) => {
     const b = el('button', { class: 'chip' + (i === ui.sel ? ' on' : ''), onclick: () => selectKey(i) }, [`${cLabel(k.at)} ${k.name}`]);
     if (bad[i]) b.append(el('span', { class: 'bad', text: String(bad[i]) }));
     box.append(b);
   });
-  const on = box.children[ui.sel]; if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  const on = box.children[ui.sel];
+  if (on && on.scrollIntoView) on.scrollIntoView({ block: 'nearest', inline: 'nearest' });
 }
 function fillKeyForm() {
-  const k = S.keys[ui.sel]; if (!k) return;
-  $('#kName').value = k.name; $('#kEight').value = Math.floor(k.at / 8) + 1; $('#kCount').value = k.at % 8 + 1; $('#kMove').value = k.move;
+  const k = S.keys[ui.sel];
+  if (!k) return;
+  $('#kName').value = k.name;
+  $('#kEight').value = Math.floor(k.at / 8) + 1;
+  $('#kCount').value = k.at % 8 + 1;
+  $('#kMove').value = k.move;
   $('#kMove').disabled = ui.sel === 0;
 }
-$('#kName').addEventListener('change', e => { pushUndo(); S.keys[ui.sel].name = e.target.value.slice(0, 20) || '隊形'; changed(false); });
-function atFromForm() { const e = Math.max(1, parseInt($('#kEight').value) || 1), c = Math.min(8, Math.max(1, parseInt($('#kCount').value) || 1)); return (e - 1) * 8 + (c - 1); }
+$('#kName').addEventListener('change', e => {
+  pushUndo();
+  S.keys[ui.sel].name = e.target.value.slice(0, 20) || '隊形';
+  changed(false);
+});
+function atFromForm() {
+  const e = Math.max(1, parseInt($('#kEight').value) || 1), c = Math.min(8, Math.max(1, parseInt($('#kCount').value) || 1));
+  return (e - 1) * 8 + (c - 1);
+}
 ['#kEight', '#kCount'].forEach(s => $(s).addEventListener('change', () => {
-  const at = atFromForm(); if (S.keys.some((k, i) => i !== ui.sel && k.at === at)) { toast('同じ時刻に別の隊形があります'); fillKeyForm(); return; }
-  pushUndo(); S.keys[ui.sel].at = at; if (at >= S.totalEights * 8) S.totalEights = Math.floor(at / 8) + 2;
-  changed(true); setCount(S.keys[ui.sel].at);
+  const at = atFromForm();
+  if (S.keys.some((k, i) => i !== ui.sel && k.at === at)) {
+    toast('同じ時刻に別の隊形があります');
+    fillKeyForm();
+    return;
+  }
+  pushUndo();
+  S.keys[ui.sel].at = at;
+  if (at >= S.totalEights * 8) S.totalEights = Math.floor(at / 8) + 2;
+  changed(true);
+  setCount(S.keys[ui.sel].at);
 }));
-$('#kMove').addEventListener('change', e => { pushUndo(); S.keys[ui.sel].move = Math.max(1, Math.min(64, parseInt(e.target.value) || 4)); changed(false); requestRender(); });
+$('#kMove').addEventListener('change', e => {
+  pushUndo();
+  S.keys[ui.sel].move = Math.max(1, Math.min(64, parseInt(e.target.value) || 4));
+  changed(false);
+  requestRender();
+});
 $('#btnAddKey').addEventListener('click', () => {
-  const k = S.keys[ui.sel]; let at = Math.round(ui.count);
+  const k = S.keys[ui.sel];
+  let at = Math.round(ui.count);
   if (S.keys.some(x => x.at === at)) at = k.at + 16;
   while (S.keys.some(x => x.at === at)) at += 8;
   pushUndo();
   const nk = { id: newId(), name: '隊形' + (S.keys.length + 1), at, move: 4, pos: clone(positionsAt(S.keys, at)) };
-  S.keys.push(nk); if (at >= S.totalEights * 8) S.totalEights = Math.floor(at / 8) + 2;
-  sortKeys(); ui.sel = S.keys.indexOf(nk); changed(true); setCount(at);
+  S.keys.push(nk);
+  if (at >= S.totalEights * 8) S.totalEights = Math.floor(at / 8) + 2;
+  sortKeys();
+  ui.sel = S.keys.indexOf(nk);
+  changed(true);
+  setCount(at);
   toast('今の立ち位置をコピーした隊形を追加しました。丸を動かすか「形を当てはめる」で形を作ってください', 3600);
 });
 $('#btnDelKey').addEventListener('click', () => {
-  if (S.keys.length <= 1) { toast('最後の1つは消せません'); return; }
-  ask(`「${S.keys[ui.sel].name}」を削除しますか？`, '削除する', () => { pushUndo(); S.keys.splice(ui.sel, 1); ui.sel = Math.max(0, ui.sel - 1); changed(true); setCount(S.keys[ui.sel].at); });
+  if (S.keys.length <= 1) {
+    toast('最後の1つは消せません');
+    return;
+  }
+  ask(`「${S.keys[ui.sel].name}」を削除しますか？`, '削除する', () => {
+    pushUndo();
+    S.keys.splice(ui.sel, 1);
+    ui.sel = Math.max(0, ui.sel - 1);
+    changed(true);
+    setCount(S.keys[ui.sel].at);
+  });
 });
-$('#btnUndo').addEventListener('click', undo); $('#btnUndo2').addEventListener('click', undo);
+$('#btnUndo').addEventListener('click', undo);
+$('#btnUndo2').addEventListener('click', undo);
 Object.keys(TEMPLATES).forEach(t => $('#tplSel').append(el('option', { value: t, text: t })));
 $('#btnTpl').addEventListener('click', () => {
   const k = S.keys[ui.sel], spots = TEMPLATES[$('#tplSel').value](S.dancers.length, S.stage.w, S.stage.d);
-  pushUndo(); const from = ui.sel > 0 ? S.keys[ui.sel - 1].pos : k.pos;
-  k.pos = assignSpots(from, spots).map(p => [r2(p[0]), r2(p[1])]); k.pos = clampPos(k.pos);
+  pushUndo();
+  const from = ui.sel > 0 ? S.keys[ui.sel - 1].pos : k.pos;
+  k.pos = assignSpots(from, spots).map(p => [r2(p[0]), r2(p[1])]);
+  k.pos = clampPos(k.pos);
   if (k.name.startsWith('隊形')) k.name = $('#tplSel').value.replace(/（.*）/, '');
-  changed(true); toast('前の隊形から近い人が近い場所に行くように割り当てました');
+  changed(true);
+  toast('前の隊形から近い人が近い場所に行くように割り当てました');
 });
-$('#btnMirror').addEventListener('click', () => { pushUndo(); const k = S.keys[ui.sel]; k.pos = k.pos.map(p => [-p[0], p[1]]); changed(false); });
-$('#btnCenter').addEventListener('click', () => { pushUndo(); const k = S.keys[ui.sel]; k.pos = centerPos(k.pos); changed(false); });
+$('#btnMirror').addEventListener('click', () => {
+  pushUndo();
+  const k = S.keys[ui.sel];
+  k.pos = k.pos.map(p => [-p[0], p[1]]);
+  changed(false);
+});
+$('#btnCenter').addEventListener('click', () => {
+  pushUndo();
+  const k = S.keys[ui.sel];
+  k.pos = centerPos(k.pos);
+  changed(false);
+});
 
 /* 照明・きっかけ */
 Object.entries(LIGHT_KINDS).forEach(([k, v]) => $('#cKind').append(el('option', { value: k, text: v })));
-function fillCueTargets() { const s = $('#cTarget'); s.textContent = ''; s.append(el('option', { value: '-1', text: '（なし）' })); S.dancers.forEach((d, i) => s.append(el('option', { value: String(i), text: d.name }))); }
+function fillCueTargets() {
+  const s = $('#cTarget');
+  s.textContent = '';
+  s.append(el('option', { value: '-1', text: '（なし）' }));
+  S.dancers.forEach((d, i) => s.append(el('option', { value: String(i), text: d.name })));
+}
 function renderCueChips() {
-  const box = $('#cueChips'); box.textContent = '';
+  const box = $('#cueChips');
+  box.textContent = '';
   if (!S.cues.length) box.append(el('span', { class: 'muted', text: 'まだありません' }));
-  S.cues.forEach(q => box.append(el('button', { class: 'chip' + (q.id === ui.selCue ? ' on' : ''), onclick: () => selectCue(q.id) }, [`${cLabel(q.at)} ${q.kind === 'memo' ? '♪' : '💡'}${q.name}`])));
+  S.cues.forEach(q => box.append(el('button',
+    { class: 'chip' + (q.id === ui.selCue ? ' on' : ''), onclick: () => selectCue(q.id) },
+    [`${cLabel(q.at)} ${q.kind === 'memo' ? '♪' : '💡'}${q.name}`])));
 }
 function selectCue(id) {
-  const q = S.cues.find(x => x.id === id); if (!q) return; ui.selCue = id; pause(); setCount(q.at);
-  $('#cKind').value = q.kind; $('#cName').value = q.name; $('#cColor').value = q.color; $('#cTarget').value = String(q.target); $('#cFade').value = q.fade;
-  $('#cEight').value = Math.floor(q.at / 8) + 1; $('#cCount').value = q.at % 8 + 1; renderCueChips();
+  const q = S.cues.find(x => x.id === id);
+  if (!q) return;
+  ui.selCue = id;
+  pause();
+  setCount(q.at);
+  $('#cKind').value = q.kind;
+  $('#cName').value = q.name;
+  $('#cColor').value = q.color;
+  $('#cTarget').value = String(q.target);
+  $('#cFade').value = q.fade;
+  $('#cEight').value = Math.floor(q.at / 8) + 1;
+  $('#cCount').value = q.at % 8 + 1;
+  renderCueChips();
 }
 function cueFromForm(at) {
   const kind = $('#cKind').value;
-  return { kind, name: ($('#cName').value.trim() || LIGHT_KINDS[kind]).slice(0, 20), color: $('#cColor').value, target: parseInt($('#cTarget').value), fade: Math.max(0, Math.min(32, parseInt($('#cFade').value) || 0)), at };
+  return {
+    kind, name: ($('#cName').value.trim() || LIGHT_KINDS[kind]).slice(0, 20),
+    color: $('#cColor').value, target: parseInt($('#cTarget').value),
+    fade: Math.max(0, Math.min(32, parseInt($('#cFade').value) || 0)), at };
 }
 $('#btnAddCue').addEventListener('click', () => {
-  const at = Math.max(0, Math.round(ui.count)); pushUndo();
-  const q = Object.assign({ id: newId() }, cueFromForm(at)); if (q.kind === 'spot' && q.target < 0) q.target = ui.me >= 0 ? ui.me : 0;
-  S.cues.push(q); S.cues.sort((a, b) => a.at - b.at); ui.selCue = q.id; save(); renderCueChips(); renderAdvice(); requestRender(); toast(`${cLabel(at)} に「${q.name}」を追加しました`);
+  const at = Math.max(0, Math.round(ui.count));
+  pushUndo();
+  const q = Object.assign({ id: newId() }, cueFromForm(at));
+  if (q.kind === 'spot' && q.target < 0) q.target = ui.me >= 0 ? ui.me : 0;
+  S.cues.push(q);
+  S.cues.sort((a, b) => a.at - b.at);
+  ui.selCue = q.id;
+  save();
+  renderCueChips();
+  renderAdvice();
+  requestRender();
+  toast(`${cLabel(at)} に「${q.name}」を追加しました`);
 });
 $('#btnUpdCue').addEventListener('click', () => {
-  const q = S.cues.find(x => x.id === ui.selCue); if (!q) { toast('先に上の一覧から選んでください'); return; }
-  pushUndo(); const e = Math.max(1, parseInt($('#cEight').value) || 1), cc = Math.min(8, Math.max(1, parseInt($('#cCount').value) || 1));
-  Object.assign(q, cueFromForm((e - 1) * 8 + cc - 1)); S.cues.sort((a, b) => a.at - b.at); save(); renderCueChips(); requestRender(); setCount(q.at); toast('更新しました');
+  const q = S.cues.find(x => x.id === ui.selCue);
+  if (!q) {
+    toast('先に上の一覧から選んでください');
+    return;
+  }
+  pushUndo();
+  const e = Math.max(1, parseInt($('#cEight').value) || 1), cc = Math.min(8, Math.max(1, parseInt($('#cCount').value) || 1));
+  Object.assign(q, cueFromForm((e - 1) * 8 + cc - 1));
+  S.cues.sort((a, b) => a.at - b.at);
+  save();
+  renderCueChips();
+  requestRender();
+  setCount(q.at);
+  toast('更新しました');
 });
 $('#btnDelCue').addEventListener('click', () => {
-  const i = S.cues.findIndex(x => x.id === ui.selCue); if (i < 0) { toast('先に上の一覧から選んでください'); return; }
-  pushUndo(); S.cues.splice(i, 1); ui.selCue = null; save(); renderCueChips(); requestRender();
+  const i = S.cues.findIndex(x => x.id === ui.selCue);
+  if (i < 0) {
+    toast('先に上の一覧から選んでください');
+    return;
+  }
+  pushUndo();
+  S.cues.splice(i, 1);
+  ui.selCue = null;
+  save();
+  renderCueChips();
+  requestRender();
 });
 let clickCtx = null, lastBeat = null;
 function clickSound(strong) {
   try {
     if (!clickCtx) clickCtx = new (window.AudioContext || window.webkitAudioContext)();
     const o = clickCtx.createOscillator(), g = clickCtx.createGain(), t = clickCtx.currentTime;
-    o.frequency.value = strong ? 1600 : 1000; g.gain.setValueAtTime(strong ? 0.5 : 0.3, t); g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
-    o.connect(g); g.connect(clickCtx.destination); o.start(t); o.stop(t + 0.07);
+    o.frequency.value = strong ? 1600 : 1000;
+    g.gain.setValueAtTime(strong ? 0.5 : 0.3, t);
+    g.gain.exponentialRampToValueAtTime(0.001, t + 0.06);
+    o.connect(g);
+    g.connect(clickCtx.destination);
+    o.start(t);
+    o.stop(t + 0.07);
   } catch (e) { }
 }
-$('#clickOn').addEventListener('change', e => { if (e.target.checked) { try { if (!clickCtx) clickCtx = new (window.AudioContext || window.webkitAudioContext)(); clickCtx.resume(); } catch (x) { } } });
+$('#clickOn').addEventListener('change', e => {
+  if (e.target.checked) {
+    try {
+      if (!clickCtx) clickCtx = new (window.AudioContext || window.webkitAudioContext)();
+      clickCtx.resume();
+    } catch (x) { }
+  }
+});
+
 
 /* ===== アドバイスタブ ===== */
 function renderAdvice() {
-  const list = $('#advList'), adv = analyze(); list.textContent = '';
-  const c = [0, 0, 0]; adv.forEach(a => c[a.lv]++);
-  const sm = $('#advSummary'); sm.textContent = '';
-  sm.append(el('span', {}, [el('b', { text: String(c[0]), style: 'color:var(--red)' }), ' 要修正']), el('span', {}, [el('b', { text: String(c[1]), style: 'color:var(--amber)' }), ' 提案']), el('span', {}, [el('b', { text: String(c[2]) }), ' 参考']));
+  const list = $('#advList'), adv = analyze();
+  list.textContent = '';
+  const c = [0, 0, 0];
+  adv.forEach(a => c[a.lv]++);
+  const sm = $('#advSummary');
+  sm.textContent = '';
+  sm.append(
+    el('span', {}, [el('b', { text: String(c[0]), style: 'color:var(--red)' }), ' 要修正']),
+    el('span', {}, [el('b', { text: String(c[1]), style: 'color:var(--amber)' }), ' 提案']),
+    el('span', {}, [el('b', { text: String(c[2]) }), ' 参考']));
   if (S.baseKeys) sm.append(el('span', { class: 'muted', text: '（ベースを保存済み）' }));
   if (!adv.length) list.append(el('div', { class: 'card', text: '気になる所は見つかりませんでした。完成形です。' }));
   adv.forEach(a => {
-    const where = a.key >= 0 ? el('span', { class: 'where', text: `${cLabel(S.keys[a.key].at)} ${S.keys[a.key].name}`, onclick: () => { switchTab('edit'); selectKey(a.key); } }) : null;
+    const where = a.key >= 0 ? el('span', { class: 'where', text: `${cLabel(S.keys[a.key].at)} ${S.keys[a.key].name}`, onclick: () => {
+      switchTab('edit');
+      selectKey(a.key);
+    } }) : null;
     const body = el('div', { class: 'body' }, [where ? el('div', {}, [where]) : null, el('div', { text: a.msg })]);
     const row = el('div', { class: 'adv l' + a.lv }, [el('span', { class: 'tag', text: ['要修正', '提案', '参考'][a.lv] }), body]);
-    if (a.fix) row.append(el('button', { class: 'small', text: a.fixLabel, onclick: () => { pushUndo(); if (!S.baseKeys) S.baseKeys = clone(S.keys); a.fix(); changed(true); toast('直しました（元に戻すで戻せます）'); } }));
+    if (a.fix) row.append(el('button', { class: 'small', text: a.fixLabel, onclick: () => {
+      pushUndo();
+      if (!S.baseKeys) S.baseKeys = clone(S.keys);
+      a.fix();
+      changed(true);
+      toast('直しました（元に戻すで戻せます）');
+    } }));
     list.append(row);
   });
 }
 $('#btnImprove').addEventListener('click', autoImprove);
-$('#compare').addEventListener('change', e => { ui.compare = e.target.checked; if (ui.compare && !S.baseKeys) toast('まだ改善していないので、ベースはありません'); requestRender(); });
-$('#btnRestoreBase').addEventListener('click', () => { if (!S.baseKeys) { toast('ベースは保存されていません'); return; } pushUndo(); S.keys = clone(S.baseKeys); ui.sel = 0; changed(true); toast('ベースに戻しました'); });
-$('#btnSetBase').addEventListener('click', () => { pushUndo(); S.baseKeys = clone(S.keys); changed(true); toast('今の形をベースとして保存しました'); });
+$('#compare').addEventListener('change', e => {
+  ui.compare = e.target.checked;
+  if (ui.compare && !S.baseKeys) toast('まだ改善していないので、ベースはありません');
+  requestRender();
+});
+$('#btnRestoreBase').addEventListener('click', () => {
+  if (!S.baseKeys) {
+    toast('ベースは保存されていません');
+    return;
+  }
+  pushUndo();
+  S.keys = clone(S.baseKeys);
+  ui.sel = 0;
+  changed(true);
+  toast('ベースに戻しました');
+});
+$('#btnSetBase').addEventListener('click', () => {
+  pushUndo();
+  S.baseKeys = clone(S.keys);
+  changed(true);
+  toast('今の形をベースとして保存しました');
+});
 $('#btnAiText').addEventListener('click', async () => {
   const adv = analyze(), L = [];
   L.push(`ダンスのフォーメーションについて、振付の観点で改善案をください。`, `作品：${S.title} ／ ${S.dancers.length}人 ／ ステージ 横${S.stage.w}m×奥行${S.stage.d}m ／ BPM ${S.bpm} ／ 長さ ${S.totalEights}×8カウント`,
     `座標：x はステージ中央が0で、客席から見て右（上手）がプラス。y は客席側の端が0で、奥へ行くほど大きい（単位 m）。`, '');
-  S.keys.forEach(k => { L.push(`■ ${cLabel(k.at)}「${k.name}」（移動 ${k.move}カウント）`); L.push(k.pos.map((p, i) => `${S.dancers[i].name}(${p[0].toFixed(1)},${p[1].toFixed(1)})`).join(' ')); });
-  if (S.cues && S.cues.length) L.push('', '照明・きっかけ：' + S.cues.map(q => `${cLabel(q.at)} ${LIGHT_KINDS[q.kind]}「${q.name}」${q.kind === 'spot' && q.target >= 0 ? '→' + S.dancers[q.target].name : ''}${q.fade ? `（フェード${q.fade}）` : ''}`).join(' ／ '));
+  S.keys.forEach(k => {
+    L.push(`■ ${cLabel(k.at)}「${k.name}」（移動 ${k.move}カウント）`);
+    L.push(k.pos.map((p, i) => `${S.dancers[i].name}(${p[0].toFixed(1)},${p[1].toFixed(1)})`).join(' '));
+  });
+  if (S.cues && S.cues.length) L.push('',
+    '照明・きっかけ：' + S.cues.map(q => `${cLabel(q.at)} ${LIGHT_KINDS[q.kind]}「${q.name}」`
+      + `${q.kind === 'spot' && q.target >= 0 ? '→' + S.dancers[q.target].name : ''}${q.fade ? `（フェード${q.fade}）` : ''}`).join(' ／ '));
   if (S.energy) L.push('', '曲の盛り上がり（8カウントごと、0〜1）：' + S.energy.map(e => e.toFixed(2)).join(' '));
-  L.push('', 'アプリが自動で見つけた点：'); adv.forEach(a => L.push(`- [${['要修正', '提案', '参考'][a.lv]}] ${a.key >= 0 ? cLabel(S.keys[a.key].at) + ' ' : ''}${a.msg}`));
+  L.push('', 'アプリが自動で見つけた点：');
+  adv.forEach(a => L.push(`- [${['要修正', '提案', '参考'][a.lv]}] ${a.key >= 0 ? cLabel(S.keys[a.key].at) + ' ' : ''}${a.msg}`));
   L.push('', '見せ方・流れ・センターの使い方などの意見と、直した後の座標を同じ書き方で返してください。');
   const txt = L.join('\n');
-  try { await navigator.clipboard.writeText(txt); toast('コピーしました。Claude や ChatGPT に貼り付けてください'); }
-  catch (e) { $('#pasteJson').value = txt; switchTab('setup'); toast('自動でコピーできなかったので、設定タブの入力欄に入れました'); }
+  try {
+    await navigator.clipboard.writeText(txt);
+    toast('コピーしました。Claude や ChatGPT に貼り付けてください');
+  }
+  catch (e) {
+    $('#pasteJson').value = txt;
+    switchTab('setup');
+    toast('自動でコピーできなかったので、設定タブの入力欄に入れました');
+  }
 });
 $('#allowSwap').addEventListener('change', () => { });
 
+function autoImprove() {
+  const before = analyze();
+  const nb = before.filter(a => a.lv === 0).length, ns = before.filter(a => a.lv === 1).length;
+  pushUndo();
+  if (!S.baseKeys) S.baseKeys = clone(S.keys);
+  const allowSwap = $('#allowSwap').checked;
+  const energies = S.keys.map((_, i) => keyEnergy(i)), eS = energies.filter(e => e != null).sort((a, b) => a - b);
+  const eHigh = eS.length ? eS[Math.floor(eS.length * 0.7)] : null;
+  const sMed = [...S.keys.map(k => spreadOf(k.pos))].sort((a, b) => a - b)[Math.floor(S.keys.length / 2)];
+  S.keys.forEach((k, i) => {
+    k.pos = clampPos(k.pos);
+    const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length;
+    if (Math.abs(cx) > S.stage.w * 0.12) k.pos = centerPos(k.pos);
+    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreadOf(k.pos) < sMed * 0.95) k.pos = spreadOut(k.pos);
+    k.pos = fixFormation(k.pos);
+  });
+  for (let i = 1; i < S.keys.length; i++) {
+    const p = S.keys[i - 1], k = S.keys[i], gap = k.at - p.at;
+    if (allowSwap) {
+      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
+      const crash = minPathGap(p.pos, k.pos).d < TH.crash, crash2 = minPathGap(p.pos, opt).d < TH.crash;
+      if ((crash && !crash2) || cur - best > Math.max(2, cur * 0.15)) k.pos = opt;
+    }
+    if (k.move > gap) k.move = gap;
+    const v = Math.max(...p.pos.map((q, j) => hyp(q[0] - k.pos[j][0], q[1] - k.pos[j][1]))) / (k.move * beatSec());
+    if (v > TH.speed) k.move = Math.min(gap, Math.max(k.move, neededMove(p.pos, k.pos)));
+  }
+  changed(true);
+  const after = analyze();
+  const na = after.filter(a => a.lv === 0).length, sa = after.filter(a => a.lv === 1).length;
+  toast(`要修正 ${nb}→${na}件、提案 ${ns}→${sa}件になりました。気に入らなければ「元に戻す」で戻せます。`, 4200);
+}
+
 /* ===== 練習タブ ===== */
 function fillMeSel() {
-  const s = $('#meSel'); s.textContent = ''; s.append(el('option', { value: '-1', text: '（選ばない）' }));
+  const s = $('#meSel');
+  s.textContent = '';
+  s.append(el('option', { value: '-1', text: '（選ばない）' }));
   S.dancers.forEach((d, i) => s.append(el('option', { value: String(i), text: d.name })));
-  if (ui.me >= S.dancers.length) ui.me = -1; s.value = String(ui.me);
+  if (ui.me >= S.dancers.length) ui.me = -1;
+  s.value = String(ui.me);
 }
-$('#meSel').addEventListener('change', e => { ui.me = parseInt(e.target.value); try { localStorage.setItem(LS_KEY + '.me', String(ui.me)); } catch (x) { } requestRender(); });
-$('#viewSel').addEventListener('change', e => { ui.view = e.target.value; try { localStorage.setItem(LS_KEY + '.view', ui.view); } catch (x) { } requestRender(); });
-$('#showNames').addEventListener('change', e => { ui.showNames = e.target.checked; requestRender(); });
-$('#showPaths').addEventListener('change', e => { ui.showPaths = e.target.checked; requestRender(); });
+$('#meSel').addEventListener('change', e => {
+  ui.me = parseInt(e.target.value);
+  try { localStorage.setItem(LS_KEY + '.me', String(ui.me)); } catch (x) { }
+  requestRender();
+});
+$('#viewSel').addEventListener('change', e => {
+  ui.view = e.target.value;
+  try { localStorage.setItem(LS_KEY + '.view', ui.view); } catch (x) { }
+  requestRender();
+});
+$('#showNames').addEventListener('change', e => {
+  ui.showNames = e.target.checked;
+  requestRender();
+});
+$('#showPaths').addEventListener('change', e => {
+  ui.showPaths = e.target.checked;
+  requestRender();
+});
 let dlCap; // claude.ai の中で開いたときは、保存の仕組み（downloads）を使う
 if (window.claude && window.claude.use) dlCap = window.claude.use('downloads').catch(() => null);
 async function download(blob, name) {
   const cap = dlCap ? await dlCap : null;
   if (cap) {
-    try { await cap.save({ filename: name, data: blob }); toast('保存しました'); }
-    catch (e) { toast(e && e.code === 'declined' ? '保存をやめました' : e && e.code === 'host_unavailable' ? 'このアプリでは保存できません。ブラウザかパソコンで開いてください' : '保存できませんでした'); }
+    try {
+      await cap.save({ filename: name, data: blob });
+      toast('保存しました');
+    }
+    catch (e) {
+      toast(e && e.code === 'declined' ? '保存をやめました'
+        : e && e.code === 'host_unavailable' ? 'このアプリでは保存できません。ブラウザかパソコンで開いてください'
+          : '保存できませんでした');
+    }
     return;
   }
   // iPhone などは共有シートから「写真」「ファイル」に保存する
@@ -1104,215 +2244,453 @@ async function download(blob, name) {
       return;
     }
   } catch (e) { }
-  const a = el('a', { href: URL.createObjectURL(blob), download: name }); document.body.append(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 4000);
+  const a = el('a', { href: URL.createObjectURL(blob), download: name });
+  document.body.append(a);
+  a.click();
+  setTimeout(() => {
+    URL.revokeObjectURL(a.href);
+    a.remove();
+  }, 4000);
 }
 function ask(msg, okLabel, fn) { // 画面の中で確かめる（埋め込み先では確認ダイアログが出ないため）
-  const box = $('#askBox'); box.textContent = '';
+  const box = $('#askBox');
+  box.textContent = '';
   const close = () => { box.hidden = true; };
   box.append(el('div', { text: msg, style: 'margin-bottom:8px' }), el('div', { class: 'row', style: 'margin:0' }, [
-    el('button', { class: 'primary', text: okLabel, onclick: () => { close(); fn(); } }), el('button', { text: 'やめる', onclick: close })]));
+    el('button', { class: 'primary', text: okLabel, onclick: () => {
+      close();
+      fn();
+    } }), el('button', { text: 'やめる', onclick: close })]));
   box.hidden = false;
 }
 const safeName = s => (s || 'formation').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 30);
 function legend(c, x, y, w, fs) {
-  let cx = x, cy = y; c.font = `${fs}px sans-serif`; c.textBaseline = 'middle'; c.textAlign = 'left';
+  let cx = x, cy = y;
+  c.font = `${fs}px sans-serif`;
+  c.textBaseline = 'middle';
+  c.textAlign = 'left';
   S.dancers.forEach(d => {
     const tw = c.measureText(d.name).width + fs * 1.8;
-    if (cx + tw > x + w) { cx = x; cy += fs * 1.6; }
-    c.fillStyle = d.color; c.beginPath(); c.arc(cx + fs * 0.5, cy, fs * 0.45, 0, 7); c.fill(); c.fillStyle = '#e8ecf3'; c.fillText(d.name, cx + fs * 1.1, cy); cx += tw;
+    if (cx + tw > x + w) {
+      cx = x;
+      cy += fs * 1.6;
+    }
+    c.fillStyle = d.color;
+    c.beginPath();
+    c.arc(cx + fs * 0.5, cy, fs * 0.45, 0, 7);
+    c.fill();
+    c.fillStyle = '#e8ecf3';
+    c.fillText(d.name, cx + fs * 1.1, cy);
+    cx += tw;
   });
   return cy + fs;
 }
 $('#btnSheet').addEventListener('click', () => {
-  const cols = S.keys.length > 4 ? 3 : 2, cw = 520, ch = Math.round(cw * (S.stage.d + 1.3) / (S.stage.w + 0.6)) + 34, rows = Math.ceil(S.keys.length / cols);
+  const cols = S.keys.length > 4 ? 3 : 2, cw = 520;
+  const ch = Math.round(cw * (S.stage.d + 1.3) / (S.stage.w + 0.6)) + 34, rows = Math.ceil(S.keys.length / cols);
   const c = document.createElement('canvas'), W = cols * cw + 20, H = 70 + rows * (ch + 10) + 120;
-  c.width = W; c.height = H; const x = c.getContext('2d');
-  x.fillStyle = '#0b0e14'; x.fillRect(0, 0, W, H); x.fillStyle = '#fff'; x.font = '700 28px sans-serif'; x.textBaseline = 'top'; x.textAlign = 'left';
+  c.width = W;
+  c.height = H;
+  const x = c.getContext('2d');
+  x.fillStyle = '#0b0e14';
+  x.fillRect(0, 0, W, H);
+  x.fillStyle = '#fff';
+  x.font = '700 28px sans-serif';
+  x.textBaseline = 'top';
+  x.textAlign = 'left';
   x.fillText(`${S.title}（${S.dancers.length}人・BPM ${S.bpm}）`, 14, 18);
   S.keys.forEach((k, i) => {
     const ox = 10 + (i % cols) * cw, oy = 70 + Math.floor(i / cols) * (ch + 10);
-    x.save(); x.translate(ox, oy + 34); drawStage(x, cw - 10, ch - 34, k.at, { view: ui.view, me: -1, names: true }); x.restore();
-    x.fillStyle = '#4fb3ff'; x.font = '700 20px sans-serif'; x.textBaseline = 'top'; x.textAlign = 'left'; x.fillText(`${i + 1}. ${cLabel(k.at)} ${k.name}`, ox + 4, oy + 6);
+    x.save();
+    x.translate(ox, oy + 34);
+    drawStage(x, cw - 10, ch - 34, k.at, { view: ui.view, me: -1, names: true });
+    x.restore();
+    x.fillStyle = '#4fb3ff';
+    x.font = '700 20px sans-serif';
+    x.textBaseline = 'top';
+    x.textAlign = 'left';
+    x.fillText(`${i + 1}. ${cLabel(k.at)} ${k.name}`, ox + 4, oy + 6);
   });
   legend(x, 14, 70 + rows * (ch + 10) + 20, W - 28, 18);
   c.toBlob(b => download(b, safeName(S.title) + '_全隊形.png'), 'image/png');
 });
 $('#btnKeyPng').addEventListener('click', () => {
-  const c = document.createElement('canvas'), w = 1200, h = Math.round(w * (S.stage.d + 1.3) / (S.stage.w + 0.6)) + 140; c.width = w; c.height = h;
-  const x = c.getContext('2d'); x.fillStyle = '#0b0e14'; x.fillRect(0, 0, w, h);
-  x.save(); x.translate(0, 60); drawStage(x, w, h - 140, ui.count, { view: ui.view, me: ui.me, names: true }); x.restore();
-  const k = S.keys[keyIndexAt(ui.count)]; x.fillStyle = '#fff'; x.font = '700 30px sans-serif'; x.textBaseline = 'top'; x.textAlign = 'left'; x.fillText(`${S.title} ／ ${cLabel(ui.count)} ${k.name}`, 16, 14);
+  const c = document.createElement('canvas'), w = 1200, h = Math.round(w * (S.stage.d + 1.3) / (S.stage.w + 0.6)) + 140;
+  c.width = w;
+  c.height = h;
+  const x = c.getContext('2d');
+  x.fillStyle = '#0b0e14';
+  x.fillRect(0, 0, w, h);
+  x.save();
+  x.translate(0, 60);
+  drawStage(x, w, h - 140, ui.count, { view: ui.view, me: ui.me, names: true });
+  x.restore();
+  const k = S.keys[keyIndexAt(ui.count)];
+  x.fillStyle = '#fff';
+  x.font = '700 30px sans-serif';
+  x.textBaseline = 'top';
+  x.textAlign = 'left';
+  x.fillText(`${S.title} ／ ${cLabel(ui.count)} ${k.name}`, 16, 14);
   legend(x, 16, h - 60, w - 32, 20);
   c.toBlob(b => download(b, `${safeName(S.title)}_${cLabel(ui.count)}.png`), 'image/png');
 });
 /* 動画 */
 let rec = null, recChunks = [], recCanvas = null, recCtx = null, audioCtx = null, mediaDest = null;
 function drawRecFrame() {
-  if (!recCtx) return; const w = recCanvas.width, h = recCanvas.height;
+  if (!recCtx) return;
+  const w = recCanvas.width, h = recCanvas.height;
   drawStage(recCtx, w, h, ui.count, { view: ui.view, me: ui.me, names: true, showPaths: ui.showPaths });
-  recCtx.fillStyle = '#fff'; recCtx.font = '800 64px sans-serif'; recCtx.textAlign = 'right'; recCtx.textBaseline = 'top'; recCtx.fillText(cLabel(ui.count), w - 24, 14);
-  const k = S.keys[keyIndexAt(ui.count)]; recCtx.font = '700 30px sans-serif'; recCtx.textAlign = 'left'; recCtx.fillText(`${S.title} ／ ${k.name}`, 20, 20);
+  recCtx.fillStyle = '#fff';
+  recCtx.font = '800 64px sans-serif';
+  recCtx.textAlign = 'right';
+  recCtx.textBaseline = 'top';
+  recCtx.fillText(cLabel(ui.count), w - 24, 14);
+  const k = S.keys[keyIndexAt(ui.count)];
+  recCtx.font = '700 30px sans-serif';
+  recCtx.textAlign = 'left';
+  recCtx.fillText(`${S.title} ／ ${k.name}`, 20, 20);
 }
 $('#btnVideo').addEventListener('click', async () => {
-  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) { toast('この端末のブラウザは動画の書き出しに対応していません'); return; }
-  if (ui.recording) { stopRecording(); return; }
+  if (!window.MediaRecorder || !HTMLCanvasElement.prototype.captureStream) {
+    toast('この端末のブラウザは動画の書き出しに対応していません');
+    return;
+  }
+  if (ui.recording) {
+    stopRecording();
+    return;
+  }
   pause();
-  recCanvas = document.createElement('canvas'); recCanvas.width = 1280; recCanvas.height = 720; recCtx = recCanvas.getContext('2d');
+  recCanvas = document.createElement('canvas');
+  recCanvas.width = 1280;
+  recCanvas.height = 720;
+  recCtx = recCanvas.getContext('2d');
   const stream = recCanvas.captureStream(30);
   if (audioReady) {
     try {
-      if (!audioCtx) { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); const src = audioCtx.createMediaElementSource(audio); mediaDest = audioCtx.createMediaStreamDestination(); src.connect(audioCtx.destination); src.connect(mediaDest); }
-      await audioCtx.resume(); mediaDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        const src = audioCtx.createMediaElementSource(audio);
+        mediaDest = audioCtx.createMediaStreamDestination();
+        src.connect(audioCtx.destination);
+        src.connect(mediaDest);
+      }
+      await audioCtx.resume();
+      mediaDest.stream.getAudioTracks().forEach(t => stream.addTrack(t));
     } catch (e) { toast('音を入れられなかったので、映像だけで作ります'); }
   }
   const types = ['video/mp4;codecs=avc1', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm'];
   const mime = types.find(t => MediaRecorder.isTypeSupported(t)) || '';
-  try { rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4e6 } : undefined); } catch (e) { toast('動画を作れませんでした'); return; }
-  recChunks = []; rec.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
-  rec.onstop = () => { const type = rec.mimeType || 'video/webm', ext = type.includes('mp4') ? 'mp4' : 'webm'; download(new Blob(recChunks, { type }), `${safeName(S.title)}.${ext}`); recCtx = null; $('#btnVideo').textContent = '動画に書き出す'; toast('動画を保存しました'); };
-  ui.recording = true; setCount(0); drawRecFrame(); rec.start(500); $('#btnVideo').textContent = '■ 書き出しを止める';
-  toast('最後まで再生すると動画ができます。途中で止めるとそこまでの動画になります', 4000); play();
+  try {
+    rec = new MediaRecorder(stream, mime ? { mimeType: mime, videoBitsPerSecond: 4e6 } : undefined);
+  } catch (e) {
+    toast('動画を作れませんでした');
+    return;
+  }
+  recChunks = [];
+  rec.ondataavailable = e => { if (e.data && e.data.size) recChunks.push(e.data); };
+  rec.onstop = () => {
+    const type = rec.mimeType || 'video/webm', ext = type.includes('mp4') ? 'mp4' : 'webm';
+    download(new Blob(recChunks, { type }), `${safeName(S.title)}.${ext}`);
+    recCtx = null;
+    $('#btnVideo').textContent = '動画に書き出す';
+    toast('動画を保存しました');
+  };
+  ui.recording = true;
+  setCount(0);
+  drawRecFrame();
+  rec.start(500);
+  $('#btnVideo').textContent = '■ 書き出しを止める';
+  toast('最後まで再生すると動画ができます。途中で止めるとそこまでの動画になります', 4000);
+  play();
 });
-function stopRecording() { ui.recording = false; try { if (rec && rec.state !== 'inactive') rec.stop(); } catch (e) { } }
-
+function stopRecording() {
+  ui.recording = false;
+  try { if (rec && rec.state !== 'inactive') rec.stop(); } catch (e) { }
+}
+// 設定タブ・保存と読み込みの操作・タブ切り替え・起動
 /* ===== 設定タブ ===== */
 function fillSetup() {
-  $('#title').value = S.title; $('#stW').value = S.stage.w; $('#stD').value = S.stage.d; $('#totalEights').value = S.totalEights;
-  $('#bpm').value = S.bpm; $('#offset').value = S.offset.toFixed(2); $('#hdrTitle').textContent = S.title;
+  $('#title').value = S.title;
+  $('#stW').value = S.stage.w;
+  $('#stD').value = S.stage.d;
+  $('#totalEights').value = S.totalEights;
+  $('#bpm').value = S.bpm;
+  $('#offset').value = S.offset.toFixed(2);
+  $('#hdrTitle').textContent = S.title;
   $('#dCount').textContent = S.dancers.length;
-  const box = $('#dancerList'); box.textContent = '';
+  const box = $('#dancerList');
+  box.textContent = '';
   S.dancers.forEach((d, i) => {
     const inp = el('input', { type: 'text', maxlength: '16', value: d.name, 'aria-label': `${i + 1}人目の名前` });
-    inp.addEventListener('change', () => { pushUndo(); d.name = inp.value.trim().slice(0, 16) || `No.${i + 1}`; save(); fillMeSel(); fillCueTargets(); renderKeyChips(); renderAdvice(); requestRender(); });
+    inp.addEventListener('change', () => {
+      pushUndo();
+      d.name = inp.value.trim().slice(0, 16) || `No.${i + 1}`;
+      save();
+      fillMeSel();
+      fillCueTargets();
+      renderKeyChips();
+      renderAdvice();
+      requestRender();
+    });
     box.append(el('div', { class: 'drow' }, [el('span', { class: 'sw', style: `background:${d.color}` }), inp]));
   });
 }
-$('#title').addEventListener('change', e => { S.title = e.target.value.slice(0, 40) || '無題'; $('#hdrTitle').textContent = S.title; save(); });
-$('#stW').addEventListener('change', e => { S.stage.w = Math.min(40, Math.max(3, parseFloat(e.target.value) || 10)); save(); fitCanvas(); renderAdvice(); renderKeyChips(); });
-$('#stD').addEventListener('change', e => { S.stage.d = Math.min(30, Math.max(2, parseFloat(e.target.value) || 6)); save(); fitCanvas(); renderAdvice(); renderKeyChips(); });
-$('#totalEights').addEventListener('change', e => { S.totalEights = Math.min(400, Math.max(1, parseInt(e.target.value) || 24)); save(); renderAdvice(); requestRender(); });
-$('#bpm').addEventListener('change', e => { S.bpm = Math.min(240, Math.max(40, parseFloat(e.target.value) || 120)); afterTempoChange(); });
-$('#offset').addEventListener('change', e => { S.offset = Math.max(0, parseFloat(e.target.value) || 0); afterTempoChange(); });
-const shiftOff = d => { S.offset = Math.max(0, r2(S.offset + d)); afterTempoChange(); };
-$('#offM1').addEventListener('click', () => shiftOff(-beatSec())); $('#offP1').addEventListener('click', () => shiftOff(beatSec()));
-$('#offMs').addEventListener('click', () => shiftOff(-0.05)); $('#offPs').addEventListener('click', () => shiftOff(0.05));
-$('#btnNowIsOne').addEventListener('click', () => { if (!audioReady) { toast('先に曲を読み込んでください'); return; } S.offset = r2(audio.currentTime); afterTempoChange(); toast('今の時刻を 1-1 にしました'); });
+$('#title').addEventListener('change', e => {
+  S.title = e.target.value.slice(0, 40) || '無題';
+  $('#hdrTitle').textContent = S.title;
+  save();
+});
+$('#stW').addEventListener('change', e => {
+  S.stage.w = Math.min(40, Math.max(3, parseFloat(e.target.value) || 10));
+  save();
+  fitCanvas();
+  renderAdvice();
+  renderKeyChips();
+});
+$('#stD').addEventListener('change', e => {
+  S.stage.d = Math.min(30, Math.max(2, parseFloat(e.target.value) || 6));
+  save();
+  fitCanvas();
+  renderAdvice();
+  renderKeyChips();
+});
+$('#totalEights').addEventListener('change', e => {
+  S.totalEights = Math.min(400, Math.max(1, parseInt(e.target.value) || 24));
+  save();
+  renderAdvice();
+  requestRender();
+});
+$('#bpm').addEventListener('change', e => {
+  S.bpm = Math.min(240, Math.max(40, parseFloat(e.target.value) || 120));
+  afterTempoChange();
+});
+$('#offset').addEventListener('change', e => {
+  S.offset = Math.max(0, parseFloat(e.target.value) || 0);
+  afterTempoChange();
+});
+const shiftOff = d => {
+  S.offset = Math.max(0, r2(S.offset + d));
+  afterTempoChange();
+};
+$('#offM1').addEventListener('click', () => shiftOff(-beatSec()));
+$('#offP1').addEventListener('click', () => shiftOff(beatSec()));
+$('#offMs').addEventListener('click', () => shiftOff(-0.05));
+$('#offPs').addEventListener('click', () => shiftOff(0.05));
+$('#btnNowIsOne').addEventListener('click', () => {
+  if (!audioReady) {
+    toast('先に曲を読み込んでください');
+    return;
+  }
+  S.offset = r2(audio.currentTime);
+  afterTempoChange();
+  toast('今の時刻を 1-1 にしました');
+});
 function afterTempoChange() {
-  if (analysis) { S.energy = energyPerEight(analysis); S.totalEights = Math.max(1, Math.ceil((analysis.duration - S.offset) / (8 * beatSec()))); }
-  save(); fillSetup(); renderAdvice(); renderKeyChips();
+  if (analysis) {
+    S.energy = energyPerEight(analysis);
+    S.totalEights = Math.max(1, Math.ceil((analysis.duration - S.offset) / (8 * beatSec())));
+  }
+  save();
+  fillSetup();
+  renderAdvice();
+  renderKeyChips();
   if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
   requestRender();
 }
 let taps = [];
 $('#btnTap').addEventListener('click', () => {
-  const t = performance.now(); if (taps.length && t - taps[taps.length - 1] > 2000) taps = []; taps.push(t); if (taps.length > 9) taps.shift();
-  if (taps.length >= 4) { const iv = (taps[taps.length - 1] - taps[0]) / (taps.length - 1); S.bpm = Math.round(60000 / iv * 10) / 10; $('#tapInfo').textContent = `${taps.length}回 → BPM ${S.bpm}`; afterTempoChange(); }
+  const t = performance.now();
+  if (taps.length && t - taps[taps.length - 1] > 2000) taps = [];
+  taps.push(t);
+  if (taps.length > 9) taps.shift();
+  if (taps.length >= 4) {
+    const iv = (taps[taps.length - 1] - taps[0]) / (taps.length - 1);
+    S.bpm = Math.round(60000 / iv * 10) / 10;
+    $('#tapInfo').textContent = `${taps.length}回 → BPM ${S.bpm}`;
+    afterTempoChange();
+  }
   else $('#tapInfo').textContent = `拍に合わせて押してください（${taps.length}回）`;
 });
 $('#btnAddDancer').addEventListener('click', () => {
-  if (S.dancers.length >= 40) return; pushUndo(); const i = S.dancers.length;
+  if (S.dancers.length >= 40) return;
+  pushUndo();
+  const i = S.dancers.length;
   S.dancers.push({ name: `No.${i + 1}`, color: PALETTE[i % PALETTE.length] });
   const add = ks => ks && ks.forEach(k => k.pos.push([0, r2(Math.min(S.stage.d - 0.5, 0.8))]));
-  add(S.keys); add(S.baseKeys); changed(true); toast('前の真ん中に追加しました。位置を直してください');
+  add(S.keys);
+  add(S.baseKeys);
+  changed(true);
+  toast('前の真ん中に追加しました。位置を直してください');
 });
 $('#btnDelDancer').addEventListener('click', () => {
-  if (S.dancers.length <= 1) return; const d = S.dancers[S.dancers.length - 1];
-  ask(`${d.name} を削除しますか？`, '削除する', () => { pushUndo(); S.dancers.pop(); S.keys.forEach(k => k.pos.pop()); (S.cues || []).forEach(q => { if (q.target >= S.dancers.length) q.target = -1; }); if (S.baseKeys) S.baseKeys.forEach(k => k.pos.pop()); if (ui.me >= S.dancers.length) ui.me = -1; changed(true); });
+  if (S.dancers.length <= 1) return;
+  const d = S.dancers[S.dancers.length - 1];
+  ask(`${d.name} を削除しますか？`, '削除する', () => {
+    pushUndo();
+    S.dancers.pop();
+    S.keys.forEach(k => k.pos.pop());
+    (S.cues || []).forEach(q => { if (q.target >= S.dancers.length) q.target = -1; });
+    if (S.baseKeys) S.baseKeys.forEach(k => k.pos.pop());
+    if (ui.me >= S.dancers.length) ui.me = -1;
+    changed(true);
+  });
 });
+
 /* 曲の読み込みと解析 */
 $('#audioFile').addEventListener('change', async e => {
-  const f = e.target.files && e.target.files[0]; if (!f) return;
-  pause(); if (audio.src) URL.revokeObjectURL(audio.src);
-  audio.src = URL.createObjectURL(f); audioReady = true; $('#audioName').textContent = f.name + '（解析中…）';
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  pause();
+  if (audio.src) URL.revokeObjectURL(audio.src);
+  audio.src = URL.createObjectURL(f);
+  audioReady = true;
+  $('#audioName').textContent = f.name + '（解析中…）';
   try {
     const buf = await f.arrayBuffer();
     const AC = window.AudioContext || window.webkitAudioContext, ac = new AC();
-    const ab = await new Promise((res, rej) => { const p = ac.decodeAudioData(buf, res, rej); if (p && p.then) p.then(res, rej); });
+    const ab = await new Promise((res, rej) => {
+      const p = ac.decodeAudioData(buf, res, rej);
+      if (p && p.then) p.then(res, rej);
+    });
     try { ac.close(); } catch (x) { }
     analysis = analyzeAudio(ab);
-    S.bpm = analysis.bpm; S.offset = analysis.offset;
+    S.bpm = analysis.bpm;
+    S.offset = analysis.offset;
     afterTempoChange();
     $('#audioName').textContent = `${f.name}（${Math.floor(analysis.duration / 60)}分${Math.round(analysis.duration % 60)}秒）`;
     toast(`BPM ${S.bpm}、1カウント目は ${S.offset.toFixed(2)}秒 と推定しました。曲を流して合っているか確かめてください`, 5000);
-  } catch (err) { $('#audioName').textContent = f.name + '（解析できませんでした。BPMは手で入れてください）'; }
+  } catch (err) {
+    $('#audioName').textContent = f.name + '（解析できませんでした。BPMは手で入れてください）';
+  }
   setCount(0);
 });
-function analyzeAudio(ab) {
-  const sr = ab.sampleRate, ch0 = ab.getChannelData(0), ch1 = ab.numberOfChannels > 1 ? ab.getChannelData(1) : null;
-  const hop = 512, nF = Math.floor(ch0.length / hop), fr = sr / hop;
-  const rms = new Float32Array(nF), on = new Float32Array(nF);
-  let prev = 0, lp = 0;
-  for (let f = 0; f < nF; f++) {
-    let s = 0, sl = 0; const b = f * hop;
-    for (let i = 0; i < hop; i++) { const v = ch1 ? (ch0[b + i] + ch1[b + i]) * 0.5 : ch0[b + i]; s += v * v; lp += 0.08 * (v - lp); sl += lp * lp; }
-    const e = Math.sqrt(s / hop); rms[f] = e;
-    const le = Math.log(1 + 200 * Math.sqrt(sl / hop)) + 0.5 * Math.log(1 + 200 * e);
-    on[f] = Math.max(0, le - prev); prev = le;
-  }
-  // 平均を引く
-  const win = Math.round(fr * 0.4); const ons = new Float32Array(nF); let acc = 0;
-  for (let f = 0; f < nF; f++) { acc += on[f]; if (f >= win) acc -= on[f - win]; ons[f] = Math.max(0, on[f] - acc / Math.min(f + 1, win)); }
-  const N = Math.min(nF, Math.round(fr * 150)), lag = b => fr * 60 / b;
-  const acAt = L => { const l0 = Math.floor(L), t = L - l0; let s0 = 0, s1 = 0; for (let i = 0; i + l0 + 1 < N; i++) { s0 += ons[i] * ons[i + l0]; s1 += ons[i] * ons[i + l0 + 1]; } return s0 * (1 - t) + s1 * t; };
-  let best = 120, bs = -1;
-  for (let b = 78; b <= 170; b += 0.5) { const L = lag(b); const sc = acAt(L) + 0.5 * acAt(2 * L) + 0.25 * acAt(4 * L); if (sc > bs) { bs = sc; best = b; } }
-  let fb = best, fphase = 0, fs = -1;
-  for (let b = best - 1; b <= best + 1; b += 0.02) {
-    const L = lag(b);
-    for (let ph = 0; ph < L; ph += 1) {
-      let s = 0; for (let x = ph; x < nF - 1; x += L) { const i = Math.round(x); s += ons[i] + 0.5 * (ons[i + 1] || 0); }
-      if (s > fs) { fs = s; fb = b; fphase = ph; }
-    }
-  }
-  const beat = 60 / fb, phaseT = fphase / fr;
-  let mx = 0; for (let f = 0; f < nF; f++) mx = Math.max(mx, rms[f]);
-  let t0 = 0; for (let f = 0; f < nF; f++) if (rms[f] > mx * 0.15) { t0 = f / fr; break; }
-  let k = Math.ceil((t0 - phaseT) / beat - 0.5); if (k < 0) k = 0;
-  return { bpm: Math.round(fb * 10) / 10, offset: r2(phaseT + k * beat), duration: ab.duration, rms, fr };
-}
-function energyPerEight(a) {
-  const n = Math.max(1, Math.ceil((a.duration - S.offset) / (8 * beatSec()))), out = [];
-  for (let e = 0; e < n; e++) {
-    const t0 = S.offset + e * 8 * beatSec(), t1 = t0 + 8 * beatSec(); const f0 = Math.max(0, Math.floor(t0 * a.fr)), f1 = Math.min(a.rms.length, Math.floor(t1 * a.fr));
-    let s = 0; for (let f = f0; f < f1; f++) s += a.rms[f]; out.push(f1 > f0 ? s / (f1 - f0) : 0);
-  }
-  const mx = Math.max(...out, 1e-9); return out.map(v => r2(v / mx));
-}
+
 /* 保存・読み込み */
-$('#btnSave').addEventListener('click', () => download(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), safeName(S.title) + '.json'));
-function loadObj(o) { const s = validState(o); if (!s) { toast('読み込めませんでした（形式が違います）'); return false; } pushUndo(); S = s; ui.sel = 0; ui.me = -1; refreshAll(); setCount(S.keys[0].at); save(); toast('読み込みました'); return true; }
-$('#loadFile').addEventListener('change', async e => { const f = e.target.files && e.target.files[0]; if (!f) return; try { loadObj(JSON.parse(await f.text())); } catch (x) { toast('読み込めませんでした'); } e.target.value = ''; });
+$('#btnSave').addEventListener('click',
+  () => download(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), safeName(S.title) + '.json'));
+function loadObj(o) {
+  const s = validState(o);
+  if (!s) {
+    toast('読み込めませんでした（形式が違います）');
+    return false;
+  }
+  pushUndo();
+  S = s;
+  ui.sel = 0;
+  ui.me = -1;
+  refreshAll();
+  setCount(S.keys[0].at);
+  save();
+  toast('読み込みました');
+  return true;
+}
+$('#loadFile').addEventListener('change', async e => {
+  const f = e.target.files && e.target.files[0];
+  if (!f) return;
+  try { loadObj(JSON.parse(await f.text())); } catch (x) { toast('読み込めませんでした'); }
+  e.target.value = '';
+});
 $('#btnPasteLoad').addEventListener('click', () => {
   const t = $('#pasteJson').value, i = t.indexOf('{'), j = t.lastIndexOf('}');
   try { loadObj(JSON.parse(t.slice(i, j + 1))); } catch (x) { toast('JSONとして読めませんでした'); }
 });
-$('#btnDemo').addEventListener('click', () => ask('今の内容を消して見本に戻しますか？（「元に戻す」で戻せます）', '見本に戻す', () => { pushUndo(); S = demoState(); ui.sel = 0; refreshAll(); setCount(0); save(); }));
+$('#btnDemo').addEventListener('click', () => ask('今の内容を消して見本に戻しますか？（「元に戻す」で戻せます）', '見本に戻す', () => {
+  pushUndo();
+  S = demoState();
+  ui.sel = 0;
+  refreshAll();
+  setCount(0);
+  save();
+}));
 
 /* ===== タブ・全体 ===== */
 function switchTab(t) {
-  currentTab = t; document.querySelectorAll('nav#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
+  currentTab = t;
+  document.querySelectorAll('nav#tabs button').forEach(b => b.classList.toggle('on', b.dataset.tab === t));
   document.querySelectorAll('section.tab').forEach(s => s.classList.toggle('on', s.id === 'tab-' + t));
   if (t === 'advice') renderAdvice();
   requestRender();
 }
 document.querySelectorAll('nav#tabs button').forEach(b => b.addEventListener('click', () => switchTab(b.dataset.tab)));
-function refreshAll() { if (!Array.isArray(S.cues)) S.cues = []; sortKeys(); fillSetup(); fillMeSel(); fillCueTargets(); renderCueChips(); renderKeyChips(); fillKeyForm(); renderAdvice(); fitCanvas(); }
-$('#btnPlay').addEventListener('click', toggle); $('#projPlay').addEventListener('click', toggle);
-$('#btnBack').addEventListener('click', () => { const k = S.keys[ui.sel]; pause(); setCount(Math.max(0, k.at - 8)); });
-$('#rate').addEventListener('change', e => { ui.rate = parseFloat(e.target.value); if (audioReady) audio.playbackRate = ui.rate; if (ui.playing) { ui.clockT0 = performance.now(); ui.clockC0 = ui.count; } });
-$('#btnProj').addEventListener('click', () => { document.body.classList.add('proj'); try { const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen(); if (p && p.catch) p.catch(() => { }); } catch (e) { } fitCanvas(); });
-$('#projExit').addEventListener('click', () => { document.body.classList.remove('proj'); try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { } fitCanvas(); });
-document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && document.body.classList.contains('proj')) { document.body.classList.remove('proj'); fitCanvas(); } });
-document.addEventListener('keydown', e => { if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) { e.preventDefault(); toggle(); } if (e.key === 'Escape' && document.body.classList.contains('proj')) $('#projExit').click(); });
+function refreshAll() {
+  if (!Array.isArray(S.cues)) S.cues = [];
+  sortKeys();
+  fillSetup();
+  fillMeSel();
+  fillCueTargets();
+  renderCueChips();
+  renderKeyChips();
+  fillKeyForm();
+  renderAdvice();
+  fitCanvas();
+}
+$('#btnPlay').addEventListener('click', toggle);
+$('#projPlay').addEventListener('click', toggle);
+$('#btnBack').addEventListener('click', () => {
+  const k = S.keys[ui.sel];
+  pause();
+  setCount(Math.max(0, k.at - 8));
+});
+$('#rate').addEventListener('change', e => {
+  ui.rate = parseFloat(e.target.value);
+  if (audioReady) audio.playbackRate = ui.rate;
+  if (ui.playing) {
+    ui.clockT0 = performance.now();
+    ui.clockC0 = ui.count;
+  }
+});
+$('#btnProj').addEventListener('click', () => {
+  document.body.classList.add('proj');
+  try {
+    const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
+    if (p && p.catch) p.catch(() => { });
+  } catch (e) { }
+  fitCanvas();
+});
+$('#projExit').addEventListener('click', () => {
+  document.body.classList.remove('proj');
+  try { if (document.fullscreenElement) document.exitFullscreen(); } catch (e) { }
+  fitCanvas();
+});
+document.addEventListener('fullscreenchange', () => {
+  if (!document.fullscreenElement && document.body.classList.contains('proj')) {
+    document.body.classList.remove('proj');
+    fitCanvas();
+  }
+});
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && !/INPUT|TEXTAREA|SELECT/.test(e.target.tagName)) {
+    e.preventDefault();
+    toggle();
+  }
+  if (e.key === 'Escape' && document.body.classList.contains('proj')) $('#projExit').click();
+});
 window.addEventListener('resize', fitCanvas);
 if (window.ResizeObserver) new ResizeObserver(fitCanvas).observe($('#stageWrap'));
-document.addEventListener('visibilitychange', async () => { if (document.visibilityState === 'visible' && ui.playing) { try { if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen'); } catch (e) { } } });
+document.addEventListener('visibilitychange', async () => {
+  if (document.visibilityState === 'visible' && ui.playing) {
+    try {
+      if (navigator.wakeLock) wakeLock = await navigator.wakeLock.request('screen');
+    } catch (e) { }
+  }
+});
 
 S = load();
-try { const m = parseInt(localStorage.getItem(LS_KEY + '.me')); if (m >= 0 && m < S.dancers.length) ui.me = m; const v = localStorage.getItem(LS_KEY + '.view'); if (v === 'dancer' || v === 'audience') { ui.view = v; $('#viewSel').value = v; } } catch (e) { }
-refreshAll(); setCount(S.keys[0].at);
+try {
+  const m = parseInt(localStorage.getItem(LS_KEY + '.me'));
+  if (m >= 0 && m < S.dancers.length) ui.me = m;
+  const v = localStorage.getItem(LS_KEY + '.view');
+  if (v === 'dancer' || v === 'audience') {
+    ui.view = v;
+    $('#viewSel').value = v;
+  }
+} catch (e) { }
+refreshAll();
+setCount(S.keys[0].at);
 requestAnimationFrame(tick);
-if ('serviceWorker' in navigator && location.protocol === 'https:' && document.querySelector('link[rel=manifest]')) navigator.serviceWorker.register('sw.js').catch(() => { });
+if ('serviceWorker' in navigator && location.protocol === 'https:' && document.querySelector('link[rel=manifest]')) {
+  navigator.serviceWorker.register('sw.js').catch(() => { });
+}
 </script>
 </body>
 </html>

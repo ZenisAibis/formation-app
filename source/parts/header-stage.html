@@ -1,0 +1,27 @@
+<header><h1>フォーメーション練習</h1><span id="hdrTitle"></span></header>
+
+<div id="stageWrap">
+  <canvas id="stage" aria-label="ステージ図"></canvas>
+  <div id="countBig"></div>
+  <div id="meInfo"></div>
+  <button id="projPlay" class="primary">▶</button>
+  <button id="projExit">閉じる</button>
+</div>
+
+<div id="transport">
+  <button id="btnPlay" class="primary" style="min-width:64px">▶ 再生</button>
+  <button id="btnBack" title="選んだ隊形の少し前へ">⏮</button>
+  <div id="countDisp">1-1</div>
+  <div id="timeDisp"></div>
+  <label>速さ <select id="rate"><option value="0.5">0.5倍</option><option value="0.75">0.75倍</option><option value="1" selected>1倍</option></select></label>
+  <button id="btnProj">大きく表示</button>
+</div>
+<canvas id="timeline" aria-label="タイムライン"></canvas>
+<div class="muted" style="margin-top:4px">タイムライン：数字は8カウントの番号。棒は曲の盛り上がり、●は隊形、横線は移動の区間、◆は照明・きっかけ。</div>
+
+<nav id="tabs">
+  <button data-tab="edit" class="on">編集</button>
+  <button data-tab="advice">アドバイス</button>
+  <button data-tab="practice">練習</button>
+  <button data-tab="setup">設定</button>
+</nav>

@@ -1,0 +1,44 @@
+<!-- 編集 -->
+<section class="tab on" id="tab-edit">
+  <div class="chips" id="keyChips"></div>
+  <div class="card">
+    <div class="row">
+      <label>名前 <input type="text" id="kName" style="width:9em" maxlength="20"></label>
+      <label>始まり <input type="number" id="kEight" min="1" step="1">-<input type="number" id="kCount" min="1" max="8" step="1" style="width:56px"></label>
+      <label>移動 <input type="number" id="kMove" min="1" max="64" step="1" style="width:60px">カウント</label>
+    </div>
+    <div class="row">
+      <button id="btnAddKey">＋ 隊形を追加</button>
+      <button id="btnDelKey">削除</button>
+      <button id="btnUndo">↶ 元に戻す</button>
+      <label><input type="checkbox" id="snap" checked> 25cm刻み</label>
+    </div>
+    <div class="row">
+      <select id="tplSel"></select>
+      <button id="btnTpl">形を当てはめる</button>
+      <button id="btnMirror">左右反転</button>
+      <button id="btnCenter">中央に寄せる</button>
+    </div>
+    <div class="muted" id="editHint">丸をドラッグして立ち位置を動かせます。薄い丸と線は、ひとつ前の隊形からの動きです。黄色の×はクロスする場所です。</div>
+  </div>
+  <div class="card">
+    <h3>照明・きっかけ</h3>
+    <div class="chips" id="cueChips"></div>
+    <div class="row">
+      <select id="cKind"></select>
+      <input type="text" id="cName" maxlength="20" placeholder="名前（例：サビ前の暗転）" style="width:12em">
+      <label>色 <input type="color" id="cColor" value="#ff3b6b" style="width:44px;height:36px;padding:0;border:none;background:none"></label>
+      <label>当てる人 <select id="cTarget"></select></label>
+    </div>
+    <div class="row">
+      <label>時刻 <input type="number" id="cEight" min="1" step="1">-<input type="number" id="cCount" min="1" max="8" step="1" style="width:56px"></label>
+      <label>フェード <input type="number" id="cFade" min="0" max="32" step="1" style="width:60px">カウント</label>
+    </div>
+    <div class="row">
+      <button id="btnAddCue">＋ 今のカウントに追加</button>
+      <button id="btnUpdCue">選んだものを更新</button>
+      <button id="btnDelCue">削除</button>
+    </div>
+    <div class="muted">照明が変わる所や、音のきっかけ（歌い出し・ドラムなど）を入れると、練習画面と動画に「あと何カウント」で出ます。暗転中も立ち位置は線で見えます。</div>
+  </div>
+</section>

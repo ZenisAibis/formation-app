@@ -1,0 +1,15 @@
+/* 色・基準の値 */
+:root {
+  --bg: #11151d;
+  --panel: #1a202b;
+  --panel2: #222a37;
+  --line: #2e3848;
+  --text: #e8ecf3;
+  --muted: #9aa5b8;
+  --accent: #4fb3ff;
+  --accent2: #1a63d6;
+  --red: #ff6b6b;
+  --amber: #ffb547;
+  --green: #3ddc97;
+  color-scheme: dark;
+}

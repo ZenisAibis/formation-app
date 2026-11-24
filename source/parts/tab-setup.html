@@ -1,0 +1,47 @@
+<!-- 設定 -->
+<section class="tab" id="tab-setup">
+  <div class="card">
+    <h3>作品</h3>
+    <div class="row"><label>作品名 <input type="text" id="title" maxlength="40" style="width:14em"></label></div>
+    <div class="row">
+      <label>ステージ 横 <input type="number" id="stW" min="3" max="40" step="0.5">m</label>
+      <label>奥行 <input type="number" id="stD" min="2" max="30" step="0.5">m</label>
+      <label>長さ <input type="number" id="totalEights" min="1" max="400" step="1">×8カウント</label>
+    </div>
+  </div>
+  <div class="card">
+    <h3>曲</h3>
+    <div class="row"><input type="file" id="audioFile" accept="audio/*,.mp3,.m4a,.wav,.aac"><span class="muted" id="audioName"></span></div>
+    <div class="muted">曲はこの端末の中だけで解析します。どこにも送信しません。曲は保存されないので、開き直したら読み込み直してください。</div>
+    <div class="row">
+      <label>BPM <input type="number" id="bpm" min="40" max="240" step="0.1" style="width:84px"></label>
+      <button id="btnTap">タップで測る</button>
+      <span class="muted" id="tapInfo"></span>
+    </div>
+    <div class="row">
+      <label>1カウント目の時刻 <input type="number" id="offset" min="0" step="0.01" style="width:84px">秒</label>
+      <button class="small" id="offM1">−1拍</button><button class="small" id="offP1">＋1拍</button>
+      <button class="small" id="offMs">−0.05秒</button><button class="small" id="offPs">＋0.05秒</button>
+    </div>
+    <div class="row"><button id="btnNowIsOne">再生中の「今」を 1-1 にする</button></div>
+    <div class="muted">自動で測ったBPMや頭の位置は、ずれることがあります。曲を流しながら数字が合っているかを確かめ、上のボタンで直してください。</div>
+  </div>
+  <div class="card">
+    <h3>メンバー（<span id="dCount"></span>人）</h3>
+    <div class="dlist" id="dancerList"></div>
+    <div class="row"><button class="small" id="btnAddDancer">＋ 1人追加</button><button class="small" id="btnDelDancer">最後の1人を削除</button></div>
+  </div>
+  <div class="card">
+    <h3>保存・読み込み</h3>
+    <div class="muted">この端末には自動で保存されます。ほかの人や端末に渡すときは、ファイルに保存して送ってください。</div>
+    <div class="row">
+      <button id="btnSave">ファイルに保存</button>
+      <label class="small" style="display:inline-flex;align-items:center;gap:6px">読み込み <input type="file" id="loadFile" accept=".json,application/json"></label>
+    </div>
+    <details><summary>文章（JSON）を貼り付けて読み込む</summary>
+      <textarea id="pasteJson" placeholder='{"v":1, ...}'></textarea>
+      <div class="row"><button class="small" id="btnPasteLoad">読み込む</button></div>
+    </details>
+    <div class="row"><button class="small" id="btnDemo">見本の作品に戻す（今の内容は消えます）</button></div>
+  </div>
+</section>

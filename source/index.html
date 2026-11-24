@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#11151d">
+<title>フォーメーション練習</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="立ち位置">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<style>
+<!-- @include styles/tokens.css -->
+<!-- @include styles/app.css -->
+</style>
+</head>
+<body>
+<main>
+<!-- @include parts/header-stage.html -->
+
+<!-- @include parts/tab-edit.html -->
+
+<!-- @include parts/tab-advice.html -->
+
+<!-- @include parts/tab-practice.html -->
+
+<!-- @include parts/tab-setup.html -->
+</main>
+<div id="toast"></div>
+<div id="askBox" hidden></div>
+<audio id="audio" preload="auto"></audio>
+
+<script>
+<!-- @include js/core/config.js -->
+<!-- @include js/core/state.js -->
+<!-- @include js/core/motion.js -->
+<!-- @include js/core/templates.js -->
+<!-- @include js/core/lights.js -->
+<!-- @include js/core/storage.js -->
+<!-- @include js/core/undo.js -->
+<!-- @include js/core/advice.js -->
+<!-- @include js/core/fixes.js -->
+<!-- @include js/core/audio-analysis.js -->
+<!-- @include js/ui/stage.js -->
+<!-- @include js/ui/tabs.js -->
+<!-- @include js/ui/setup.js -->
+</script>
+</body>
+</html>
