@@ -27,7 +27,21 @@ EXTERNAL_EXCEPTIONS = [
         "contains": "location.protocol === 'https:'",
         "reason": "通信先ではない。https で開いたときだけ、電波がなくても動くための sw.js を登録する判定",
     },
+    {
+        "file": "js/ui/youtube.js",
+        "contains": "https://www.youtube.com/iframe_api",
+        "reason": "YouTube 公式の IFrame Player API の読み込み（動画を出すとき1回だけ。CSP の script-src に同じ host）",
+    },
+    {
+        "file": "js/ui/youtube.js",
+        "contains": "https://www.youtube-nocookie.com/embed/",
+        "reason": "YouTube のプライバシー強化モードの埋め込み枠（iframe の src。CSP の frame-src に同じ host）",
+    },
 ]
+
+# CSP（meta の content）に書いてよい外のアドレス。YouTube の埋め込みに要る物だけ。ここに無い host は検査で止める
+CSP_ALLOWED_HOSTS = ["https://www.youtube.com", "https://www.youtube-nocookie.com"]
+CSP_HOST_RE = re.compile(r"https?://[^\s;'\"]+")
 
 INCLUDE_RE = re.compile(r"^\s*<!--\s*@include\s+(\S+)\s*-->\s*$")
 
@@ -113,10 +127,17 @@ def check_external(files):
             continue
         for n, line in enumerate(read(os.path.join(SRC, rel)).split("\n"), 1):
             if "Content-Security-Policy" in line:
-                continue  # CSP の文の中は対象外
-            if not any(p.search(line) for p in EXT_PATTERNS):
+                # CSP の文：外のアドレスは CSP_ALLOWED_HOSTS の物だけ（'self' などはアドレスでない）
+                for h in CSP_HOST_RE.findall(line):
+                    if h not in CSP_ALLOWED_HOSTS:
+                        bad.append("%s:%d CSP に許していないアドレス %s" % (rel, n, h))
                 continue
-            if any(e["file"] == rel and e["contains"] in line for e in EXTERNAL_EXCEPTIONS):
+            # 例外に名指しした文字列だけを取り除いて、まだ外部参照が残るなら止める（同じ行の別のアドレスは許さない）
+            rest = line
+            for e in EXTERNAL_EXCEPTIONS:
+                if e["file"] == rel:
+                    rest = rest.replace(e["contains"], "")
+            if not any(p.search(rest) for p in EXT_PATTERNS):
                 continue
             bad.append("%s:%d %s" % (rel, n, line.strip()[:80]))
     return bad

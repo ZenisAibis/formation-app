@@ -41,7 +41,7 @@ C:/Users/osm12/family/tools/.venv/Scripts/python.exe -I build.py --verify    # �
 1. `@include` の先がある・ぐるぐる回らない
 2. source の .js・.css・.html に 500字を超える行がない
 3. 改行は LF
-4. 外部参照なし（`http:`・`https:`・`//` で始まる src/href・url(…外)・@import。CSP の meta の文の中は対象外。下の例外の表だけ許す）
+4. 外部参照なし（`http:`・`https:`・`//` で始まる src/href・url(…外)・@import。例外の表（下）に名指しした文字列だけを取り除いて、まだ残るなら止める。CSP の meta の文は、外のアドレスが YouTube の2つ〈`https://www.youtube.com`・`https://www.youtube-nocookie.com`〉だけかを見る）
 5. 最上位の名前（function・const・let・var）の重なりなし（js の取り込み順に全部見る）
 6. html の id の重なりなし
 7. js の中に `</script` と `<!--` がない
@@ -53,8 +53,10 @@ C:/Users/osm12/family/tools/.venv/Scripts/python.exe -I build.py --verify    # �
 | 場所 | 内容 | 理由 |
 |---|---|---|
 | source/js/ui/setup.js の `location.protocol === 'https:'` | 文字 `https:` が出る | 通信先ではない。https で開いたときだけ、電波がなくても動くための sw.js を登録する判定 |
+| source/js/ui/youtube.js の `https://www.youtube.com/iframe_api` | YouTube 公式の IFrame Player API の読み込み | 動画を出すとき1回だけ。CSP の script-src に同じ host |
+| source/js/ui/youtube.js の `https://www.youtube-nocookie.com/embed/` | 埋め込み枠（iframe の src） | プライバシー強化モード。CSP の frame-src に同じ host |
 
-（manifest・CSP の文の中の `http`・`https` は検査の対象外。今の CSP は `'self'` だけで、外のアドレスは書いていない）
+（manifest の `http`・`https` は検査の対象外。CSP は YouTube の埋め込みに要る2つの host だけを許す：script-src に `https://www.youtube.com`、frame-src に `https://www.youtube-nocookie.com` と `https://www.youtube.com`）
 
 ## 試験
 再現試験は `C:\Users\osm12\family\tools\formation\tests\`（`run_tests.js`・T1〜T10。使い方はそこの README）。
