@@ -28,7 +28,7 @@ source/            手で直すのはここだけ
 build.py           組み立て＋検査（標準ライブラリだけの Python）
 dist/              組み立ての出力（git に入れない）  index.html と build.json
 index.html         公開用（GitHub Pages が配る物）。dist/index.html の写し
-manifest.webmanifest・sw.js・icon-*.png・.nojekyll   そのまま
+manifest.webmanifest・sw.js・icon-*.png・.nojekyll   手で直す物（ビルドの外）。組み立てても変わらない
 ```
 - 直すのは `source/` だけ。`dist/` と、ルートの `index.html` は手で直さない（組み立ての出力）
 - 改行は LF（`.gitattributes`）
@@ -138,7 +138,7 @@ node run_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.htm
 - 「グループの形で見分ける」・ダンサーの色を選ぶ機能（保存データの項目が増える。持ち主の承認待ち）
 - YouTube の埋め込み枠：このあとの「YouTube で練習する」で入れた（試作）
 - 横長（844px）のとき、ステージを動画の枠の隣に並べる2列（動画の枠が無いので入れていない）。ステージの高さの上限（画面の高さの58%）は前のまま
-- `manifest.webmanifest` の色（`#11151d`）と `sw.js`：「そのまま」の物なので触っていない（起動画面の色が少し違う）
+- `manifest.webmanifest` の色（`#11151d`）と `sw.js`：このときは触っていない（起動画面の色が少し違った）。「公開の前の直し」の段2で、色を `#0a0c11` に・キャッシュの版を `formation-v2` にした
 
 ## YouTube で練習する（2026-11-26・試作。公開していない）
 設定タブの「YouTube の動画」に URL を入れて「動画を出す」と、画面の上（見出しとステージの間）に YouTube の公式プレーヤーが出る。再生・停止・位置の移動（動画の枠の中でも、アプリの ▶・タイムライン・「戻る」でも）に、アプリの再生位置が追いかける。
@@ -211,3 +211,8 @@ P1 23・P2 37・P3 29 ケースすべて合格（89ケース）。既存の T1�
 ### 試験の直し（段1）
 - 既存の `run_youtube_tests.js` の `openHttp` は、同意の印を入れた端末として開く（初期設定の1行。同意の動きそのものは `run_compat_tests.js` の K3 で確かめる）。期待値は変えていない
 - Y2 の最後の1件「組み立てた index.html の外のアドレス」は、新しい規格で足したリンク2つ（`<a href="…" target="_blank" rel="noopener noreferrer">` の形のもの）を名指しで許す形に直した（段1の仕様そのものが変えた期待。形の違う物・別のアドレスは今までどおり止まる）
+
+### 段2：manifest の色・sw.js の版
+- `manifest.webmanifest:9-10`：`background_color`・`theme_color` を `#11151d` → `#0a0c11`（案C の画面の背景 `--bg`・`<meta name="theme-color">` と同じ。起動画面・上の帯の色が背景と合う）。アイコン（`icon-*.png`）の外側の色は `#11151d` に近いまま（アイコンの絵を案C に合わせるかは持ち主の好み。直していない）
+- `sw.js:2`：`CACHE` を `'formation-v1'` → `'formation-v2'`（以後、公開のたびに数字を1つ上げる。直す場所はここだけ）。`FILES`（先にしまう一覧）は変えていない（ポリシーは index.html の中にあるので、足す物は無い）。入れ替わり：新しい `sw.js` が入ると `install`→`skipWaiting`→`activate` で `formation-v1` が消え、`formation-v2` に変わる（コードを読んだ範囲。ブラウザで v1→v2 を動かしては未確認。試験 K4 は、ファイルの中身（CACHE の文字・公開版との差が1行だけ）を見る）
+- 見た目の確かめ（iPhone・Android のホーム画面から開いたときの起動画面・上の帯の色）は実機で（`docs/06`）。iPhone が manifest の色をどこまで使うかは未確認
