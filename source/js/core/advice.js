@@ -27,12 +27,15 @@ const spreadOf = pos => {
   const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length, cy = pos.reduce((s, p) => s + p[1], 0) / pos.length;
   return Math.sqrt(pos.reduce((s, p) => s + (p[0] - cx) ** 2 + (p[1] - cy) ** 2, 0) / pos.length);
 };
-function minPathGap(a, b) {
+// skip＝意図したクロスの組 [[小, 大]…]。この組は「ぶつかり」として数えない
+function minPathGap(a, b, skip = []) {
   let best = 1e9, pair = null, at = 0;
+  const skipSet = new Set(skip.map(c => c[0] + ',' + c[1]));
   for (let s = 0; s <= 24; s++) {
     const u = s / 24;
     const p = a.map((q, j) => [q[0] + (b[j][0] - q[0]) * u, q[1] + (b[j][1] - q[1]) * u]);
     for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) {
+      if (skipSet.size && skipSet.has(i + ',' + j)) continue;
       const d = hyp(p[i][0] - p[j][0], p[i][1] - p[j][1]);
       if (d < best) {
         best = d;
@@ -64,22 +67,25 @@ function analyze() {
   const eHigh = eSorted.length ? eSorted[Math.floor(eSorted.length * 0.7)] : null;
   const sMed = [...spreads].sort((a, b) => a - b)[Math.floor(spreads.length / 2)];
   K.forEach((k, i) => {
+    const lk = lockPosOf(k), crossSkip = lockCrossOf(k), pins = assignPins(k);
+    // 位置を固定した人が問題の人に含まれるとき、動かさないことを添える
+    const lockNote = ids => ids.some(j => lk.includes(j)) ? `（位置を固定している人は動かしません：${names(ids.filter(j => lk.includes(j)))}）` : '';
     const o = outOf(k.pos);
-    if (o.length) add(0, i, `${names(o)} がステージの端からはみ出しています。`, '内側に入れる', () => { k.pos = clampPos(k.pos); });
+    if (o.length) add(0, i, `${names(o)} がステージの端からはみ出しています。${lockNote(o)}`, '内側に入れる', () => { setPos(k, clampPos(k.pos)); });
     const hid = hiddenOf(k.pos);
     if (hid.length) add(0, i,
-      `${names(hid.map(h => h[1]))} がすぐ前の人の真後ろにいて、客席から見えません。前の列と半人分ずらす（千鳥にする）と全員が見えます。`,
-      '千鳥にずらす', () => { k.pos = fixFormation(k.pos); });
+      `${names(hid.map(h => h[1]))} がすぐ前の人の真後ろにいて、客席から見えません。前の列と半人分ずらす（千鳥にする）と全員が見えます。${lockNote(hid.flat())}`,
+      '千鳥にずらす', () => { setPos(k, fixFormation(k.pos, lk)); });
     const tp = tightPairs(k.pos);
     if (tp.length) add(0, i,
-      `${tp.length}組の間隔が${TH.space * 100}cmより狭く、腕を広げるとぶつかります（例：${nm(tp[0][0])}と${nm(tp[0][1])}）。`,
-      '間隔を広げる', () => { k.pos = fixFormation(k.pos); });
+      `${tp.length}組の間隔が${TH.space * 100}cmより狭く、腕を広げるとぶつかります（例：${nm(tp[0][0])}と${nm(tp[0][1])}）。${lockNote(tp.flat())}`,
+      '間隔を広げる', () => { setPos(k, fixFormation(k.pos, lk)); });
     const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length;
     if (Math.abs(cx) > W * 0.12) add(1, i,
       `全体が${cx > 0 ? '上手（客席から見て右）' : '下手（客席から見て左）'}に${Math.abs(cx).toFixed(1)}m寄っています。意図した演出でなければ中央に寄せると見栄えが安定します。`,
-      '中央に寄せる', () => { k.pos = centerPos(k.pos); });
+      '中央に寄せる', () => { setPos(k, centerPos(k.pos)); });
     if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreads[i] < sMed * 0.95)
-      add(1, i, `曲が盛り上がる所なのに、隊形がこぢんまりしています。ステージを広く使うと迫力が出ます。`, 'ステージ全体に広げる', () => { k.pos = fixFormation(spreadOut(k.pos)); });
+      add(1, i, `曲が盛り上がる所なのに、隊形がこぢんまりしています。ステージを広く使うと迫力が出ます。`, 'ステージ全体に広げる', () => { setPos(k, fixFormation(lockedPos(k, spreadOut(k.pos)), lk)); });
     if (i > 0) {
       const p = K[i - 1], gap = k.at - p.at, nd = neededMove(p.pos, k.pos);
       if (k.move > gap) add(0, i, `移動が${k.move}カウントですが、前の隊形からここまで${gap}カウントしかありません。`, `移動を${gap}カウントにする`, () => { k.move = gap; });
@@ -95,10 +101,10 @@ function analyze() {
           can > k.move ? `移動を${can}カウントにする` : null,
           can > k.move ? () => { k.move = can; } : null);
       }
-      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
-      const g = minPathGap(p.pos, k.pos);
+      const opt = optimalNext(p.pos, k.pos, pins), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
+      const g = minPathGap(p.pos, k.pos, crossSkip);
       if (g.d < TH.crash) {
-        const g2 = minPathGap(p.pos, opt);
+        const g2 = minPathGap(p.pos, opt, crossSkip);
         const c = Math.round(k.at - k.move * (1 - g.u));
         add(0, i,
           `移動の途中（${cLabel(c)}ごろ）で ${nm(g.pair[0])} と ${nm(g.pair[1])} がぶつかります。`
@@ -106,17 +112,22 @@ function analyze() {
             ? '行き先を入れ替えると、ぶつからずに済みます。'
             : '通る道を前後にずらすか、移動のタイミングを1カウントずらしてください。'),
           g2.d >= TH.crash ? '行き先を入れ替える' : null,
-          g2.d >= TH.crash ? () => { k.pos = opt; } : null);
+          g2.d >= TH.crash ? () => { setPos(k, opt); } : null);
       } else if (cur - best > Math.max(2, cur * 0.15)) {
         add(1, i,
           `行き先を入れ替えると、全員の移動の合計が${cur.toFixed(1)}m → ${best.toFixed(1)}mに減ります（センターや見せ場の人が変わることがあります）。`,
-          '行き先を入れ替える', () => { k.pos = opt; });
+          '行き先を入れ替える', () => { setPos(k, opt); });
       }
-      const crs = crossesInto(i).filter(x => x.gap >= TH.crash);
+      const crsAll = crossesInto(i).filter(x => x.gap >= TH.crash || x.intended);
+      const crs = crsAll.filter(x => !x.intended), ics = crsAll.filter(x => x.intended);
       if (crs.length) add(2, i,
         `この移動で${crs.length}組がクロスします（練習で合わせる所）：`
         + crs.slice(0, 4).map(x => `${nm(x.a)}×${nm(x.b)}（${cLabel(x.count)}ごろ、${nm(x.front)}が前）`).join('、')
         + (crs.length > 4 ? ` ほか${crs.length - 4}組` : '') + '。');
+      if (ics.length) add(2, i,
+        `この移動で${ics.length}組は意図したクロスです（ロック。ぶつかりの警告と行き先の入れ替えの対象から外しています）：`
+        + ics.slice(0, 4).map(x => `${nm(x.a)}×${nm(x.b)}（${cLabel(x.count)}ごろ、${nm(x.front)}が前）`).join('、')
+        + (ics.length > 4 ? ` ほか${ics.length - 4}組` : '') + '。');
       const md = cur / k.pos.length;
       if (md < 0.3 && gap >= 16) add(2, i, `前の隊形（${p.name}）とほとんど同じ形です。見ている人には変化が伝わりにくいので、形を変えるか、レベル（高さ）や向きで変化を付けると良くなります。`);
     }

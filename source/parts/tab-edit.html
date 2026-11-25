@@ -26,7 +26,15 @@
       <select id="tplSel"></select>
       <button id="btnTpl">形を当てはめる</button>
     </div>
-    <div class="hint">薄い丸と線は、ひとつ前の隊形からの動きです。黄色の×はクロスする場所です。</div>
+    <div class="lockbox">
+      <div class="muted" id="lockSummary"></div>
+      <div class="row" id="rowLockClear" hidden><button class="small" id="btnLockClear">位置の固定を全部外す</button></div>
+      <div id="crossBox" hidden>
+        <div class="muted">クロスする組：押すと「意図したクロス」の印を付け外し（ぶつかりの警告と行き先の入れ替えの対象から外れます）</div>
+        <div class="crosslist" id="crossList"></div>
+      </div>
+    </div>
+    <div class="hint">薄い丸と線は、ひとつ前の隊形からの動きです。黄色の×はクロスする場所です（押すと、意図したクロスの印を付け外しできます）。鍵の印の丸は、位置を固定しています。</div>
   </div>
 
   <!-- 選んだ丸（ダンサー） -->
@@ -37,7 +45,9 @@
     <p class="kv" id="cardDancerBami"></p>
     <div class="row" id="cardDancerGroupRow" hidden><label>グループ <select id="cardDancerGroupSel"></select></label></div>
     <p class="kv" id="cardDancerNear"></p>
-    <div class="hint">ドラッグで動かせます。</div>
+    <div class="hint">ドラッグで動かせます（ロック中の丸は動きません）。</div>
+    <div class="row"><button id="btnLockDancer" aria-pressed="false">この隊形で位置を固定する（ロック）</button></div>
+    <div class="hint" id="cardDancerLockHint" hidden>ロック中：この隊形では、自動の直し・反転・中央寄せ・形の当てはめ・ドラッグでも、この人の位置は動きません。</div>
     <div class="row"><button id="btnSetMe">この人を「自分」にする</button></div>
   </div>
 

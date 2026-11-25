@@ -28,6 +28,7 @@ function render() {
   lastLayout = drawStage(ctx, w, h, ui.count, {
     view: ui.view, me: ui.me, compare: ui.compare, names: ui.showNames, showPaths: ui.showPaths && !editing, bamiri: ui.showBamiri,
     ghostPrev: editing && ui.sel > 0 ? ui.sel : 0, selDancer: editing ? ui.selDancer : -1, screen: true,
+    lockPos: lockMarksAt(ui.count),
   });
   $('#countDisp').textContent = cLabel(ui.count);
   $('#countBig').textContent = document.body.classList.contains('proj') ? cLabel(ui.count) : '';
@@ -81,7 +82,7 @@ function renderMeInfo() {
     const cr = crossesInto(j).find(x => (x.a === ui.me || x.b === ui.me) && x.count >= ui.count - 0.5);
     if (cr) {
       const other = cr.a === ui.me ? cr.b : cr.a;
-      extra.push(`✕ ${cLabel(cr.count)}ごろ ${S.dancers[other].name} とクロス（${cr.front === ui.me ? 'あなたが前' : 'あなたが後ろ'}を通る）`);
+      extra.push(`✕ ${cLabel(cr.count)}ごろ ${S.dancers[other].name} とクロス（${cr.front === ui.me ? 'あなたが前' : 'あなたが後ろ'}を通る${cr.intended ? '・意図したクロス' : ''}）`);
     }
   }
   const nq = nextCue(ui.count);

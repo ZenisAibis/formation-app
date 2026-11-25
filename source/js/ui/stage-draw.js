@@ -159,6 +159,12 @@ function drawStage(c, w, h, count, o) {
     c.moveTo(x + z, y - z);
     c.lineTo(x - z, y + z);
     c.stroke();
+    if (cr.intended) { // 意図したクロス（ロック）：×のまわりに輪
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x, y, z + 4, 0, 7);
+      c.stroke();
+    }
     c.globalAlpha = 1;
   });
   // ダンサー（選んだ丸を最後＝いちばん上に描く）
@@ -182,6 +188,7 @@ function drawStage(c, w, h, count, o) {
     c.lineWidth = isMe ? 3 : 1;
     c.strokeStyle = isMe ? THEME.text : '#0008';
     c.stroke();
+    if (o.lockPos && o.lockPos.includes(i)) drawLockMark(c, x, y, rr); // 位置を固定した丸に鍵の印
     // 名前：丸が小さい（人数が多い）画面では、自分以外は丸の中に書かない（選んだ丸は下の吹き出しで）
     if (o.names && (!o.screen || R >= 11 || isMe)) {
       c.fillStyle = THEME.onToken;

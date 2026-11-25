@@ -26,7 +26,7 @@ function crossesInto(i) { // 隊形 i-1 → i の移動で起きるクロス
         front = px[1] <= py[1] ? x : y;
       }
     }
-    out.push({ a: x, b: y, pt, count: ms + bt * dur, front, gap: bd });
+    out.push({ a: x, b: y, pt, count: ms + bt * dur, front, gap: bd, intended: isIntendedCross(k, x, y) });
   }
   return out.sort((p, q) => p.count - q.count);
 }
@@ -72,10 +72,11 @@ function hungarian(cost) {
   for (let j = 1; j <= n; j++) ans[p[j] - 1] = j - 1;
   return ans;
 }
-function assignSpots(from, spots) {
-  const cost = from.map(a => spots.map(b => hyp(a[0] - b[0], a[1] - b[1])));
+// anchor[i]＝位置を固定した人の今の座標（無ければ undefined）。その人は自分の座標のまま、いちばん近い場所を使ったことにして、ほかの人が残りの場所に入る
+function assignSpots(from, spots, anchor = []) {
+  const cost = from.map((a, i) => spots.map(b => { const o = anchor[i] || a; return hyp(o[0] - b[0], o[1] - b[1]); }));
   const ans = hungarian(cost);
-  return from.map((_, i) => [spots[ans[i]][0], spots[ans[i]][1]]);
+  return from.map((_, i) => anchor[i] ? [anchor[i][0], anchor[i][1]] : [spots[ans[i]][0], spots[ans[i]][1]]);
 }
 
 const totalDist = (a, b) => a.reduce((s, p, i) => s + hyp(p[0] - b[i][0], p[1] - b[i][1]), 0);

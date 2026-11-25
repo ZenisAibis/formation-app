@@ -31,6 +31,7 @@ function fillKeyForm() {
   $('#kCount').value = k.at % 8 + 1;
   $('#kMove').value = k.move;
   $('#kMove').disabled = ui.sel === 0;
+  renderLockCard();
 }
 $('#kName').addEventListener('change', e => {
   pushUndo();
@@ -97,8 +98,10 @@ $('#btnTpl').addEventListener('click', () => {
   const k = S.keys[ui.sel], spots = TEMPLATES[$('#tplSel').value](S.dancers.length, S.stage.w, S.stage.d);
   pushUndo();
   const from = ui.sel > 0 ? S.keys[ui.sel - 1].pos : k.pos;
-  k.pos = assignSpots(from, spots).map(p => [r2(p[0]), r2(p[1])]);
-  k.pos = clampPos(k.pos);
+  const anchor = [];
+  lockPosOf(k).forEach(i => { anchor[i] = k.pos[i]; }); // 位置を固定した人は、いまの座標のまま
+  setPos(k, assignSpots(from, spots, anchor).map(p => [r2(p[0]), r2(p[1])]));
+  setPos(k, clampPos(k.pos));
   if (k.name.startsWith('隊形')) k.name = $('#tplSel').value.replace(/（.*）/, '');
   changed(true);
   toast('前の隊形から近い人が近い場所に行くように割り当てました');
@@ -106,13 +109,13 @@ $('#btnTpl').addEventListener('click', () => {
 $('#btnMirror').addEventListener('click', () => {
   pushUndo();
   const k = S.keys[ui.sel];
-  k.pos = k.pos.map(p => [-p[0], p[1]]);
+  setPos(k, k.pos.map(p => [-p[0], p[1]]));
   changed(false);
 });
 $('#btnCenter').addEventListener('click', () => {
   pushUndo();
   const k = S.keys[ui.sel];
-  k.pos = centerPos(k.pos);
+  setPos(k, centerPos(k.pos));
   changed(false);
 });
 
@@ -141,6 +144,7 @@ function fillDancerCard() {
   $('#cardDancerSw').style.background = d.color;
   syncDancerPalette();
   fillDancerGroup(i);
+  fillDancerLock(i);
   $('#cardDancerPos').textContent = `中央から${p[0] < 0 ? '左' : '右'} ${Math.abs(p[0]).toFixed(2)}m・前から ${p[1].toFixed(2)}m（客席から見て）`;
   $('#cardDancerBami').textContent = `バミリ ${bamiriText(p[0], p[1])}`;
   $('#cardDancerNear').textContent = `まわり（画面の左右） ${neighborText(neighborsOf(k.pos, i), S.dancers.map(x => x.name), ui.view)}`;

@@ -20,15 +20,27 @@ cv.addEventListener('pointerdown', e => {
     }
   });
   if (best >= 0 && bd < Math.max(R, 22)) {
+    ui.selDancer = best;
+    setCard('dancer'); // 選んだ丸のカードを出す
+    if (isLockedPos(k, best)) { // ロック中の丸は動かさない（選ぶだけ。カードで外すと動かせる）
+      toast('ロック中です。丸のカードの「ロックを外す」で動かせます', 3200);
+      requestRender();
+      e.preventDefault();
+      return;
+    }
     // 押しただけでは履歴に積まない（実際に動いた最初の時に1回だけ積む。下の pointermove）
     ui.drag = best;
     ui.dragMoved = false;
-    ui.selDancer = best;
-    setCard('dancer'); // 選んだ丸のカードを出す
     cv.setPointerCapture(e.pointerId);
     requestRender();
     e.preventDefault();
   } else {
+    const cr = crossHitAt(x, y); // ステージの × を押すと、意図したクロスの印を付け外し
+    if (cr) {
+      toggleCrossIntent(cr.a, cr.b);
+      e.preventDefault();
+      return;
+    }
     ui.selDancer = -1;
     if (ui.card === 'dancer') setCard(null);
     requestRender();
@@ -37,6 +49,7 @@ cv.addEventListener('pointerdown', e => {
 cv.addEventListener('pointermove', e => {
   if (ui.drag == null) return;
   const [x, y] = ptr(e), k = S.keys[ui.sel];
+  if (isLockedPos(k, ui.drag)) return; // ロック中の丸は動かさない
   let [mx, my] = lastLayout.inv(x, y);
   if ($('#snap').checked) {
     mx = Math.round(mx * 4) / 4;

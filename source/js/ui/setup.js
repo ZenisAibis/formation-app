@@ -161,9 +161,13 @@ $('#btnDelDancer').addEventListener('click', () => {
   ask(`${d.name} を削除しますか？`, '削除する', () => {
     pushUndo();
     S.dancers.pop();
-    S.keys.forEach(k => k.pos.pop());
+    const dropRef = k => {
+      k.pos.pop();
+      cleanDancerRefs(k, S.dancers.length); // 消した人へのロックの参照を残さない
+    };
+    S.keys.forEach(dropRef);
     (S.cues || []).forEach(q => { if (q.target >= S.dancers.length) q.target = -1; });
-    if (S.baseKeys) S.baseKeys.forEach(k => k.pos.pop());
+    if (S.baseKeys) S.baseKeys.forEach(dropRef);
     if (ui.me >= S.dancers.length) ui.me = -1;
     changed(true);
   });

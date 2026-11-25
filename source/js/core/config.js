@@ -7,7 +7,7 @@ const PALETTE = [
   '#3fe0ff','#5b8cff','#a77bff','#e86bff','#ff7bc8','#ffb547','#d9b98a','#b6f05a','#3ddc97','#c3cad6'];
 const LS_KEY = 'danceFormation.v1';
 // 新しい項目を使った作品に付ける版。使っていない作品は v=1 のまま（schema.js の schemaVOf）。足すときはここに1行
-const FEATURE_V = { groups: 2 };
+const FEATURE_V = { groups: 2, lock: 2 };
 const SCHEMA_V = Math.max(1, ...Object.values(FEATURE_V)); // このアプリが読める作品の版の最大。これより大きい版の作品は読み込まない
 const MAX_GROUPS = 8;         // グループの数の上限
 const GROUP_NAME_MAX = 12;    // グループの名前の字数の上限

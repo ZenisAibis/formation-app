@@ -23,5 +23,26 @@ function tokenPath(c, shape, x, y, r) {
     c.arc(x, y, r, 0, 7);
   }
 }
+// 位置を固定した丸の右上に付ける、小さな鍵（色に頼らず形で分かる。丸の色が何色でも読めるよう、白い鍵に黒い縁）
+function drawLockMark(c, x, y, r) {
+  const s = Math.max(6, r * 0.62), bx = x + r * 0.62, by = y - r * 0.62;
+  c.save();
+  c.lineWidth = Math.max(2, s * 0.26);
+  c.strokeStyle = '#0b0d12';
+  c.beginPath();
+  c.arc(bx, by - s * 0.15, s * 0.32, Math.PI, 0);
+  c.stroke(); // つる（黒い縁）
+  c.lineWidth = Math.max(1, s * 0.13);
+  c.strokeStyle = THEME.text;
+  c.beginPath();
+  c.arc(bx, by - s * 0.15, s * 0.32, Math.PI, 0);
+  c.stroke(); // つる（白）
+  c.fillStyle = THEME.text;
+  c.strokeStyle = '#0b0d12';
+  c.lineWidth = 1;
+  c.fillRect(bx - s * 0.5, by - s * 0.15, s, s * 0.72);
+  c.strokeRect(bx - s * 0.5, by - s * 0.15, s, s * 0.72); // 本体
+  c.restore();
+}
 // 形の中に名前を書くときの、縦の位置のずれ（三角は重心が下にある）
 const tokenLabelDy = (shape, r) => shape === 'triangle' ? r * 0.3 : 0;

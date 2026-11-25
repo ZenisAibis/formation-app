@@ -62,11 +62,12 @@ function inspectLoad(o) {
     else if (kind === 'len') dropped++;
     else if (badKey === null) badKey = String((k && k.name) || '名前なし').slice(0, 20);
     return false;
-  }).map((k, i) => ({
+  }).map((k, i) => cleanDancerRefs({
     id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20),
     at: Math.max(0, Math.round(clampNum(k.at, i * 32, 0, 4000))),
     move: Math.round(clampNum(k.move, 4, 1, 64)),
-    pos: k.pos.map(p => [clampNum(p[0], 0, -50, 50), clampNum(p[1], 0, -50, 50)]) }));
+    pos: k.pos.map(p => [clampNum(p[0], 0, -50, 50), clampNum(p[1], 0, -50, 50)]),
+    lock: k.lock }, n)); // lock は人数の範囲に確かめて置き直す（無ければ書かない）
   const keys = fixKeys(o.keys);
   const base = Array.isArray(o.baseKeys) ? fixKeys(o.baseKeys, true) : [];
   if (badKey !== null) return refuse(`座標が数でない隊形があります（「${badKey}」）`);

@@ -40,6 +40,7 @@ function changed(all) {
   else {
     renderKeyChips();
     renderAdvice();
+    renderLockCard(); // クロスの組・固定の一覧は、動かした・反転したあとで変わる
   }
   requestRender();
 }

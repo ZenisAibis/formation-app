@@ -74,3 +74,17 @@
 .grow-h .muted {
   white-space: nowrap;
 }
+/* ロック：固定している人の一覧・意図したクロスの一覧 */
+.lockbox {
+  margin: 8px 0;
+}
+.crosslist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+.crossbtn[aria-pressed=true] {
+  box-shadow: inset 0 0 0 1px var(--sel);
+  color: var(--text);
+}

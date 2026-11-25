@@ -1,4 +1,4 @@
-// 元に戻す・やり直す。単位は作品 S の全部（title・bpm・offset・totalEights・stage・dancers・keys・baseKeys・cues・energy）
+// 元に戻す・やり直す。単位は作品 S の全部（title・bpm・offset・totalEights・stage・dancers〔group を含む〕・groups・keys〔lock を含む〕・baseKeys・cues・energy）。S の中に置いた項目は、ここに作りを足さなくても一緒に戻る
 let undoStack = [];
 let redoStack = [];
 

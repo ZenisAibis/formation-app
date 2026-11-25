@@ -95,18 +95,18 @@ function autoImprove() {
   const eHigh = eS.length ? eS[Math.floor(eS.length * 0.7)] : null;
   const sMed = [...S.keys.map(k => spreadOf(k.pos))].sort((a, b) => a - b)[Math.floor(S.keys.length / 2)];
   S.keys.forEach((k, i) => {
-    k.pos = clampPos(k.pos);
+    setPos(k, clampPos(k.pos)); // 位置を固定した人は、どの段でも動かさない（setPos が元の座標に戻す）
     const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length;
-    if (Math.abs(cx) > S.stage.w * 0.12) k.pos = centerPos(k.pos);
-    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreadOf(k.pos) < sMed * 0.95) k.pos = spreadOut(k.pos);
-    k.pos = fixFormation(k.pos);
+    if (Math.abs(cx) > S.stage.w * 0.12) setPos(k, centerPos(k.pos));
+    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreadOf(k.pos) < sMed * 0.95) setPos(k, spreadOut(k.pos));
+    setPos(k, fixFormation(k.pos, lockPosOf(k)));
   });
   for (let i = 1; i < S.keys.length; i++) {
-    const p = S.keys[i - 1], k = S.keys[i], gap = k.at - p.at;
+    const p = S.keys[i - 1], k = S.keys[i], gap = k.at - p.at, skip = lockCrossOf(k);
     if (allowSwap) {
-      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
-      const crash = minPathGap(p.pos, k.pos).d < TH.crash, crash2 = minPathGap(p.pos, opt).d < TH.crash;
-      if ((crash && !crash2) || cur - best > Math.max(2, cur * 0.15)) k.pos = opt;
+      const opt = optimalNext(p.pos, k.pos, assignPins(k)), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
+      const crash = minPathGap(p.pos, k.pos, skip).d < TH.crash, crash2 = minPathGap(p.pos, opt, skip).d < TH.crash;
+      if ((crash && !crash2) || cur - best > Math.max(2, cur * 0.15)) setPos(k, opt);
     }
     if (k.move > gap) k.move = gap;
     const v = Math.max(...p.pos.map((q, j) => hyp(q[0] - k.pos[j][0], q[1] - k.pos[j][1]))) / (k.move * beatSec());

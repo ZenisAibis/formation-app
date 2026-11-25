@@ -5,6 +5,7 @@
 function usedFeatures(st) {
   const f = [];
   if (usesGroups(st)) f.push('groups');
+  if (usesLock(st)) f.push('lock');
   return f;
 }
 const schemaVOf = st => Math.max(1, ...usedFeatures(st).map(f => FEATURE_V[f]));
