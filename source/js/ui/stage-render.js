@@ -26,7 +26,7 @@ function render() {
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const editing = isEditable(), k = S.keys[ui.sel];
   lastLayout = drawStage(ctx, w, h, ui.count, {
-    view: ui.view, me: ui.me, compare: ui.compare, names: ui.showNames, showPaths: ui.showPaths && !editing,
+    view: ui.view, me: ui.me, compare: ui.compare, names: ui.showNames, showPaths: ui.showPaths && !editing, bamiri: ui.showBamiri,
     ghostPrev: editing && ui.sel > 0 ? ui.sel : 0, selDancer: editing ? ui.selDancer : -1, screen: true,
   });
   $('#countDisp').textContent = cLabel(ui.count);
@@ -53,12 +53,19 @@ function renderMeInfo() {
     box.style.display = 'none';
     return;
   }
-  const i = keyIndexAt(ui.count), nk = S.keys[i + 1], pos = positionsAt(S.keys, ui.count)[ui.me];
+  const i = keyIndexAt(ui.count), nk = S.keys[i + 1], all = positionsAt(S.keys, ui.count), pos = all[ui.me];
   box.style.display = 'block';
   box.textContent = '';
   const nameEl = el('b', { text: S.dancers[ui.me].name, style: `color:${S.dancers[ui.me].color}` });
+  const info = []; // 立ち位置のバミリ番号（出す設定のとき）と、まわりの人
+  if (ui.showBamiri) {
+    const h = S.keys[i].pos[ui.me];
+    info.push(`📍 立ち位置 ${bamiriText(h[0], h[1])}${nk ? ` → 次 ${bamiriText(nk.pos[ui.me][0], nk.pos[ui.me][1])}` : ''}`);
+  }
+  const addInfo = () => info.forEach(t => box.append(el('div', { text: t, style: 'font-size:13px;color:var(--muted)' })));
   if (!nk) {
     box.append(nameEl, ` ／ 最後の隊形（${S.keys[i].name}）です`);
+    addInfo();
     return;
   }
   const dx = nk.pos[ui.me][0] - pos[0], dy = nk.pos[ui.me][1] - pos[1], d = hyp(dx, dy);
@@ -78,6 +85,7 @@ function renderMeInfo() {
   }
   const nq = nextCue(ui.count);
   if (nq) extra.push(`💡 次のきっかけ ${cLabel(nq.at)}「${nq.name}」（あと${Math.ceil(nq.at - ui.count - 1e-6)}カウント）`);
+  addInfo();
   extra.forEach(t => box.append(el('div', { text: t, style: 'font-size:13px;color:var(--muted)' })));
 }
 function isEditable() {

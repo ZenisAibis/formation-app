@@ -43,7 +43,8 @@ function ask(msg, okLabel, fn, cancelLabel = 'やめる') { // 画面の中で�
   box.hidden = false;
 }
 const safeName = s => (s || 'formation').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 30);
-function legend(c, x, y, w, fs) {
+// dry が true のときは描かず、できあがりの下端の y だけ返す（画像の高さを先に決めるため）
+function legend(c, x, y, w, fs, dry = false) {
   let cx = x, cy = y;
   c.font = `${fs}px sans-serif`;
   c.textBaseline = 'middle';
@@ -54,13 +55,39 @@ function legend(c, x, y, w, fs) {
       cx = x;
       cy += fs * 1.6;
     }
-    c.fillStyle = d.color;
-    c.beginPath();
-    c.arc(cx + fs * 0.5, cy, fs * 0.45, 0, 7);
-    c.fill();
-    c.fillStyle = THEME.text;
-    c.fillText(d.name, cx + fs * 1.1, cy);
+    if (!dry) {
+      c.fillStyle = d.color;
+      c.beginPath();
+      c.arc(cx + fs * 0.5, cy, fs * 0.45, 0, 7);
+      c.fill();
+      c.fillStyle = THEME.text;
+      c.fillText(d.name, cx + fs * 1.1, cy);
+    }
     cx += tw;
   });
   return cy + fs;
+}
+// 各ダンサーのバミリ番号の一覧（画像の下）。見出し1行と、「名前　上手2.5・前から2.35m」を幅に合わせて何列かに並べる
+function bamiriListLayout(c, w, fs, pos, names) {
+  c.font = `700 ${fs}px sans-serif`;
+  const items = pos.map((p, i) => ({ name: names[i] || '', text: bamiriText(p[0], p[1]) }));
+  const colW = Math.ceil(Math.max(1, ...items.map(t => c.measureText(t.name).width + fs * 0.8 + c.measureText(t.text).width)) + fs * 1.5);
+  const cols = Math.max(1, Math.floor(w / colW)), rows = Math.ceil(items.length / cols), rowH = fs * 1.55;
+  return { items, colW, cols, rows, rowH, height: fs * 2 + rows * rowH };
+}
+function drawBamiriList(c, x, y, w, fs, lay) {
+  c.textBaseline = 'top';
+  c.textAlign = 'left';
+  c.font = `700 ${fs}px sans-serif`;
+  c.fillStyle = THEME.muted;
+  c.fillText('バミリ番号（前の縁の中央が0・1mごと・上手は客席から見て右）', x, y);
+  lay.items.forEach((t, i) => {
+    const cx = x + (i % lay.cols) * lay.colW, cy = y + fs * 2 + Math.floor(i / lay.cols) * lay.rowH;
+    c.font = `700 ${fs}px sans-serif`;
+    c.fillStyle = S.dancers[i] ? S.dancers[i].color : THEME.text;
+    c.fillText(t.name, cx, cy);
+    c.font = `${fs}px sans-serif`;
+    c.fillStyle = THEME.text;
+    c.fillText(t.text, cx + c.measureText(t.name).width + fs * 0.8, cy);
+  });
 }

@@ -53,3 +53,8 @@ $('#showPaths').addEventListener('change', e => {
   ui.showPaths = e.target.checked;
   requestRender();
 });
+// バミリ番号：画面の状態だけ（保存しない）。前の縁の番号と、書き出し画像の一覧に効く
+$('#showBamiri').addEventListener('change', e => {
+  ui.showBamiri = e.target.checked;
+  requestRender();
+});

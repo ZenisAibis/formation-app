@@ -17,7 +17,7 @@ $('#btnSheet').addEventListener('click', () => {
     const ox = 10 + (i % cols) * cw, oy = 70 + Math.floor(i / cols) * (ch + 10);
     x.save();
     x.translate(ox, oy + 34);
-    drawStage(x, cw - 10, ch - 34, k.at, { view: ui.view, me: -1, names: true });
+    drawStage(x, cw - 10, ch - 34, k.at, { view: ui.view, me: -1, names: true, bamiri: ui.showBamiri });
     x.restore();
     x.fillStyle = THEME.sel;
     x.font = '700 20px sans-serif';
@@ -29,7 +29,12 @@ $('#btnSheet').addEventListener('click', () => {
   c.toBlob(b => download(b, safeName(S.title) + '_全隊形.png'), 'image/png');
 });
 $('#btnKeyPng').addEventListener('click', () => {
-  const c = document.createElement('canvas'), w = 1200, h = Math.round(w * (S.stage.d + 1.3) / (S.stage.w + 0.6)) + 140;
+  // 高さ：見出し60＋ステージ＋凡例（人数が多いと何行かになる）＋バミリ番号の一覧（出す設定のとき）。画像の大きさだけが変わる
+  const w = 1200, stageH = Math.round(w * (S.stage.d + 1.3) / (S.stage.w + 0.6)), m = document.createElement('canvas').getContext('2d');
+  const legY = stageH + 80, legBottom = legend(m, 16, legY, w - 32, 20, true);
+  const pos = positionsAt(S.keys, ui.count), lay = bamiriListLayout(m, w - 32, 18, pos, S.dancers.map(d => d.name));
+  const listY = legBottom + 14, h = ui.showBamiri ? listY + lay.height + 20 : legBottom + 40;
+  const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
   const x = c.getContext('2d');
@@ -37,7 +42,7 @@ $('#btnKeyPng').addEventListener('click', () => {
   x.fillRect(0, 0, w, h);
   x.save();
   x.translate(0, 60);
-  drawStage(x, w, h - 140, ui.count, { view: ui.view, me: ui.me, names: true });
+  drawStage(x, w, stageH, ui.count, { view: ui.view, me: ui.me, names: true, bamiri: ui.showBamiri });
   x.restore();
   const k = S.keys[keyIndexAt(ui.count)];
   x.fillStyle = THEME.text;
@@ -45,7 +50,8 @@ $('#btnKeyPng').addEventListener('click', () => {
   x.textBaseline = 'top';
   x.textAlign = 'left';
   x.fillText(`${S.title} ／ ${cLabel(ui.count)} ${k.name}`, 16, 14);
-  legend(x, 16, h - 60, w - 32, 20);
+  legend(x, 16, legY, w - 32, 20);
+  if (ui.showBamiri) drawBamiriList(x, 16, listY, w - 32, 18, lay);
   c.toBlob(b => download(b, `${safeName(S.title)}_${cLabel(ui.count)}.png`), 'image/png');
 });
 /* 動画 */
@@ -53,7 +59,7 @@ let rec = null, recChunks = [], recCanvas = null, recCtx = null, audioCtx = null
 function drawRecFrame() {
   if (!recCtx) return;
   const w = recCanvas.width, h = recCanvas.height;
-  drawStage(recCtx, w, h, ui.count, { view: ui.view, me: ui.me, names: true, showPaths: ui.showPaths });
+  drawStage(recCtx, w, h, ui.count, { view: ui.view, me: ui.me, names: true, showPaths: ui.showPaths, bamiri: ui.showBamiri });
   recCtx.fillStyle = THEME.text;
   recCtx.font = '800 64px sans-serif';
   recCtx.textAlign = 'right';

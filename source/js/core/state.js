@@ -2,7 +2,7 @@
 let S = null;
 const ui = { sel: 0, selDancer: -1, me: -1, view: 'audience', compare: false, playing: false, count: 0,
   rate: 1, selCue: null, clockT0: 0, clockC0: 0, showNames: true, showPaths: false, drag: null, dragMoved: false,
-  recording: false,
+  recording: false, showBamiri: true,
   card: null }; // 編集タブで開いているカード：null（ふだん）・'key'・'dancer'・'cue'。保存しない画面の状態
 
 const beatSec = () => 60 / S.bpm;

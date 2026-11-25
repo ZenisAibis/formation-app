@@ -39,6 +39,7 @@ function drawStage(c, w, h, count, o) {
   c.moveTo(fx1, fy);
   c.lineTo(fx2, fy);
   c.stroke();
+  if (o.bamiri !== false) drawFrontRuler(c, L, o.view); // 前の縁のバミリ番号
   drawFrontLabels(c, L, w, o.view, Math.max(11, Math.min(L.lab * 0.55, 22))); // 客席（正面）と、画面の左右の上手・下手
   const pos = positionsAt(S.keys, count), R = Math.max(8, sc * (pos.length > 20 ? 0.31 : 0.35)), n = pos.length;
   const focus = o.selDancer >= 0 ? o.selDancer : o.me; // 光と動線を集める人：選んだ丸（なければ「自分」）
@@ -240,12 +241,13 @@ function drawStage(c, w, h, count, o) {
       c.globalAlpha = 1;
     }
     const fs2 = Math.max(11, Math.min(sc * 0.32, 26));
+    const rulerTop = o.bamiri !== false ? rulerTopPad(L, o.view) : 0; // ダンサー目線では前の縁（番号）が上なので、その下から書く
     c.font = `700 ${fs2}px sans-serif`;
     c.textBaseline = 'top';
     c.textAlign = 'left';
     if (Lt.name) {
       c.fillStyle = THEME.text;
-      c.fillText('💡 ' + Lt.name, L.ox + 6, L.oy + 6);
+      c.fillText('💡 ' + Lt.name, L.ox + 6, L.oy + 6 + rulerTop);
     }
     const nq = nextCue(count, 8);
     if (nq && count >= 0) {
@@ -253,7 +255,7 @@ function drawStage(c, w, h, count, o) {
       c.textAlign = 'center';
       c.fillStyle = nq.kind === 'memo' ? '#7fe0ff' : THEME.text;
       c.font = `800 ${fs2 * 1.15}px sans-serif`;
-      c.fillText(`あと${left}：${nq.name}`, L.ox + L.sw / 2, L.oy + 6);
+      c.fillText(`あと${left}：${nq.name}`, L.ox + L.sw / 2, L.oy + 6 + rulerTop);
     }
   }
   return L;
