@@ -34,6 +34,7 @@ function syncRateUi() {
   $('#btnRate').textContent = `${ui.rate}倍`;
 }
 function setRate(r) {
+  if (ytActive()) return ytSetRate(r); // 動画の速さは YouTube が決める。変わったかを見てから画面に反映する
   ui.rate = r;
   if (audioReady) audio.playbackRate = ui.rate;
   if (ui.playing) {

@@ -2,7 +2,8 @@
 /* ===== 再生 ===== */
 function setCount(c) {
   ui.count = c;
-  if (audioReady) {
+  if (ytActive()) ytSeekCount(c);
+  else if (audioReady) {
     const t = S.offset + c * beatSec();
     audio.currentTime = Math.max(0, t);
   }
@@ -14,6 +15,7 @@ function setCount(c) {
 }
 async function play() {
   if (ui.playing) return;
+  if (ytActive()) return ytPlay(); // 動画の再生はプレーヤーに頼む。始まったら onStateChange で ui.playing が立つ
   if (ui.count >= S.totalEights * 8 - 0.5) setCount(0);
   ui.playing = true;
   ui.clockT0 = performance.now();
@@ -36,6 +38,7 @@ async function play() {
 function pause() {
   if (!ui.playing) return;
   ui.playing = false;
+  if (ytActive()) ytPause();
   if (audioReady) audio.pause();
   try { if (wakeLock) {
     wakeLock.release();
@@ -47,7 +50,8 @@ function pause() {
 const toggle = () => ui.playing ? pause() : play();
 function tick() {
   if (ui.playing) {
-    if (audioReady) ui.count = (audio.currentTime - S.offset) / beatSec();
+    if (ytActive()) ui.count = ytCount(); // 動画の時刻が正
+    else if (audioReady) ui.count = (audio.currentTime - S.offset) / beatSec();
     else ui.count = ui.clockC0 + (performance.now() - ui.clockT0) / 1000 / beatSec() * ui.rate;
     const bi = Math.floor(ui.count);
     if ($('#clickOn').checked && bi >= 0 && lastBeat !== null && bi !== lastBeat) clickSound(bi % 8 === 0);
@@ -66,6 +70,7 @@ function tick() {
     }
     needRender = true;
   }
+  if (!ui.playing && ytActive() && ytFollowIdle()) needRender = true; // 止まっている間の、動画側での位置の移動
   if (needRender) {
     needRender = false;
     render();

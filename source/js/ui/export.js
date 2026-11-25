@@ -73,6 +73,10 @@ $('#btnVideo').addEventListener('click', async () => {
     stopRecording();
     return;
   }
+  if (ytActive()) {
+    toast('動画に書き出すときは、先に YouTube の動画を閉じてください（YouTube の音は書き出せません）');
+    return;
+  }
   pause();
   recCanvas = document.createElement('canvas');
   recCanvas.width = 1280;

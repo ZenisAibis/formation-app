@@ -1,0 +1,31 @@
+/* YouTube の動画の枠。上に何も重ねない（枠の中に絶対配置・固定の物を入れない）。16:9・最小 200×200px */
+#ytBox {
+  max-width: 640px;
+  margin: 0 auto 8px;
+}
+#ytFrameWrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-width: 200px;
+  min-height: 200px;
+  background: #000;
+  border-radius: var(--stage-radius);
+  overflow: hidden;
+}
+#ytFrameWrap iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+#ytBox .yt-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--gap);
+  padding-top: 6px;
+}
+#ytBox .yt-bar #ytStatus {
+  flex: 1;
+  min-width: 8em;
+}

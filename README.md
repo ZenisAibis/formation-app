@@ -11,13 +11,14 @@
 source/            手で直すのはここだけ
 ├─ index.html      骨組み（<!-- @include ... --> を並べる）
 ├─ parts/          画面の部品（HTML）
-├─ styles/         tokens.css（色・基準の値）・app.css
+├─ styles/         tokens.css（色・基準の値）・app.css・youtube.css（動画の枠）
 └─ js/
-   ├─ core/        状態・保存・読み込みの確かめ・元に戻す・計算（画面に触らない）
+   ├─ core/        状態・保存・読み込みの確かめ・元に戻す・計算（画面に触らない）。youtube-id.js は URL から動画 ID を取り出す
    └─ ui/          画面と操作（役割ごとに分けてある。各 300 行以下）
       ├─ theme.js                      描画の色と光（CSS の変数から読む表 THEME・光の強さ GLOW）
       ├─ stage-base / stage-draw / stage-render / stage-drag    ステージの土台・描き方・1コマの描き直し・ドラッグ
       ├─ timeline.js / playback.js     タイムライン・再生
+      ├─ youtube.js                    YouTube の動画の枠（試作。下の「YouTube で練習する」）
       ├─ history.js                    戻す・やり直す・変更のあとの描き直し
       ├─ tab-edit / tab-cues / tab-advice / tab-practice        各タブ
       ├─ export-common.js / export.js  書き出し（画像・動画）
@@ -55,8 +56,9 @@ C:/Users/osm12/family/tools/.venv/Scripts/python.exe -I build.py --verify    # �
 | source/js/ui/setup.js の `location.protocol === 'https:'` | 文字 `https:` が出る | 通信先ではない。https で開いたときだけ、電波がなくても動くための sw.js を登録する判定 |
 | source/js/ui/youtube.js の `https://www.youtube.com/iframe_api` | YouTube 公式の IFrame Player API の読み込み | 動画を出すとき1回だけ。CSP の script-src に同じ host |
 | source/js/ui/youtube.js の `https://www.youtube-nocookie.com/embed/` | 埋め込み枠（iframe の src） | プライバシー強化モード。CSP の frame-src に同じ host |
+| source/js/core/youtube-id.js の `'https://' + s` | 先頭に `https://` を足す文 | 通信しない。URL の先頭の指定が無い入力を URL として読むため |
 
-（manifest の `http`・`https` は検査の対象外。CSP は YouTube の埋め込みに要る2つの host だけを許す：script-src に `https://www.youtube.com`、frame-src に `https://www.youtube-nocookie.com` と `https://www.youtube.com`）
+（manifest の `http`・`https` は検査の対象外。CSP は YouTube の埋め込みに要る物だけ：script-src に `https://www.youtube.com`（IFrame Player API の2つの script がどちらも www.youtube.com から来る）、frame-src に `https://www.youtube-nocookie.com`。frame-src に `https://www.youtube.com` は、本物の YouTube で要らないと確かめたので足していない）
 
 ## 試験
 再現試験は `C:\Users\osm12\family\tools\formation\tests\`（`run_tests.js`・T1〜T10。使い方はそこの README）。
@@ -128,6 +130,36 @@ node run_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.htm
 
 ### 入れなかった物（保存データに触れる、または別の決め）
 - 「グループの形で見分ける」・ダンサーの色を選ぶ機能（保存データの項目が増える。持ち主の承認待ち）
-- YouTube の埋め込み枠（CSP の変更が要る。別の仕事）
+- YouTube の埋め込み枠：このあとの「YouTube で練習する」で入れた（試作）
 - 横長（844px）のとき、ステージを動画の枠の隣に並べる2列（動画の枠が無いので入れていない）。ステージの高さの上限（画面の高さの58%）は前のまま
 - `manifest.webmanifest` の色（`#11151d`）と `sw.js`：「そのまま」の物なので触っていない（起動画面の色が少し違う）
+
+## YouTube で練習する（2026-11-26・試作。公開していない）
+設定タブの「YouTube の動画」に URL を入れて「動画を出す」と、画面の上（見出しとステージの間）に YouTube の公式プレーヤーが出る。再生・停止・位置の移動（動画の枠の中でも、アプリの ▶・タイムライン・「戻る」でも）に、アプリの再生位置が追いかける。
+
+### 作り
+| ファイル | 役目 |
+|---|---|
+| `source/js/core/youtube-id.js` | `ytParseUrl(text)`：`youtube.com/watch?v=`・`youtu.be/`・`youtube.com/shorts/`（先頭の http・https はあってもなくても可）から動画 ID（11字）を取り出す。再生リスト・チャンネル・埋め込み用・別のサイト・ID だけは断る（`{ ok:false, reason }`） |
+| `source/js/ui/youtube.js` | 枠の出し入れ・IFrame Player API の読み込み・時刻の追いかけ・速さ・失敗の知らせ |
+| `source/styles/youtube.css` | 枠（16:9・最小 200×200px・幅は最大 640px） |
+| `source/parts/header-stage.html`・`tab-setup.html` | 枠（`#ytBox`）・入れ口のカード（`#cardYt`） |
+| `playback.js`・`setup.js`・`tab-practice.js`・`export.js` | 動画を出している間（`ytActive()`）は、曲のファイルの代わりにプレーヤーの時刻を使う分岐を足した |
+
+### 動き
+- **時刻**：プレーヤーの `getCurrentTime()` が正。再生中は毎コマ読み、読んだ値からの経過を足して滑らかにする（足す上限 0.5秒）。止まっている間も 0.25秒ごとに読み、動画側で位置を動かしたら追いかける。カウント＝（時刻 − 1カウント目の時刻）÷ 1拍の秒。曲の読み込みと同じ軸（BPM・offset）。「再生中の『今』を 1-1 にする」も動画の時刻で働く
+- **再生の状態**はプレーヤーの知らせ（onStateChange）に従う。アプリの ▶ は `playVideo()` を頼むだけ（2秒たっても始まらないときは「動画の枠の中の再生ボタンを直接押してください」と知らせる）。アプリから位置を動かすと `seekTo()`（直後 0.4秒は古い時刻を読み戻さない）
+- **ずれたら**：「位置を合わせ直す」（枠の下）で、今のプレーヤーの時刻を読み直す
+- **速さ**：API は頼むだけで保証が無い。`setPlaybackRate` を呼び、0.6秒後に `getPlaybackRate` で確かめて、変わらなければ「できませんでした。速さは YouTube の側（動画の歯車）で」と知らせる。YouTube の側で変えた速さも onPlaybackRateChange で表示に追いかける
+- **曲のファイルとは同時に使わない**：曲を読み込むと動画を閉じる。動画を出している間は「動画に書き出す」を断る（YouTube の音は書き出せない）
+- **大きく表示**：枠が隠れるので、先に止める（隠したまま鳴らさない）。戻っても自動では再生しない
+
+### 守る条件（YouTube の決まり）
+- 枠の上に何も重ねない（枠の入れ物は iframe 1つだけ。固定・絶対配置の物を重ねない）。16:9・幅も高さも 200px 以上。見えるまで自動で再生しない（`autoplay` を付けない・allow に autoplay を入れない・押されたときだけ `playVideo`・枠が見えない状態では頼まない）。枠が画面の外にあるとき、出したとき・▶ のときに見える所へ動かす
+- `youtube-nocookie.com` の埋め込み（`/embed/ID?enablejsapi=1&playsinline=1&rel=0&origin=自分`）。iframe を自分で作り、`new YT.Player(iframe)` でつなぐ（公式の「iframe を自分で書く」形。`host` の指定は公式の IFrame の文書に無いので使わない）
+- 保存データは変えない。動画 ID は別のキー `danceFormation.v1.youtube` に端末の中だけ（ID の11字だけ）。作品の JSON・書き出す JSON には入らない。次に開いたとき、入れ口に `youtu.be/ID` が入るだけで、枠は自動では出さず YouTube にも通信しない。「動画を閉じる」で消える
+- `file://` で開いたときは出せない（エラー 153）。「公開版（https）で使えます」と知らせて、YouTube には通信しない。プレーヤーのエラー（101・150・100・153 など）・部品が読めない・枠の準備が 15秒来ない、のときも知らせて枠を閉じ、画面は落とさない
+- 通信先は `https://www.youtube.com/iframe_api`（script。続けて同じ host の www-widgetapi.js）と `https://www.youtube-nocookie.com/embed/…`（枠）だけ。動画を出すまで通信しない
+
+### 確かめ方
+`C:\Users\osm12\family\tools\formation\tests\` の `run_youtube_tests.js`（Y1〜Y6。使い方は tests の README）。

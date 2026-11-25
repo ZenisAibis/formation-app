@@ -37,6 +37,11 @@ EXTERNAL_EXCEPTIONS = [
         "contains": "https://www.youtube-nocookie.com/embed/",
         "reason": "YouTube のプライバシー強化モードの埋め込み枠（iframe の src。CSP の frame-src に同じ host）",
     },
+    {
+        "file": "js/core/youtube-id.js",
+        "contains": "'https://' + s",
+        "reason": "通信先ではない。先頭の https:// が無い URL を URL として読むために足す文字（読むだけ。通信しない）",
+    },
 ]
 
 # CSP（meta の content）に書いてよい外のアドレス。YouTube の埋め込みに要る物だけ。ここに無い host は検査で止める

@@ -91,11 +91,11 @@ $('#offP1').addEventListener('click', () => shiftOff(beatSec()));
 $('#offMs').addEventListener('click', () => shiftOff(-0.05));
 $('#offPs').addEventListener('click', () => shiftOff(0.05));
 $('#btnNowIsOne').addEventListener('click', () => {
-  if (!audioReady) {
-    toast('先に曲を読み込んでください');
+  if (!audioReady && !ytActive()) {
+    toast('先に曲を読み込むか、YouTube の動画を出してください');
     return;
   }
-  const v = r2(audio.currentTime);
+  const v = r2(ytActive() ? ytNow() : audio.currentTime);
   if (v !== S.offset) {
     pushUndo();
     S.offset = v;
@@ -105,7 +105,8 @@ $('#btnNowIsOne').addEventListener('click', () => {
 });
 // 止まっているとき、音の位置に合わせて ui.count を合わせ直す（offset・BPM・作品を替えたあと）
 function syncCountToAudio() {
-  if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
+  if (ytActive() && !ui.playing) ui.count = ytCount();
+  else if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
 }
 function afterTempoChange() {
   if (analysis) {
@@ -169,6 +170,10 @@ $('#audioFile').addEventListener('change', async e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   pause();
+  if (ytActive()) {
+    ytClose(true); // 曲のファイルと動画は同時に使わない
+    toast('YouTube の動画を閉じて、曲のファイルを使います');
+  }
   if (audio.src) URL.revokeObjectURL(audio.src);
   audio.src = URL.createObjectURL(f);
   audioReady = true;
@@ -282,6 +287,7 @@ $('#btnBack').addEventListener('click', () => {
   setCount(Math.max(0, k.at - 8));
 });
 $('#btnProj').addEventListener('click', () => {
+  ytBeforeProj();
   document.body.classList.add('proj');
   try {
     const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();

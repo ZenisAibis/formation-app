@@ -26,6 +26,15 @@
     <div class="row"><button id="btnNowIsOne">再生中の「今」を 1-1 にする</button></div>
     <div class="muted">自動で測ったBPMや頭の位置は、ずれることがあります。曲を流しながら数字が合っているかを確かめ、上のボタンで直してください。</div>
   </div>
+  <div class="card" id="cardYt">
+    <h3>YouTube の動画</h3>
+    <div class="row">
+      <input type="text" id="ytUrl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="YouTube の URL" aria-label="YouTube の URL" style="flex:1;min-width:12em">
+      <button id="btnYtOpen">動画を出す</button>
+    </div>
+    <div class="muted" id="ytMsg" role="status"></div>
+    <div class="muted">URL は youtube.com/watch?v=… ・ youtu.be/… ・ youtube.com/shorts/… が使えます。動画は画面の上に出て、再生・停止・位置の移動にアプリの位置が追いかけます。上の「曲」と同じ BPM と1カウント目の時刻で拍に合わせます（ずれたら「位置を合わせ直す」）。速さは YouTube の側（動画の歯車）で変えてください。曲のファイルとは同時に使えません。動画は保存されず、開いたこの端末にだけ ID が残ります。</div>
+  </div>
   <div class="card">
     <h3>メンバー（<span id="dCount"></span>人）</h3>
     <div class="dlist" id="dancerList"></div>
