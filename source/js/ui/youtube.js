@@ -173,6 +173,11 @@ async function ytOpen(text) {
     ytNote('公開版（https）で使えます。ファイルとして開いている間は、YouTube の動画は出せません');
     return;
   }
+  // 初めて出すときだけ、規約とポリシーを見せて同意を1回とる（privacy.js）。同意されたら、同じ URL で続ける
+  if (!ytHasConsent()) {
+    ytAskConsent(() => ytOpen(text));
+    return;
+  }
   ytClose(true);
   pause();
   if (audioReady) audio.pause();

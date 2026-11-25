@@ -10,8 +10,8 @@
 ```text
 source/            手で直すのはここだけ
 ├─ index.html      骨組み（<!-- @include ... --> を並べる）
-├─ parts/          画面の部品（HTML）
-├─ styles/         tokens.css（色・基準の値）・app.css・youtube.css（動画の枠）
+├─ parts/          画面の部品（HTML）。overlays.html は プライバシーポリシーの1枚（#privacyBox）と YouTube の同意の確認（#ytConsentBox）
+├─ styles/         tokens.css（色・基準の値）・app.css・youtube.css（動画の枠）・privacy.css（ポリシーの全面・同意の札）
 └─ js/
    ├─ core/        状態・保存・読み込みの確かめ・元に戻す・計算（画面に触らない）。youtube-id.js は URL から動画 ID を取り出す。bamiri.js は上手・下手の向き・バミリ番号・まわりの人の計算（保存しない）
    └─ ui/          画面と操作（役割ごとに分けてある。各 300 行以下）
@@ -19,6 +19,7 @@ source/            手で直すのはここだけ
       ├─ stage-base / stage-draw / stage-render / stage-drag    ステージの土台・描き方・1コマの描き直し・ドラッグ
       ├─ stage-ruler.js                前の縁の文字（客席・上手・下手）とバミリ番号の描き方
       ├─ timeline.js / playback.js     タイムライン・再生
+      ├─ privacy.js                    プライバシーポリシーの開け閉め・初めて動画を出すときの同意（同意の印は別のキー）
       ├─ youtube.js                    YouTube の動画の枠（試作。下の「YouTube で練習する」）
       ├─ history.js                    戻す・やり直す・変更のあとの描き直し
       ├─ tab-edit / tab-cues / tab-advice / tab-practice        各タブ
@@ -58,8 +59,12 @@ C:/Users/osm12/family/tools/.venv/Scripts/python.exe -I build.py --verify    # �
 | source/js/ui/youtube.js の `https://www.youtube.com/iframe_api` | YouTube 公式の IFrame Player API の読み込み | 動画を出すとき1回だけ。CSP の script-src に同じ host |
 | source/js/ui/youtube.js の `https://www.youtube-nocookie.com/embed/` | 埋め込み枠（iframe の src） | プライバシー強化モード。CSP の frame-src に同じ host |
 | source/js/core/youtube-id.js の `'https://' + s` | 先頭に `https://` を足す文 | 通信しない。URL の先頭の指定が無い入力を URL として読むため |
+| source/parts/tab-setup.html の `https://www.youtube.com/t/terms` | YouTube 利用規約へのリンク（a の href） | YouTube の決まりが求める。押したとき新しいタブで開く（`target="_blank" rel="noopener noreferrer"`）。アプリは通信しない |
+| source/parts/tab-setup.html の `https://policies.google.com/privacy` | Google のプライバシーポリシーへのリンク（a の href） | 同上 |
+| source/parts/overlays.html の `https://www.youtube.com/t/terms` | ポリシー本文の中の、YouTube 利用規約へのリンク | 同上 |
+| source/parts/overlays.html の `https://policies.google.com/privacy` | ポリシー本文の中の、Google のプライバシーポリシーへのリンク | 同上 |
 
-（manifest の `http`・`https` は検査の対象外。CSP は YouTube の埋め込みに要る物だけ：script-src に `https://www.youtube.com`（IFrame Player API の2つの script がどちらも www.youtube.com から来る）、frame-src に `https://www.youtube-nocookie.com`。frame-src に `https://www.youtube.com` は、本物の YouTube で要らないと確かめたので足していない）
+（manifest の `http`・`https` は検査の対象外。CSP は YouTube の埋め込みに要る物だけ：script-src に `https://www.youtube.com`（IFrame Player API の2つの script がどちらも www.youtube.com から来る）、frame-src に `https://www.youtube-nocookie.com`。frame-src に `https://www.youtube.com` は、本物の YouTube で要らないと確かめたので足していない。外へのリンク〈a の href〉は CSP の対象ではない〈ページの移動は default-src に縛られない〉ので、CSP は変えていない）
 
 ## 試験
 再現試験は `C:\Users\osm12\family\tools\formation\tests\`（`run_tests.js`・T1〜T10。使い方はそこの README）。
@@ -190,3 +195,19 @@ node run_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.htm
 
 ### 試験の結果（2026-11-26・dist sha256 ee196606…）
 P1 23・P2 37・P3 29 ケースすべて合格（89ケース）。既存の T1〜T10（T9 ＋ INFO 1＝T5）・X1〜X14・D1〜D5・Y1〜Y6 も期待値を変えずに全部合格。既存の試験の探し方・手順は直していない。保存データの形（キー・作品の JSON の項目・自分と向きの保存・書き出す JSON）は前（ff46b85）と同じ。
+
+## 公開の前の直し（2026-11-26・作業ブランチ dev/p0-20261125。公開はしていない）
+元の文書：`C:\Users\osm12\family\tools\formation\docs\` の 04（ポリシーの下書き）・05（公開の前に確かめる事。F・I と「直す物」）。保存データの形（キー〈同意の印を足した以外〉・作品の JSON の項目・書き出す JSON）は変えていない。
+
+### 段1：YouTube の決まり（プライバシーポリシー・規約へのリンク・同意）
+- **設定タブの YouTube のカードの上**に、新しいカード「YouTube の動画を使う前に」（`#cardYtTerms`）：「YouTube の動画を使うと YouTube 利用規約に同意したことになります。」の文と、リンク3つ（YouTube 利用規約・Google のプライバシーポリシー・このアプリのプライバシーポリシー）。外のリンクは `target="_blank" rel="noopener noreferrer"`（新しいタブ。アプリの画面は残る）
+- **プライバシーポリシーの1枚**（`parts/overlays.html` の `#privacyBox`・画面いっぱい。閉じる・Esc で閉じる）：04 の下書きの本文から作った。アプリの中なので、電波が無くても読め、通信しない。**運営する人・問い合わせ先・子どもの利用は「準備中」**（空けたまま。持ち主が決める）。最終改定日は 2026年11月26日（下書き）。「ホーム画面に追加したアプリの消し方」は未確認のまま「準備中・まだ確かめていません」と書いた。同意の印の行を「端末の中だけに置く物」に足した
+- **初めての同意**（`js/ui/privacy.js`・`youtube.js` の `ytOpen`）：初めて、正しい URL で「動画を出す」を押したとき（file:// の断りより後・悪い URL の知らせより後）、下から「YouTube の動画を使う前に」の札（`#ytConsentBox`）が出る。リンクは設定のカードの物を写して使う（アドレスを1か所に）。「同意して動画を出す」で同意の印を保存し、同じ URL で続ける。「やめる」は何も保存せず、YouTube に通信しない。同意した後は、開き直しても聞かない
+- **同意の印**：`danceFormation.v1.ytConsent` に日付（`2026-11-26` ＝ポリシーの最終改定日）だけ。作品の JSON・書き出す JSON・主キーには入らない（試験 K2）。消す方法は端末のデータを消すだけ（ポリシーに書いた）。値は日付の形（YYYY-MM-DD）なら同意済みとみなす
+- **CSP**：変えていない（外へのリンクは CSP の対象ではない。試験 K3 で CSP の違反の記録が 0）。**build.py の例外**：4件を名指しで足した（上の例外の表。`tab-setup.html` と `overlays.html` の、`https://www.youtube.com/t/terms` と `https://policies.google.com/privacy`）。例外は 4 → 8 件
+- Google のプライバシーポリシーのアドレスは `https://policies.google.com/privacy`（YouTube の決まりの文書は `http://www.google.com/policies/privacy` と書く。こちらも 2026-11-26 に取って 200 で開くことを確かめたが、https の現在の正式なページのほうを使った）
+- 動画ごとの「子ども向け」の調べは、していない（ポリシーに「調べていません」と書いた）。05 の「直す物」2。公開してよいかは持ち主・専門家の判断
+
+### 試験の直し（段1）
+- 既存の `run_youtube_tests.js` の `openHttp` は、同意の印を入れた端末として開く（初期設定の1行。同意の動きそのものは `run_compat_tests.js` の K3 で確かめる）。期待値は変えていない
+- Y2 の最後の1件「組み立てた index.html の外のアドレス」は、新しい規格で足したリンク2つ（`<a href="…" target="_blank" rel="noopener noreferrer">` の形のもの）を名指しで許す形に直した（段1の仕様そのものが変えた期待。形の違う物・別のアドレスは今までどおり止まる）

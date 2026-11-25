@@ -42,6 +42,26 @@ EXTERNAL_EXCEPTIONS = [
         "contains": "'https://' + s",
         "reason": "通信先ではない。先頭の https:// が無い URL を URL として読むために足す文字（読むだけ。通信しない）",
     },
+    {
+        "file": "parts/tab-setup.html",
+        "contains": "https://www.youtube.com/t/terms",
+        "reason": "YouTube 利用規約へのリンク（a の href。押したとき新しいタブで開く。アプリは通信しない。YouTube の決まりが求める）",
+    },
+    {
+        "file": "parts/tab-setup.html",
+        "contains": "https://policies.google.com/privacy",
+        "reason": "Google のプライバシーポリシーへのリンク（a の href。新しいタブで開く。アプリは通信しない。YouTube の決まりが求める）",
+    },
+    {
+        "file": "parts/overlays.html",
+        "contains": "https://www.youtube.com/t/terms",
+        "reason": "プライバシーポリシーの本文の中の、YouTube 利用規約へのリンク（a の href。新しいタブで開く）",
+    },
+    {
+        "file": "parts/overlays.html",
+        "contains": "https://policies.google.com/privacy",
+        "reason": "プライバシーポリシーの本文の中の、Google のプライバシーポリシーへのリンク（a の href。新しいタブで開く）",
+    },
 ]
 
 # CSP（meta の content）に書いてよい外のアドレス。YouTube の埋め込みに要る物だけ。ここに無い host は検査で止める
