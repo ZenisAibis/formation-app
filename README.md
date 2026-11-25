@@ -13,10 +13,11 @@ source/            手で直すのはここだけ
 ├─ parts/          画面の部品（HTML）
 ├─ styles/         tokens.css（色・基準の値）・app.css・youtube.css（動画の枠）
 └─ js/
-   ├─ core/        状態・保存・読み込みの確かめ・元に戻す・計算（画面に触らない）。youtube-id.js は URL から動画 ID を取り出す
+   ├─ core/        状態・保存・読み込みの確かめ・元に戻す・計算（画面に触らない）。youtube-id.js は URL から動画 ID を取り出す。bamiri.js は上手・下手の向き・バミリ番号・まわりの人の計算（保存しない）
    └─ ui/          画面と操作（役割ごとに分けてある。各 300 行以下）
       ├─ theme.js                      描画の色と光（CSS の変数から読む表 THEME・光の強さ GLOW）
       ├─ stage-base / stage-draw / stage-render / stage-drag    ステージの土台・描き方・1コマの描き直し・ドラッグ
+      ├─ stage-ruler.js                前の縁の文字（客席・上手・下手）とバミリ番号の描き方
       ├─ timeline.js / playback.js     タイムライン・再生
       ├─ youtube.js                    YouTube の動画の枠（試作。下の「YouTube で練習する」）
       ├─ history.js                    戻す・やり直す・変更のあとの描き直し
@@ -165,3 +166,10 @@ node run_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.htm
 `C:\Users\osm12\family\tools\formation\tests\` の `run_youtube_tests.js`（Y1〜Y6。使い方は tests の README）。
 
 試験の結果（2026-11-26・dist sha256 c65fdca5…）：Y1〜Y6 は 75 ケースすべて合格（Y1 4・Y2 12・Y3 8・Y4 13・Y5 31・Y6 7）。既存の T1〜T10（T5 は仕様判断の INFO 1つ）・X1〜X14・D1〜D5 も、期待値を変えずに全部合格のまま。画面の画像は `tests/screens/youtube/`。
+
+## 表示だけの改良（2026-11-26・保存データは変えない）
+画面の状態（`ui.*`）と、その場で計算して描くだけ。localStorage に書く作品の JSON・書き出す JSON・キーは増やしていない。試験は `C:\Users\osm12\family\tools\formation\tests\run_p1_tests.js`（P1〜P3。使い方は tests の README）。
+
+### 段1：上手・下手の向き
+- 向きの切り替えは**前からある練習タブの分割ボタン**（客席から／ダンサー目線。保存は `danceFormation.v1.view` のまま）で足りるので、新しい切り替えは足さない。調べた結果、ステージ下の「下手・客席（正面）・上手」は、向きを変えると左右と上下がもともと正しく入れ替わっていた（客席から：正面が下・左が下手・右が上手／ダンサー目線＝舞台の奥から客席を向く：正面が上・左が上手・右が下手）
+- 直した所：①ボタンの文字に上手の側を足した（「客席から（上手が右）」「ダンサー目線（上手が左）」）②ラベルの左右を、向きから決める1か所 `stageSides(view)`（`js/core/bamiri.js`）に集め、描く `drawFrontLabels`（`js/ui/stage-ruler.js`）がそれを使うようにした（前は描く文の中で座標から逆算していた。見た目は同じ）

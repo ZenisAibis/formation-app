@@ -39,20 +39,7 @@ function drawStage(c, w, h, count, o) {
   c.moveTo(fx1, fy);
   c.lineTo(fx2, fy);
   c.stroke();
-  const fs = Math.max(11, Math.min(L.lab * 0.55, 22));
-  c.font = `700 ${fs}px sans-serif`;
-  c.fillStyle = THEME.audience;
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillText('客席（正面）', w / 2, o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55);
-  c.font = `${fs * 0.8}px sans-serif`;
-  c.fillStyle = THEME.muted;
-  const [kx] = map(W / 2 - 0.1, 0), [sx] = map(-W / 2 + 0.1, 0);
-  const ly = o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55;
-  c.textAlign = kx > sx ? 'right' : 'left';
-  c.fillText('上手', kx, ly);
-  c.textAlign = kx > sx ? 'left' : 'right';
-  c.fillText('下手', sx, ly);
+  drawFrontLabels(c, L, w, o.view, Math.max(11, Math.min(L.lab * 0.55, 22))); // 客席（正面）と、画面の左右の上手・下手
   const pos = positionsAt(S.keys, count), R = Math.max(8, sc * (pos.length > 20 ? 0.31 : 0.35)), n = pos.length;
   const focus = o.selDancer >= 0 ? o.selDancer : o.me; // 光と動線を集める人：選んだ丸（なければ「自分」）
   // ベースの比較
