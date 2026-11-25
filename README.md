@@ -163,3 +163,5 @@ node run_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.htm
 
 ### 確かめ方
 `C:\Users\osm12\family\tools\formation\tests\` の `run_youtube_tests.js`（Y1〜Y6。使い方は tests の README）。
+
+試験の結果（2026-11-26・dist sha256 c65fdca5…）：Y1〜Y6 は 75 ケースすべて合格（Y1 4・Y2 12・Y3 8・Y4 13・Y5 31・Y6 7）。既存の T1〜T10（T5 は仕様判断の INFO 1つ）・X1〜X14・D1〜D5 も、期待値を変えずに全部合格のまま。画面の画像は `tests/screens/youtube/`。
