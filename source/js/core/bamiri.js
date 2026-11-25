@@ -1,4 +1,4 @@
-// 上手・下手の向きとバミリ番号の計算（画面に触らない・保存しない）
+// バミリ番号と「まわりの人」の計算（画面に触らない・保存しない。毎回の表示のときに計算する）
 'use strict';
 /* ===== 上手・下手の向き ===== */
 // 画面の左右と、正面（客席側の縁）が上か下か。x がプラス＝客席から見て右＝上手（ステージの座標）
@@ -32,3 +32,28 @@ function bamiriX(x) {
 }
 // 立ち位置の読み：「上手2.5・前から2.35m」
 const bamiriText = (x, y) => `${bamiriX(x)}・前から${bamiriNum(y)}m`;
+
+/* ===== まわりの人（目印の仲間） ===== */
+// 隣・前後と呼ぶ最大の距離（m）。見本の並び（0.9〜2m 間隔）の隣は入り、4m 以上離れた人は入らないように決めた値
+const NEAR_MAX_M = 2.5;
+// i 番の人のまわり。ほかの人を、向き（|dx|≥|dy| なら横、そうでなければ前後）で4つに分け、それぞれ最も近い1人（距離 NEAR_MAX_M 以内）
+// 戻り値 { kami, shimo, front, back }：それぞれ { j: 人の番号, d: 距離 } か null。前＝客席側（y が小さい）、後＝奥
+function neighborsOf(pos, i, maxM = NEAR_MAX_M) {
+  const out = { kami: null, shimo: null, front: null, back: null }, p = pos[i];
+  if (!p) return out;
+  for (let j = 0; j < pos.length; j++) {
+    const q = pos[j];
+    if (j === i || !q) continue;
+    const dx = q[0] - p[0], dy = q[1] - p[1], d = Math.hypot(dx, dy);
+    if (d < 0.01 || d > maxM) continue; // 同じ場所（重なり）と遠い人は出さない
+    const key = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'kami' : 'shimo') : (dy < 0 ? 'front' : 'back');
+    if (!out[key] || d < out[key].d) out[key] = { j, d };
+  }
+  return out;
+}
+// 「左 けい・右 しゅ・前 こは・後 うた」。左右は画面の左右（今の向きに合わせる）。いない側は「なし」
+function neighborText(near, names, view) {
+  const sd = stageSides(view), pick = side => (side === '上手' ? near.kami : near.shimo);
+  const nm = o => (o ? names[o.j] : 'なし');
+  return `左 ${nm(pick(sd.left))}・右 ${nm(pick(sd.right))}・前 ${nm(near.front)}・後 ${nm(near.back)}`;
+}

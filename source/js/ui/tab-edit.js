@@ -140,6 +140,7 @@ function fillDancerCard() {
   $('#cardDancerSw').style.background = d.color;
   $('#cardDancerPos').textContent = `中央から${p[0] < 0 ? '左' : '右'} ${Math.abs(p[0]).toFixed(2)}m・前から ${p[1].toFixed(2)}m（客席から見て）`;
   $('#cardDancerBami').textContent = `バミリ ${bamiriText(p[0], p[1])}`;
+  $('#cardDancerNear').textContent = `まわり（画面の左右） ${neighborText(neighborsOf(k.pos, i), S.dancers.map(x => x.name), ui.view)}`;
   $('#btnSetMe').textContent = ui.me === i ? '「自分」を外す' : 'この人を「自分」にする';
 }
 $('#btnCloseKey').addEventListener('click', () => setCard(null));

@@ -62,6 +62,7 @@ function renderMeInfo() {
     const h = S.keys[i].pos[ui.me];
     info.push(`📍 立ち位置 ${bamiriText(h[0], h[1])}${nk ? ` → 次 ${bamiriText(nk.pos[ui.me][0], nk.pos[ui.me][1])}` : ''}`);
   }
+  info.push(`👥 まわり（画面の左右） ${neighborText(neighborsOf(all, ui.me), S.dancers.map(x => x.name), ui.view)}`);
   const addInfo = () => info.forEach(t => box.append(el('div', { text: t, style: 'font-size:13px;color:var(--muted)' })));
   if (!nk) {
     box.append(nameEl, ` ／ 最後の隊形（${S.keys[i].name}）です`);
