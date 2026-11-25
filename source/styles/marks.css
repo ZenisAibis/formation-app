@@ -1,0 +1,48 @@
+/* 色の選び・グループの形・ロックの印（案C の変数だけで色を決める） */
+.swbtn {
+  position: relative;
+  padding: 0;
+  min-height: 0;
+  cursor: pointer;
+}
+.swbtn::after {
+  content: "";
+  position: absolute;
+  inset: -13px -6px;
+}
+.swbtn:focus-visible,
+.palbtn:focus-visible {
+  outline: 2px solid var(--sel);
+  outline-offset: 2px;
+}
+.dlist .palrow {
+  grid-column: 1 / -1;
+}
+.palrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+.palrow[hidden] {
+  display: none;
+}
+.palbtn {
+  width: 40px;
+  min-height: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #0006;
+  color: var(--on-token);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+.palbtn.on {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--sel);
+}
+.palbtn.extra {
+  border-style: dashed;
+}

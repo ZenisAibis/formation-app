@@ -23,7 +23,10 @@ function fillSetup() {
       renderAdvice();
       requestRender();
     });
-    box.append(el('div', { class: 'drow' }, [el('span', { class: 'sw', style: `background:${d.color}` }), inp]));
+    const sw = el('button', { type: 'button', class: 'sw swbtn', style: `background:${d.color}`, 'aria-label': `${i + 1}人目の色を選ぶ`, 'aria-expanded': 'false' });
+    const pal = el('div', { class: 'palrow', hidden: '' });
+    sw.addEventListener('click', () => togglePalette(sw, pal, i));
+    box.append(el('div', { class: 'drow' }, [sw, inp]), pal);
   });
 }
 // 設定の入力欄は、change のとき（打ち終わったとき）に1回だけ履歴に積む。値が変わらなければ積まない

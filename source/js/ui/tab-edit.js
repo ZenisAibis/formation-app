@@ -126,6 +126,7 @@ function syncCards() {
   $('#cardCue').hidden = ui.card !== 'cue';
   $('#editHint').hidden = ui.card !== null;
   if (ui.card === 'dancer') fillDancerCard();
+  else syncDancerPalette();
 }
 function setCard(c) {
   ui.card = c;
@@ -138,6 +139,7 @@ function fillDancerCard() {
   const p = k.pos[i];
   $('#cardDancerName').textContent = d.name;
   $('#cardDancerSw').style.background = d.color;
+  syncDancerPalette();
   $('#cardDancerPos').textContent = `中央から${p[0] < 0 ? '左' : '右'} ${Math.abs(p[0]).toFixed(2)}m・前から ${p[1].toFixed(2)}m（客席から見て）`;
   $('#cardDancerBami').textContent = `バミリ ${bamiriText(p[0], p[1])}`;
   $('#cardDancerNear').textContent = `まわり（画面の左右） ${neighborText(neighborsOf(k.pos, i), S.dancers.map(x => x.name), ui.view)}`;
