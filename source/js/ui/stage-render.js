@@ -34,6 +34,7 @@ function render() {
   renderMeInfo();
   renderTimeline();
   $('#btnPlay').textContent = ui.playing ? '⏸ 停止' : '▶ 再生';
+  document.body.classList.toggle('playing', ui.playing);
   $('#projPlay').textContent = ui.playing ? '⏸' : '▶';
 }
 function renderMeInfo() {

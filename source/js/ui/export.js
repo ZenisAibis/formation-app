@@ -6,9 +6,9 @@ $('#btnSheet').addEventListener('click', () => {
   c.width = W;
   c.height = H;
   const x = c.getContext('2d');
-  x.fillStyle = '#0b0e14';
+  x.fillStyle = THEME.bg;
   x.fillRect(0, 0, W, H);
-  x.fillStyle = '#fff';
+  x.fillStyle = THEME.text;
   x.font = '700 28px sans-serif';
   x.textBaseline = 'top';
   x.textAlign = 'left';
@@ -19,7 +19,7 @@ $('#btnSheet').addEventListener('click', () => {
     x.translate(ox, oy + 34);
     drawStage(x, cw - 10, ch - 34, k.at, { view: ui.view, me: -1, names: true });
     x.restore();
-    x.fillStyle = '#4fb3ff';
+    x.fillStyle = THEME.sel;
     x.font = '700 20px sans-serif';
     x.textBaseline = 'top';
     x.textAlign = 'left';
@@ -33,14 +33,14 @@ $('#btnKeyPng').addEventListener('click', () => {
   c.width = w;
   c.height = h;
   const x = c.getContext('2d');
-  x.fillStyle = '#0b0e14';
+  x.fillStyle = THEME.bg;
   x.fillRect(0, 0, w, h);
   x.save();
   x.translate(0, 60);
   drawStage(x, w, h - 140, ui.count, { view: ui.view, me: ui.me, names: true });
   x.restore();
   const k = S.keys[keyIndexAt(ui.count)];
-  x.fillStyle = '#fff';
+  x.fillStyle = THEME.text;
   x.font = '700 30px sans-serif';
   x.textBaseline = 'top';
   x.textAlign = 'left';
@@ -54,7 +54,7 @@ function drawRecFrame() {
   if (!recCtx) return;
   const w = recCanvas.width, h = recCanvas.height;
   drawStage(recCtx, w, h, ui.count, { view: ui.view, me: ui.me, names: true, showPaths: ui.showPaths });
-  recCtx.fillStyle = '#fff';
+  recCtx.fillStyle = THEME.text;
   recCtx.font = '800 64px sans-serif';
   recCtx.textAlign = 'right';
   recCtx.textBaseline = 'top';

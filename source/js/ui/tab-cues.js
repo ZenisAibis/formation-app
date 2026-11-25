@@ -20,7 +20,7 @@ function fillCueForm() {
   const q = S.cues.find(x => x.id === ui.selCue);
   $('#cKind').value = q ? q.kind : $('#cKind').options[0].value;
   $('#cName').value = q ? q.name : '';
-  $('#cColor').value = q ? q.color : '#ff3b6b';
+  $('#cColor').value = q ? q.color : '#7a5cff';
   $('#cTarget').value = q ? String(q.target) : '-1';
   $('#cFade').value = q ? q.fade : '';
   $('#cEight').value = q ? Math.floor(q.at / 8) + 1 : '';

@@ -8,9 +8,9 @@ function renderAdvice() {
   const sm = $('#advSummary');
   sm.textContent = '';
   sm.append(
-    el('span', {}, [el('b', { text: String(c[0]), style: 'color:var(--red)' }), ' 要修正']),
-    el('span', {}, [el('b', { text: String(c[1]), style: 'color:var(--amber)' }), ' 提案']),
-    el('span', {}, [el('b', { text: String(c[2]) }), ' 参考']));
+    el('span', { class: 'pill p0' }, [el('b', { text: String(c[0]) }), ' 要修正']),
+    el('span', { class: 'pill p1' }, [el('b', { text: String(c[1]) }), ' 提案']),
+    el('span', { class: 'pill p2' }, [el('b', { text: String(c[2]) }), ' 参考']));
   if (S.baseKeys) sm.append(el('span', { class: 'muted', text: '（ベースを保存済み）' }));
   if (!adv.length) list.append(el('div', { class: 'card', text: '気になる所は見つかりませんでした。完成形です。' }));
   adv.forEach(a => {

@@ -12,16 +12,16 @@ function renderTimeline() {
   c.clearRect(0, 0, w, h);
   const total = S.totalEights * 8, px = w / total;
   for (let e = 0; e < S.totalEights; e++) {
-    c.fillStyle = e % 2 ? '#1d2532' : '#202937';
+    c.fillStyle = e % 2 ? THEME.tlB : THEME.tlA;
     c.fillRect(e * 8 * px, 0, 8 * px, h);
     if (S.energy && S.energy[e] != null) {
       const eh = S.energy[e] * (h - 30);
-      c.fillStyle = '#3b4f6d';
+      c.fillStyle = THEME.energy;
       c.fillRect(e * 8 * px + 1, h - 4 - eh, 8 * px - 2, eh);
     }
     const step = S.totalEights > 48 ? 8 : S.totalEights > 24 ? 4 : 2;
     if (e % step === 0) {
-      c.fillStyle = '#8a96aa';
+      c.fillStyle = THEME.muted;
       c.font = '10px sans-serif';
       c.textAlign = 'left';
       c.textBaseline = 'top';
@@ -32,21 +32,26 @@ function renderTimeline() {
     const x = k.at * px, y = 30;
     if (i > 0) {
       const ms = Math.max(S.keys[i - 1].at, k.at - k.move);
-      c.strokeStyle = '#ffb547';
+      c.strokeStyle = THEME.path;
       c.lineWidth = 3;
       c.beginPath();
       c.moveTo(ms * px, y);
       c.lineTo(x, y);
       c.stroke();
     }
-    c.fillStyle = i === ui.sel ? '#4fb3ff' : '#e8ecf3';
+    c.fillStyle = i === ui.sel ? THEME.sel : THEME.text;
     c.beginPath();
     c.arc(x, y, i === ui.sel ? 6 : 4.5, 0, 7);
     c.fill();
+    if (i === ui.sel) {
+      c.strokeStyle = THEME.bg;
+      c.lineWidth = 2;
+      c.stroke();
+    }
   });
   (S.cues || []).forEach(q => {
     const x = q.at * px, y = 50, z = q.id === ui.selCue ? 6 : 4.5;
-    c.fillStyle = q.kind === 'memo' ? '#7fe0ff' : q.kind === 'black' ? '#000' : q.kind === 'color' ? q.color : '#ffd93d';
+    c.fillStyle = q.kind === 'memo' ? '#7fe0ff' : q.kind === 'black' ? '#000' : q.kind === 'color' ? q.color : q.kind === 'spot' ? '#ffffff' : '#ffd93d';
     c.beginPath();
     c.moveTo(x, y - z);
     c.lineTo(x + z, y);
@@ -54,17 +59,19 @@ function renderTimeline() {
     c.lineTo(x - z, y);
     c.closePath();
     c.fill();
-    c.strokeStyle = q.id === ui.selCue ? '#4fb3ff' : '#fff8';
-    c.lineWidth = 1;
+    c.strokeStyle = q.id === ui.selCue ? THEME.sel : 'rgba(255,255,255,.55)';
+    c.lineWidth = q.id === ui.selCue ? 2.5 : 1;
     c.stroke();
   });
   const x = Math.max(0, ui.count) * px;
-  c.strokeStyle = '#ff6b6b';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.moveTo(x, 0);
-  c.lineTo(x, h);
-  c.stroke();
+  glow(c, THEME.now, GLOW.now, () => { // 今（再生位置）の線：要修正の赤とは別の、シアン
+    c.strokeStyle = THEME.now;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(x, 0);
+    c.lineTo(x, h);
+    c.stroke();
+  });
 }
 function tlSeek(ev) {
   const r = tl.getBoundingClientRect(), total = S.totalEights * 8, c = ((ev.clientX - r.left) / r.width) * total;

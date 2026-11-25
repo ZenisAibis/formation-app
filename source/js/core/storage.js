@@ -6,11 +6,11 @@ function demoState() {
     dancers: names.map((nm, i) => ({ name: nm, color: PALETTE[i % PALETTE.length] })), keys: [], baseKeys: null, energy: null, cues: [] };
   const cue = (eight, count, kind, name, o = {}) => ({
     id: newId(), at: (eight - 1) * 8 + count - 1, kind, name,
-    color: o.color || '#ff3b6b', target: o.target == null ? -1 : o.target, fade: o.fade || 0 });
+    color: o.color || '#7a5cff', target: o.target == null ? -1 : o.target, fade: o.fade || 0 });
   st.cues = [
     cue(1, 1, 'full', '明転'),
     cue(8, 5, 'memo', 'ドラムが入る'),
-    cue(13, 1, 'color', '赤の照明', { color: '#ff2d55', fade: 2 }),
+    cue(13, 1, 'color', '紫の照明', { color: '#7a5cff', fade: 2 }),
     cue(17, 1, 'spot', 'スポット', { target: 0, fade: 1 }),
     cue(20, 5, 'black', '暗転', { fade: 2 }),
     cue(21, 1, 'full', '明転')];

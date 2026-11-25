@@ -1,14 +1,21 @@
 // ステージの描き方（drawStage）。画面・書き出しの画像・動画で共有する
 function drawStage(c, w, h, count, o) {
   const L = stageLayout(w, h, o.view), W = S.stage.w, D = S.stage.d, { map, sc } = L;
-  c.fillStyle = '#0b0e14';
+  c.fillStyle = THEME.bg;
   c.fillRect(0, 0, w, h);
-  c.fillStyle = '#18202d';
+  c.fillStyle = THEME.floor;
   c.fillRect(L.ox, L.oy, L.sw, L.sd);
+  { // 床の中央にごく薄いスポット（シアン 5%）
+    const gx = L.ox + L.sw / 2, gy = L.oy + L.sd / 2, gr = Math.max(L.sw, L.sd) * 0.65, g = c.createRadialGradient(gx, gy, 0, gx, gy, gr);
+    g.addColorStop(0, withAlpha(THEME.sel, GLOW.spotA));
+    g.addColorStop(1, withAlpha(THEME.sel, 0));
+    c.fillStyle = g;
+    c.fillRect(L.ox, L.oy, L.sw, L.sd);
+  }
   c.lineWidth = 1;
   for (let x = Math.ceil(-W / 2); x <= W / 2; x++) {
     const [a, b] = map(x, 0), [, d] = map(x, D);
-    c.strokeStyle = x === 0 ? '#3a4a63' : '#232d3d';
+    c.strokeStyle = x === 0 ? THEME.gridC : THEME.grid;
     c.beginPath();
     c.moveTo(a, b);
     c.lineTo(a, d);
@@ -16,15 +23,17 @@ function drawStage(c, w, h, count, o) {
   }
   for (let y = 1; y < D; y++) {
     const [a, b] = map(-W / 2, y), [e] = map(W / 2, y);
-    c.strokeStyle = '#232d3d';
+    c.strokeStyle = THEME.grid;
     c.beginPath();
     c.moveTo(a, b);
     c.lineTo(e, b);
     c.stroke();
   }
+  c.strokeStyle = THEME.edge;
+  c.strokeRect(L.ox, L.oy, L.sw, L.sd);
   // 客席側の線と文字
   const [fx1, fy] = map(-W / 2, 0), [fx2] = map(W / 2, 0);
-  c.strokeStyle = '#ffd93d';
+  c.strokeStyle = THEME.audience;
   c.lineWidth = Math.max(2, sc * 0.05);
   c.beginPath();
   c.moveTo(fx1, fy);
@@ -32,12 +41,12 @@ function drawStage(c, w, h, count, o) {
   c.stroke();
   const fs = Math.max(11, Math.min(L.lab * 0.55, 22));
   c.font = `700 ${fs}px sans-serif`;
-  c.fillStyle = '#ffd93d';
+  c.fillStyle = THEME.audience;
   c.textAlign = 'center';
   c.textBaseline = 'middle';
   c.fillText('客席（正面）', w / 2, o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55);
   c.font = `${fs * 0.8}px sans-serif`;
-  c.fillStyle = '#7d8aa0';
+  c.fillStyle = THEME.muted;
   const [kx] = map(W / 2 - 0.1, 0), [sx] = map(-W / 2 + 0.1, 0);
   const ly = o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55;
   c.textAlign = kx > sx ? 'right' : 'left';
@@ -65,13 +74,13 @@ function drawStage(c, w, h, count, o) {
     c.lineWidth = 1.5;
     prev.pos.forEach((p, i) => {
       const [x, y] = map(p[0], p[1]), [x2, y2] = map(pos[i][0], pos[i][1]);
-      c.globalAlpha = 0.3;
+      c.globalAlpha = GLOW.ghostA;
       c.fillStyle = S.dancers[i].color;
       c.beginPath();
       c.arc(x, y, R * 0.6, 0, 7);
       c.fill();
-      c.globalAlpha = 0.45;
-      c.strokeStyle = S.dancers[i].color;
+      c.globalAlpha = GLOW.pathA;
+      c.strokeStyle = THEME.path;
       c.beginPath();
       c.moveTo(x, y);
       c.lineTo(x2, y2);
@@ -88,8 +97,9 @@ function drawStage(c, w, h, count, o) {
     const [x, y] = map(pos[i][0], pos[i][1]), [x2, y2] = map(nextK.pos[i][0], nextK.pos[i][1]);
     if (hyp(x2 - x, y2 - y) < R * 0.8) return;
     const isMe = i === o.me;
-    c.strokeStyle = S.dancers[i].color;
-    c.globalAlpha = isMe ? 0.95 : 0.4;
+    const ac = isMe ? THEME.sel : THEME.path;
+    c.strokeStyle = ac;
+    c.globalAlpha = isMe ? 0.95 : GLOW.pathA;
     c.lineWidth = isMe ? 3 : 1.5;
     c.setLineDash(isMe ? [] : [5, 4]);
     c.beginPath();
@@ -103,7 +113,7 @@ function drawStage(c, w, h, count, o) {
     c.lineTo(x2 - hs * Math.cos(a - 0.45), y2 - hs * Math.sin(a - 0.45));
     c.lineTo(x2 - hs * Math.cos(a + 0.45), y2 - hs * Math.sin(a + 0.45));
     c.closePath();
-    c.fillStyle = S.dancers[i].color;
+    c.fillStyle = ac;
     c.fill();
     if (isMe) {
       c.globalAlpha = 0.5;
@@ -121,7 +131,7 @@ function drawStage(c, w, h, count, o) {
     const mine = o.me >= 0 && (cr.a === o.me || cr.b === o.me);
     if (o.me >= 0 && !mine && !o.ghostPrev) return;
     const [x, y] = map(cr.pt[0], cr.pt[1]), z = mine ? 9 : 6;
-    c.strokeStyle = '#ffd93d';
+    c.strokeStyle = THEME.warn;
     c.lineWidth = mine ? 3 : 2;
     c.globalAlpha = mine ? 1 : 0.8;
     c.beginPath();
@@ -136,16 +146,16 @@ function drawStage(c, w, h, count, o) {
   const order = [...Array(n).keys()].sort((a, b) => (a === o.me) - (b === o.me));
   order.forEach(i => {
     const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, rr = isMe ? R * 1.35 : R;
-    c.globalAlpha = o.me >= 0 && !isMe ? 0.55 : 1;
+    c.globalAlpha = o.me >= 0 && !isMe ? GLOW.dim : 1;
     c.fillStyle = d.color;
     c.beginPath();
     c.arc(x, y, rr, 0, 7);
     c.fill();
     c.lineWidth = isMe || i === o.selDancer ? 3 : 1;
-    c.strokeStyle = isMe || i === o.selDancer ? '#fff' : '#0008';
+    c.strokeStyle = isMe || i === o.selDancer ? THEME.text : '#0008';
     c.stroke();
     if (o.names) {
-      c.fillStyle = '#111';
+      c.fillStyle = THEME.onToken;
       c.font = `700 ${Math.max(9, rr * 0.78)}px sans-serif`;
       c.textAlign = 'center';
       c.textBaseline = 'middle';
@@ -189,14 +199,14 @@ function drawStage(c, w, h, count, o) {
     c.textBaseline = 'top';
     c.textAlign = 'left';
     if (Lt.name) {
-      c.fillStyle = '#ffd93d';
+      c.fillStyle = THEME.text;
       c.fillText('💡 ' + Lt.name, L.ox + 6, L.oy + 6);
     }
     const nq = nextCue(count, 8);
     if (nq && count >= 0) {
       const left = Math.ceil(nq.at - count - 1e-6);
       c.textAlign = 'center';
-      c.fillStyle = nq.kind === 'memo' ? '#7fe0ff' : '#ffb547';
+      c.fillStyle = nq.kind === 'memo' ? '#7fe0ff' : THEME.text;
       c.font = `800 ${fs2 * 1.15}px sans-serif`;
       c.fillText(`あと${left}：${nq.name}`, L.ox + L.sw / 2, L.oy + 6);
     }

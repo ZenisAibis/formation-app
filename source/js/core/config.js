@@ -2,9 +2,9 @@
 'use strict';
 /* ===== 基本 ===== */
 const $ = s => document.querySelector(s);
+// ダンサーの色（10色）。赤（「要修正」の色）は使わない。丸の中の字は --on-token の濃い色
 const PALETTE = [
-  '#ff6b6b','#ffa53d','#ffd93d','#9be15d','#3ddc97','#3dd6d0','#4fb3ff','#7b93ff','#a77bff',
-  '#e47bff','#ff7bc0','#d0a77e','#b6c3cc','#f4f4f4','#ff9e9e','#c4e86b','#7fe0ff','#ffc58a'];
+  '#3fe0ff','#5b8cff','#a77bff','#e86bff','#ff7bc8','#ffb547','#d9b98a','#b6f05a','#3ddc97','#c3cad6'];
 const LS_KEY = 'danceFormation.v1';
 const SCHEMA_V = 1;        // 作品のデータの版。これより大きい版の作品は読み込まない
 const UNDO_LIMIT = 60;     // 元に戻す・やり直すの、積める数

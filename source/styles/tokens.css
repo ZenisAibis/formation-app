@@ -1,15 +1,53 @@
-/* 色・基準の値 */
+/* 色・光・余白の基準の値（案C スタジオ）。光はシアン（選ぶ・今）と紫（動き）の2色だけ */
 :root {
-  --bg: #11151d;
-  --panel: #1a202b;
-  --panel2: #222a37;
-  --line: #2e3848;
-  --text: #e8ecf3;
-  --muted: #9aa5b8;
-  --accent: #4fb3ff;
-  --accent2: #1a63d6;
-  --red: #ff6b6b;
-  --amber: #ffb547;
-  --green: #3ddc97;
+  /* 面 */
+  --bg: #0a0c11;
+  --panel: #13161e;
+  --panel2: #1c202b;
+  --line: #2a303d;
+  --stage-floor: #0e1118;
+  --grid: #182031;
+  --grid-c: #24314a;
+  --edge: #2a303d;
+  --tl-a: #13161e;
+  --tl-b: #171b24;
+  --energy: rgba(156,124,255,.22);
+  --beat-off: #2a303d;
+  --tabbar-bg: rgba(10,12,17,.94);
+  /* 字 */
+  --text: #f1f4f8;
+  --muted: #a3abbb;
+  --on-token: #0b0d12;
+  /* 光の役割：選んだ物・今＝シアン、動き＝紫 */
+  --sel: #27dcf5;
+  --path-focus: #27dcf5;
+  --now: #27dcf5;
+  --path: #9c7cff;
+  --audience: #ffd93d;
+  --primary-bg: #27dcf5;
+  --primary-fg: #0a0c11;
+  /* 判定：赤は「要修正」だけ。光らせない。必ず「▲」と言葉を添える */
+  --danger: #ff5a3c;
+  --warn: #ffc23d;
+  --info: #a3abbb;
+  /* 光（再生中のボタン・今の拍・選んだ物だけ、弱く） */
+  --glow-btn: 0 0 10px rgba(39,220,245,.35);
+  --glow-dot: 0 0 6px rgba(39,220,245,.6);
+  --chip-on-shadow: 0 0 8px rgba(39,220,245,.25);
+  --tab-glow: 0 0 6px rgba(39,220,245,.5);
+  /* 字の大きさ */
+  --fs-xs: 11px;
+  --fs-s: 12px;
+  --fs-m: 14px;
+  --fs-l: 16px;
+  --fs-count: 36px;
+  /* 余白・角・押す所 */
+  --pad: 14px;
+  --card-pad: 14px;
+  --gap: 8px;
+  --stage-radius: 12px;
+  --r-s: 8px;
+  --r-m: 12px;
+  --tap: 44px;
   color-scheme: dark;
 }

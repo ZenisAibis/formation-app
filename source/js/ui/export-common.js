@@ -58,7 +58,7 @@ function legend(c, x, y, w, fs) {
     c.beginPath();
     c.arc(cx + fs * 0.5, cy, fs * 0.45, 0, 7);
     c.fill();
-    c.fillStyle = '#e8ecf3';
+    c.fillStyle = THEME.text;
     c.fillText(d.name, cx + fs * 1.1, cy);
     cx += tw;
   });
