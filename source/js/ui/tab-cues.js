@@ -1,4 +1,4 @@
-// 編集タブの下半分：照明・きっかけ／拍のクリック音
+// 編集タブの照明・きっかけ（◆ の追加とカード）／拍のクリック音
 /* 照明・きっかけ */
 Object.entries(LIGHT_KINDS).forEach(([k, v]) => $('#cKind').append(el('option', { value: k, text: v })));
 function fillCueTargets() {
@@ -34,6 +34,7 @@ function selectCue(id) {
   setCount(q.at);
   fillCueForm();
   renderCueChips();
+  setCard('cue');
 }
 function cueFromForm(at) {
   const kind = $('#cKind').value;
@@ -42,36 +43,46 @@ function cueFromForm(at) {
     color: $('#cColor').value, target: parseInt($('#cTarget').value),
     fade: Math.max(0, Math.min(32, parseInt($('#cFade').value) || 0)), at };
 }
+// 「◆ 照明・きっかけ」：今のカウントに、まず「きっかけ」を1つ足して選ぶ。種類・名前・時刻などはカードで直す
 $('#btnAddCue').addEventListener('click', () => {
   const at = Math.max(0, Math.round(ui.count));
   pushUndo();
-  const q = Object.assign({ id: newId() }, cueFromForm(at));
-  if (q.kind === 'spot' && q.target < 0) q.target = ui.me >= 0 ? ui.me : 0;
+  const q = { id: newId(), kind: 'memo', name: 'きっかけ', color: '#7a5cff', target: -1, fade: 0, at };
   S.cues.push(q);
   S.cues.sort((a, b) => a.at - b.at);
   ui.selCue = q.id;
   save();
+  fillCueForm();
   renderCueChips();
   renderAdvice();
   requestRender();
-  toast(`${cLabel(at)} に「${q.name}」を追加しました`);
+  setCard('cue');
+  toast(`${cLabel(at)} に「${q.name}」を追加しました。種類や名前は下のカードで直せます`);
 });
-$('#btnUpdCue').addEventListener('click', () => {
+// カードの入力欄を直すと、すぐ選んでいる照明に反映する（値が変わったときだけ、1回の元に戻す単位で積む）
+function updateCue() {
   const q = S.cues.find(x => x.id === ui.selCue);
-  if (!q) {
-    toast('先に上の一覧から選んでください');
+  if (!q) return;
+  const e = Math.max(1, parseInt($('#cEight').value) || 1), cc = Math.min(8, Math.max(1, parseInt($('#cCount').value) || 1));
+  const nv = cueFromForm((e - 1) * 8 + cc - 1);
+  if (nv.kind === 'spot' && nv.target < 0) nv.target = ui.me >= 0 ? ui.me : 0;
+  const cur = { kind: q.kind, name: q.name, color: q.color, target: q.target, fade: q.fade, at: q.at };
+  if (JSON.stringify(nv) === JSON.stringify(cur)) {
+    fillCueForm();
     return;
   }
   pushUndo();
-  const e = Math.max(1, parseInt($('#cEight').value) || 1), cc = Math.min(8, Math.max(1, parseInt($('#cCount').value) || 1));
-  Object.assign(q, cueFromForm((e - 1) * 8 + cc - 1));
+  const moved = nv.at !== q.at;
+  Object.assign(q, nv);
   S.cues.sort((a, b) => a.at - b.at);
   save();
+  fillCueForm();
   renderCueChips();
+  renderAdvice();
   requestRender();
-  setCount(q.at);
-  toast('更新しました');
-});
+  if (moved) setCount(q.at);
+}
+['#cKind', '#cName', '#cColor', '#cTarget', '#cEight', '#cCount', '#cFade'].forEach(s => $(s).addEventListener('change', updateCue));
 $('#btnDelCue').addEventListener('click', () => {
   const i = S.cues.findIndex(x => x.id === ui.selCue);
   if (i < 0) {
@@ -82,8 +93,10 @@ $('#btnDelCue').addEventListener('click', () => {
   S.cues.splice(i, 1);
   ui.selCue = null;
   save();
+  fillCueForm();
   renderCueChips();
   requestRender();
+  setCard(null);
 });
 let clickCtx = null, lastBeat = null;
 function clickSound(strong) {

@@ -11,6 +11,10 @@ function renderAdvice() {
     el('span', { class: 'pill p0' }, [el('b', { text: String(c[0]) }), ' 要修正']),
     el('span', { class: 'pill p1' }, [el('b', { text: String(c[1]) }), ' 提案']),
     el('span', { class: 'pill p2' }, [el('b', { text: String(c[2]) }), ' 参考']));
+  const badge = $('#advBadge');
+  badge.textContent = `▲${c[0]}`;
+  badge.hidden = c[0] === 0;
+  badge.setAttribute('aria-label', `要修正${c[0]}件`);
   if (S.baseKeys) sm.append(el('span', { class: 'muted', text: '（ベースを保存済み）' }));
   if (!adv.length) list.append(el('div', { class: 'card', text: '気になる所は見つかりませんでした。完成形です。' }));
   adv.forEach(a => {

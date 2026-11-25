@@ -8,16 +8,42 @@ function fillMeSel() {
   if (ui.me >= S.dancers.length) ui.me = -1;
   s.value = String(ui.me);
 }
-$('#meSel').addEventListener('change', e => {
-  ui.me = parseInt(e.target.value);
+// 「自分」を選ぶ（練習タブの選択欄と、丸のカードの「この人を自分にする」から）
+function setMe(i) {
+  ui.me = i;
   try { localStorage.setItem(LS_KEY + '.me', String(ui.me)); } catch (x) { }
+  $('#meSel').value = String(ui.me);
   requestRender();
-});
-$('#viewSel').addEventListener('change', e => {
-  ui.view = e.target.value;
+}
+$('#meSel').addEventListener('change', e => setMe(parseInt(e.target.value)));
+// 向き：分割ボタン（今の向きが押された見た目）
+function syncViewUi() {
+  document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === ui.view)));
+}
+function setView(v) {
+  ui.view = v;
   try { localStorage.setItem(LS_KEY + '.view', ui.view); } catch (x) { }
+  syncViewUi();
   requestRender();
-});
+}
+document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+// 速さ：練習タブの分割ボタンと、再生の列のボタン（押すたびに 0.5→0.75→1→0.5…）
+const RATES = [0.5, 0.75, 1];
+function syncRateUi() {
+  document.querySelectorAll('#rateSeg button').forEach(b => b.setAttribute('aria-pressed', String(parseFloat(b.dataset.rate) === ui.rate)));
+  $('#btnRate').textContent = `${ui.rate}倍`;
+}
+function setRate(r) {
+  ui.rate = r;
+  if (audioReady) audio.playbackRate = ui.rate;
+  if (ui.playing) {
+    ui.clockT0 = performance.now();
+    ui.clockC0 = ui.count;
+  }
+  syncRateUi();
+}
+document.querySelectorAll('#rateSeg button').forEach(b => b.addEventListener('click', () => setRate(parseFloat(b.dataset.rate))));
+$('#btnRate').addEventListener('click', () => setRate(RATES[(RATES.indexOf(ui.rate) + 1) % RATES.length]));
 $('#showNames').addEventListener('change', e => {
   ui.showNames = e.target.checked;
   requestRender();

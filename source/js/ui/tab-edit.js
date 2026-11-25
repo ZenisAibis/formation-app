@@ -7,6 +7,7 @@ function selectKey(i) {
   setCount(S.keys[i].at);
   renderKeyChips();
   fillKeyForm();
+  setCard('key');
 }
 function renderKeyChips() {
   const box = $('#keyChips');
@@ -24,6 +25,7 @@ function renderKeyChips() {
 function fillKeyForm() {
   const k = S.keys[ui.sel];
   if (!k) return;
+  $('#cardKeyTitle').textContent = `隊形 ${ui.sel + 1}「${k.name}」`;
   $('#kName').value = k.name;
   $('#kEight').value = Math.floor(k.at / 8) + 1;
   $('#kCount').value = k.at % 8 + 1;
@@ -34,6 +36,7 @@ $('#kName').addEventListener('change', e => {
   pushUndo();
   S.keys[ui.sel].name = e.target.value.slice(0, 20) || '隊形';
   changed(false);
+  fillKeyForm();
 });
 function atFromForm() {
   const e = Math.max(1, parseInt($('#kEight').value) || 1), c = Math.min(8, Math.max(1, parseInt($('#kCount').value) || 1));
@@ -84,12 +87,11 @@ $('#btnDelKey').addEventListener('click', () => {
     ui.sel = Math.max(0, ui.sel - 1);
     changed(true);
     setCount(S.keys[ui.sel].at);
+    setCard(null);
   });
 });
 $('#btnUndo').addEventListener('click', undo);
-$('#btnUndo2').addEventListener('click', undo);
 $('#btnRedo').addEventListener('click', redo);
-$('#btnRedo2').addEventListener('click', redo);
 Object.keys(TEMPLATES).forEach(t => $('#tplSel').append(el('option', { value: t, text: t })));
 $('#btnTpl').addEventListener('click', () => {
   const k = S.keys[ui.sel], spots = TEMPLATES[$('#tplSel').value](S.dancers.length, S.stage.w, S.stage.d);
@@ -112,4 +114,46 @@ $('#btnCenter').addEventListener('click', () => {
   const k = S.keys[ui.sel];
   k.pos = centerPos(k.pos);
   changed(false);
+});
+
+/* 選んだ物のカード：ふだんは出さず、隊形・丸（ダンサー）・照明を選んだときだけ、その物のカードを出す */
+function syncCards() {
+  // 選びが無くなっていたら、そのカードは閉じる
+  if (ui.card === 'dancer' && ui.selDancer < 0) ui.card = null;
+  if (ui.card === 'cue' && ui.selCue == null) ui.card = null;
+  $('#cardKey').hidden = ui.card !== 'key';
+  $('#cardDancer').hidden = ui.card !== 'dancer';
+  $('#cardCue').hidden = ui.card !== 'cue';
+  $('#editHint').hidden = ui.card !== null;
+  if (ui.card === 'dancer') fillDancerCard();
+}
+function setCard(c) {
+  ui.card = c;
+  syncCards();
+}
+// 丸のカード：名前・色・今の位置（客席から見て。x は中央が0で上手＝右がプラス、y は客席側の端が0）
+function fillDancerCard() {
+  const i = ui.selDancer, d = S.dancers[i], k = S.keys[ui.sel];
+  if (!d || !k || !k.pos[i]) return;
+  const p = k.pos[i];
+  $('#cardDancerName').textContent = d.name;
+  $('#cardDancerSw').style.background = d.color;
+  $('#cardDancerPos').textContent = `中央から${p[0] < 0 ? '左' : '右'} ${Math.abs(p[0]).toFixed(2)}m・前から ${p[1].toFixed(2)}m（客席から見て）`;
+  $('#btnSetMe').textContent = ui.me === i ? '「自分」を外す' : 'この人を「自分」にする';
+}
+$('#btnCloseKey').addEventListener('click', () => setCard(null));
+$('#btnCloseDancer').addEventListener('click', () => {
+  ui.selDancer = -1;
+  setCard(null);
+  requestRender();
+});
+$('#btnCloseCue').addEventListener('click', () => {
+  ui.selCue = null;
+  renderCueChips();
+  setCard(null);
+  requestRender();
+});
+$('#btnSetMe').addEventListener('click', () => {
+  setMe(ui.me === ui.selDancer ? -1 : ui.selDancer);
+  fillDancerCard();
 });

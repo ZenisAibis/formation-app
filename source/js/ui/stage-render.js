@@ -19,17 +19,27 @@ function fitCanvas() {
   requestRender();
 }
 let lastLayout = null;
+const beatEls = $('#beats').children;
+let legendText = '';
 function render() {
   const dpr = window.devicePixelRatio || 1, w = cv.width / dpr, h = cv.height / dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const editing = isEditable(), k = S.keys[ui.sel];
   lastLayout = drawStage(ctx, w, h, ui.count, {
     view: ui.view, me: ui.me, compare: ui.compare, names: ui.showNames, showPaths: ui.showPaths && !editing,
-    ghostPrev: editing && ui.sel > 0 ? ui.sel : 0, selDancer: editing ? ui.selDancer : -1,
+    ghostPrev: editing && ui.sel > 0 ? ui.sel : 0, selDancer: editing ? ui.selDancer : -1, screen: true,
   });
   $('#countDisp').textContent = cLabel(ui.count);
   $('#countBig').textContent = document.body.classList.contains('proj') ? cLabel(ui.count) : '';
   const t = S.offset + ui.count * beatSec();
+  const bi = ui.count >= 0 ? Math.floor(ui.count + 1e-6) % 8 : -1; // 今の拍の点（8つのうち1つだけ光る）
+  for (let i = 0; i < beatEls.length; i++) beatEls[i].classList.toggle('on', i === bi);
+  const lg = '薄い丸と線＝前の隊形からの動き　× ＝クロス' + (ui.me >= 0 ? '　矢印＝自分の次の位置' : '');
+  if (lg !== legendText) {
+    legendText = lg;
+    $('#stLegend').textContent = lg;
+  }
+  if (ui.card === 'dancer') fillDancerCard();
   $('#timeDisp').textContent = t >= 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : '';
   renderMeInfo();
   renderTimeline();

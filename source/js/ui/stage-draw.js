@@ -53,7 +53,8 @@ function drawStage(c, w, h, count, o) {
   c.fillText('上手', kx, ly);
   c.textAlign = kx > sx ? 'left' : 'right';
   c.fillText('下手', sx, ly);
-  const pos = positionsAt(S.keys, count), R = Math.max(8, 0.27 * sc), n = pos.length;
+  const pos = positionsAt(S.keys, count), R = Math.max(8, sc * (pos.length > 20 ? 0.31 : 0.35)), n = pos.length;
+  const focus = o.selDancer >= 0 ? o.selDancer : o.me; // 光と動線を集める人：選んだ丸（なければ「自分」）
   // ベースの比較
   if (o.compare && S.baseKeys) {
     const bp = positionsAt(S.baseKeys, count);
@@ -68,7 +69,7 @@ function drawStage(c, w, h, count, o) {
     });
     c.setLineDash([]);
   }
-  // 編集中：前の隊形から
+  // 編集中：前の隊形から。ふだんは紫の細い線、選んだ人（focus）の線だけシアンで太く光らせ、ほかは薄くする
   if (o.ghostPrev) {
     const prev = S.keys[o.ghostPrev - 1];
     c.lineWidth = 1.5;
@@ -79,7 +80,8 @@ function drawStage(c, w, h, count, o) {
       c.beginPath();
       c.arc(x, y, R * 0.6, 0, 7);
       c.fill();
-      c.globalAlpha = GLOW.pathA;
+      if (i === focus) return;
+      c.globalAlpha = focus >= 0 ? GLOW.pathDim : GLOW.pathA;
       c.strokeStyle = THEME.path;
       c.beginPath();
       c.moveTo(x, y);
@@ -87,6 +89,29 @@ function drawStage(c, w, h, count, o) {
       c.stroke();
     });
     c.globalAlpha = 1;
+    if (focus >= 0 && prev.pos[focus] && pos[focus]) {
+      const [x, y] = map(prev.pos[focus][0], prev.pos[focus][1]), [x2, y2] = map(pos[focus][0], pos[focus][1]);
+      const len = hyp(x2 - x, y2 - y);
+      glow(c, THEME.pathFocus, GLOW.path, () => {
+        c.strokeStyle = THEME.pathFocus;
+        c.fillStyle = THEME.pathFocus;
+        c.lineWidth = 2.6;
+        c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(x, y);
+        c.lineTo(x2, y2);
+        c.stroke();
+        if (len > R * 2.2) { // 矢印は丸の手前に置く
+          const ux = (x2 - x) / len, uy = (y2 - y) / len, bx = x2 - ux * (R + 3), by = y2 - uy * (R + 3), hs = 7;
+          c.beginPath();
+          c.moveTo(bx, by);
+          c.lineTo(bx - ux * hs - uy * hs * 0.6, by - uy * hs + ux * hs * 0.6);
+          c.lineTo(bx - ux * hs + uy * hs * 0.6, by - uy * hs - ux * hs * 0.6);
+          c.closePath();
+          c.fill();
+        }
+      });
+    }
   }
   // 次の位置への矢印
   const ki = keyIndexAt(count), nextK = S.keys[ki + 1];
@@ -98,6 +123,11 @@ function drawStage(c, w, h, count, o) {
     if (hyp(x2 - x, y2 - y) < R * 0.8) return;
     const isMe = i === o.me;
     const ac = isMe ? THEME.sel : THEME.path;
+    c.save();
+    if (isMe) {
+      c.shadowColor = THEME.sel;
+      c.shadowBlur = GLOW.path;
+    }
     c.strokeStyle = ac;
     c.globalAlpha = isMe ? 0.95 : GLOW.pathA;
     c.lineWidth = isMe ? 3 : 1.5;
@@ -123,6 +153,7 @@ function drawStage(c, w, h, count, o) {
       c.stroke();
       c.setLineDash([]);
     }
+    c.restore();
     c.globalAlpha = 1;
   });
   // クロスの場所
@@ -142,19 +173,29 @@ function drawStage(c, w, h, count, o) {
     c.stroke();
     c.globalAlpha = 1;
   });
-  // ダンサー
-  const order = [...Array(n).keys()].sort((a, b) => (a === o.me) - (b === o.me));
+  // ダンサー（選んだ丸を最後＝いちばん上に描く）
+  const order = [...Array(n).keys()].sort((a, b) => ((a === o.me) - (b === o.me)) || ((a === o.selDancer) - (b === o.selDancer)));
   order.forEach(i => {
-    const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, rr = isMe ? R * 1.35 : R;
-    c.globalAlpha = o.me >= 0 && !isMe ? GLOW.dim : 1;
+    const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, isSel = i === o.selDancer, rr = isMe ? R * 1.35 : R;
+    c.globalAlpha = focus >= 0 && !isMe && !isSel ? GLOW.dim : 1;
+    if (isSel) { // 選んだ丸：光る輪
+      glow(c, THEME.sel, GLOW.sel, () => {
+        c.strokeStyle = THEME.sel;
+        c.lineWidth = 2.5;
+        c.beginPath();
+        c.arc(x, y, rr + 4, 0, 7);
+        c.stroke();
+      });
+    }
     c.fillStyle = d.color;
     c.beginPath();
     c.arc(x, y, rr, 0, 7);
     c.fill();
-    c.lineWidth = isMe || i === o.selDancer ? 3 : 1;
-    c.strokeStyle = isMe || i === o.selDancer ? THEME.text : '#0008';
+    c.lineWidth = isMe ? 3 : 1;
+    c.strokeStyle = isMe ? THEME.text : '#0008';
     c.stroke();
-    if (o.names) {
+    // 名前：丸が小さい（人数が多い）画面では、自分以外は丸の中に書かない（選んだ丸は下の吹き出しで）
+    if (o.names && (!o.screen || R >= 11 || isMe)) {
       c.fillStyle = THEME.onToken;
       c.font = `700 ${Math.max(9, rr * 0.78)}px sans-serif`;
       c.textAlign = 'center';
@@ -163,6 +204,23 @@ function drawStage(c, w, h, count, o) {
     }
     c.globalAlpha = 1;
   });
+  if (o.screen && R < 11 && o.selDancer >= 0 && pos[o.selDancer]) { // 小さい丸を選んだとき、名前の吹き出し
+    const [x, y] = map(pos[o.selDancer][0], pos[o.selDancer][1]), nm = S.dancers[o.selDancer].name;
+    c.font = '700 12px sans-serif';
+    const bw = c.measureText(nm).width + 18, by = Math.max(12, y - R - 18);
+    c.fillStyle = THEME.panel2;
+    c.strokeStyle = THEME.sel;
+    c.lineWidth = 1;
+    c.beginPath();
+    if (c.roundRect) c.roundRect(x - bw / 2, by - 10, bw, 20, 10);
+    else c.rect(x - bw / 2, by - 10, bw, 20); // 古いブラウザでは角丸にしない
+    c.fill();
+    c.stroke();
+    c.fillStyle = THEME.text;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(nm, x, by + 0.5);
+  }
   // 照明
   if (o.lights !== false) {
     const Lt = lightAt(count);

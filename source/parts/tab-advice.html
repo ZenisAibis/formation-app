@@ -4,19 +4,19 @@
     <div class="summary" id="advSummary"></div>
     <div class="row">
       <button class="primary" id="btnImprove">まとめて改善して完成形へ</button>
-      <label><input type="checkbox" id="allowSwap" checked> 立ち位置の入れ替えも許可</label>
     </div>
     <div class="row">
-      <label><input type="checkbox" id="compare"> ベース（改善前）を点線で重ねる</label>
+      <label class="switch"><input type="checkbox" id="allowSwap" checked> 立ち位置の入れ替えも許可</label>
+      <label class="switch"><input type="checkbox" id="compare"> ベース（改善前）を点線で重ねる</label>
+    </div>
+    <div class="row">
       <button class="small" id="btnRestoreBase">ベースに戻す</button>
       <button class="small" id="btnSetBase">今の形をベースにする</button>
-      <button class="small" id="btnUndo2">↶ 元に戻す</button>
-      <button class="small" id="btnRedo2">↷ やり直す</button>
     </div>
     <div class="row">
       <button class="small" id="btnAiText">AIに相談する文章をコピー</button>
-      <span class="muted">Claude や ChatGPT に貼ると、振付の観点の意見をもらえます。</span>
     </div>
+    <div class="hint">Claude や ChatGPT に貼ると、振付の観点の意見をもらえます。</div>
   </div>
   <div id="advList"></div>
 </section>

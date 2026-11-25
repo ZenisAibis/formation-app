@@ -1,4 +1,9 @@
-<header><h1>フォーメーション練習</h1><span id="hdrTitle"></span></header>
+<header class="app">
+  <div class="hgroup"><h1 class="brand">フォーメーション練習</h1><div class="title" id="hdrTitle"></div></div>
+  <button id="btnUndo" class="hbtn" aria-label="元に戻す">↶ 戻す</button>
+  <button id="btnRedo" class="hbtn" aria-label="やり直す" title="やり直す">↷</button>
+  <button id="btnProj" class="hbtn">大きく表示</button>
+</header>
 
 <div id="stageWrap">
   <canvas id="stage" aria-label="ステージ図"></canvas>
@@ -7,21 +12,16 @@
   <button id="projPlay" class="primary">▶</button>
   <button id="projExit">閉じる</button>
 </div>
+<div class="legend" id="stLegend"></div>
 
 <div id="transport">
-  <button id="btnPlay" class="primary" style="min-width:64px">▶ 再生</button>
-  <button id="btnBack" title="選んだ隊形の少し前へ">⏮</button>
-  <div id="countDisp">1-1</div>
-  <div id="timeDisp"></div>
-  <label>速さ <select id="rate"><option value="0.5">0.5倍</option><option value="0.75">0.75倍</option><option value="1" selected>1倍</option></select></label>
-  <button id="btnProj">大きく表示</button>
+  <button id="btnBack" title="選んだ隊形の少し前へ" aria-label="選んだ隊形の少し前へ">⏮</button>
+  <button id="btnPlay" class="primary">▶ 再生</button>
+  <div class="count">
+    <div id="countDisp" class="count-num">1-1</div>
+    <div class="count-sub"><div class="beats" id="beats"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span id="timeDisp"></span></div>
+  </div>
+  <button id="btnRate" title="速さ（押すたびに切り替わります）">1倍</button>
 </div>
 <canvas id="timeline" aria-label="タイムライン"></canvas>
-<div class="muted" style="margin-top:4px">タイムライン：数字は8カウントの番号。棒は曲の盛り上がり、●は隊形、横線は移動の区間、◆は照明・きっかけ。</div>
-
-<nav id="tabs">
-  <button data-tab="edit" class="on">編集</button>
-  <button data-tab="advice">アドバイス</button>
-  <button data-tab="practice">練習</button>
-  <button data-tab="setup">設定</button>
-</nav>
+<div class="legend">● 隊形　━ 移動　◆ 照明・きっかけ　│ 今（なぞって移動）</div>

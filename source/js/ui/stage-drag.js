@@ -24,11 +24,13 @@ cv.addEventListener('pointerdown', e => {
     ui.drag = best;
     ui.dragMoved = false;
     ui.selDancer = best;
+    setCard('dancer'); // 選んだ丸のカードを出す
     cv.setPointerCapture(e.pointerId);
     requestRender();
     e.preventDefault();
   } else {
     ui.selDancer = -1;
+    if (ui.card === 'dancer') setCard(null);
     requestRender();
   }
 });

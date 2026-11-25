@@ -271,6 +271,7 @@ function refreshAll() {
   renderKeyChips();
   fillKeyForm();
   renderAdvice();
+  syncCards();
   fitCanvas();
 }
 $('#btnPlay').addEventListener('click', toggle);
@@ -279,14 +280,6 @@ $('#btnBack').addEventListener('click', () => {
   const k = S.keys[ui.sel];
   pause();
   setCount(Math.max(0, k.at - 8));
-});
-$('#rate').addEventListener('change', e => {
-  ui.rate = parseFloat(e.target.value);
-  if (audioReady) audio.playbackRate = ui.rate;
-  if (ui.playing) {
-    ui.clockT0 = performance.now();
-    ui.clockC0 = ui.count;
-  }
 });
 $('#btnProj').addEventListener('click', () => {
   document.body.classList.add('proj');
@@ -354,9 +347,10 @@ try {
   const v = localStorage.getItem(LS_KEY + '.view');
   if (v === 'dancer' || v === 'audience') {
     ui.view = v;
-    $('#viewSel').value = v;
   }
 } catch (e) { }
+syncViewUi();
+syncRateUi();
 refreshAll();
 setCount(S.keys[0].at);
 requestAnimationFrame(tick);
