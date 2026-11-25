@@ -11,13 +11,15 @@
 source/            手で直すのはここだけ
 ├─ index.html      骨組み（<!-- @include ... --> を並べる）
 ├─ parts/          画面の部品（HTML）。overlays.html は プライバシーポリシーの1枚（#privacyBox）と YouTube の同意の確認（#ytConsentBox）
-├─ styles/         tokens.css（色・基準の値）・app.css・youtube.css（動画の枠）・privacy.css（ポリシーの全面・同意の札）
+├─ styles/         tokens.css（色・基準の値）・app.css・marks.css（色の選び・グループの形・ロックの印）・youtube.css（動画の枠）・privacy.css（ポリシーの全面・同意の札）
 └─ js/
-   ├─ core/        状態・保存・読み込みの確かめ・元に戻す・計算（画面に触らない）。youtube-id.js は URL から動画 ID を取り出す。bamiri.js は上手・下手の向き・バミリ番号・まわりの人の計算（保存しない）
+   ├─ core/        状態・保存・読み込みの確かめ・元に戻す・計算（画面に触らない）。youtube-id.js は URL から動画 ID を取り出す。bamiri.js は上手・下手の向き・バミリ番号・まわりの人の計算（保存しない）。groups.js はグループ（形）の確かめ・locks.js はロックの確かめと setPos・schema.js は作品の版の付け方（schemaVOf・workJson）
    └─ ui/          画面と操作（役割ごとに分けてある。各 300 行以下）
       ├─ theme.js                      描画の色と光（CSS の変数から読む表 THEME・光の強さ GLOW）
       ├─ stage-base / stage-draw / stage-render / stage-drag    ステージの土台・描き方・1コマの描き直し・ドラッグ
       ├─ stage-ruler.js                前の縁の文字（客席・上手・下手）とバミリ番号の描き方
+      ├─ stage-shape.js                丸の形（丸・四角・三角・ひし形）の道すじと、鍵の印の描き方（1か所）
+      ├─ dancer-color.js / group-ui.js / lock-ui.js    色の選び（10色の丸ボタン）・グループの一覧と選び・ロックの付け外しとクロスの印
       ├─ timeline.js / playback.js     タイムライン・再生
       ├─ privacy.js                    プライバシーポリシーの開け閉め・初めて動画を出すときの同意（同意の印は別のキー）
       ├─ youtube.js                    YouTube の動画の枠（試作。下の「YouTube で練習する」）
@@ -228,3 +230,58 @@ node run_compat_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\in
 - 既存の試験の手順の直し：`run_youtube_tests.js` の `openHttp` は同意の印を入れた端末として開く・Y2 の最後の1件に、規約とポリシーへのリンク2つを名指しで許す（期待値は変えていない。直した理由は tests の README）
 - 画面の画像（幅 390）：`C:\Users\osm12\family\tools\formation\tests\screens\privacy_390\`（`p1_setup_youtube_cards.png` 設定の YouTube のカード・`p2_consent.png` 同意の確認・`p3`〜`p5` ポリシーの上・途中・下・`p6` 同意のあと）
 - 確かめていない物：実機（iPhone・Android）での動き。iPhone のホーム画面アプリで外のリンクが新しいタブとして開くか・戻れるか。v1 の `sw.js` を持つ端末が v2 に入れ替わる動き（localhost で古い sw.js を入れた状態からの差し替えは未実施）
+
+## 保存データの形の変更 v=2（2026-11-26・作業ブランチ dev/p0-20261125。公開していない）
+設計：`C:\Users\osm12\family\tools\formation\docs\03_保存データの形の設計_2026-11-26.md` の 2（色）・1（グループの形）・5（ロック）。4（個人別の時刻）・3（曲線）は入れていない（後の v=3）。持ち主の好み3つ：①ロック中は手のドラッグも止める ②色は既定の10色（`PALETTE`・赤なし）の丸ボタンの列から選ぶ（自由な色の入力は入れない） ③半カウントは入れない（時刻は整数のカウントのまま）。
+
+### 版の付け方（使った項目の最大の版だけを書く）
+- `config.js` の `FEATURE_V = { groups: 2, lock: 2 }`・`SCHEMA_V` はその最大値（読める版の上限。これより大きい版は断る）。作品の `v` は、保存と書き出しの直前に `workJson(S)`（`core/schema.js`）が付ける。**新しい項目を使っていない作品は v=1 のまま**（色だけ変えた作品も v=1）。baseKeys の中の使用も数える
+- 使っていない作品の JSON は、前の版と1文字も違わない（空の `groups: []` のような入れ物は書かない）
+- 見本の作品も `schemaVOf` で決める（今は 1）
+
+### 作品の JSON の前後（ダミーの値）
+使わない作品（v=1）：
+```json
+{"v":1,"title":"案件A","bpm":120,"offset":0,"totalEights":4,"stage":{"w":10,"d":6},"dancers":[{"name":"担当A","color":"#3fe0ff"},{"name":"担当B","color":"#5b8cff"},{"name":"担当C","color":"#a77bff"}],"keys":[{"name":"隊形A1","at":0,"move":4,"pos":[[-2,2],[0,2],[2,2]]},{"name":"隊形A2","at":16,"move":4,"pos":[[2,4],[0,4],[-2,4]]}],"baseKeys":null,"energy":null,"cues":[]}
+```
+グループとロックを使った作品（v=2。隊形の `id` は書き出しに入るが省いた）：
+```json
+{"v":2,"title":"案件A","bpm":120,"offset":0,"totalEights":4,"stage":{"w":10,"d":6},"dancers":[{"name":"担当A","color":"#3fe0ff","group":"g1"},{"name":"担当B","color":"#5b8cff","group":"g1"},{"name":"担当C","color":"#a77bff"}],"keys":[{"name":"隊形A1","at":0,"move":4,"pos":[[-2,2],[0,2],[2,2]]},{"name":"隊形A2","at":16,"move":4,"pos":[[2,4],[0,4],[-2,4]],"lock":{"pos":[2],"cross":[[0,1]]}}],"baseKeys":null,"energy":null,"cues":[],"groups":[{"id":"g1","name":"チームA","shape":"square"}]}
+```
+- `groups[{id, name, shape}]`：最大8つ・名前は12字まで・`shape` は `circle`・`square`・`triangle`・`diamond`。`dancers[i].group` はグループの id（1人1グループまで）
+- `keys[k].lock = { pos: [人の番号…], cross: [[小, 大]…] }`：`pos`＝その隊形で位置を固定する人・`cross`＝前の隊形→k の移動で、わざと交わる2人の組。両方空なら `lock` ごと書かない
+- 読み込み：知らない形・使えない id・重なった id・9個目以降・範囲外の番号・重なり・自分どうしの組は、その1件だけ捨てる（作品は断らない）。座標が数でないなど、今の断る条件は変えていない。ダンサーの番号を含む物は `cleanDancerRefs(隊形, 人数)`（`core/locks.js`）1つで確かめ、読み込みと「最後の1人を削除」の両方から使う（消した人への参照が残らない）
+
+### 色（段1）
+設定タブのメンバーの行と、丸のカードの色見本を押すと、既定の10色の丸ボタンの列が開く（今の色に ✓）。変えるときは1つの元に戻す単位（`dancer-color.js`）。パレットに無い古い色（赤など）の人は、その色のまま出し、列の先頭に「いまの色」（破線）を出して、選び直せる。保存の形・版は変えない。
+
+### グループの形（段2）
+設定タブに「グループ（形で見分ける）」のカード（名前・形・削除・追加）。メンバーの行と丸のカードに、その人のグループの選び。丸の形は `ui/stage-shape.js` の `tokenPath` 1か所で作り、基準の比較円・前の位置・次の位置の輪・選んだ輪・本体・暗転の輪・書き出しの凡例が同じ物を使う（丸は今までと同じ `arc`＝グループを使わない作品は画素まで同じ）。名前の2文字は形の中に書く。凡例は画面の文とダンサーの凡例（書き出し）の先頭に「■ チームA　▲ チームB」。つかむ判定は今のまま丸の半径。
+
+### ロック（段3）
+- 位置を作り直す16か所（`advice.js` の直し7・`tab-advice.js` の自動で直す5・`tab-edit.js` の反転・中央寄せ・形の当てはめ4）を、すべて `setPos(k, pos)`（固定した人の座標を戻す）に通した。ドラッグは押した丸が固定なら始めない（押すと「ロック中です」と知らせる・カードで外すと動かせる）
+- `relax`・`zigzag`・`staggerRows`・`fixFormation` は固定した人を動かさず、ほかの人が避ける。`optimalNext`・`assignSpots`（行き先の入れ替え・形の当てはめ）は、固定した人と意図したクロスの2人を表から外す。`minPathGap` は意図したクロスの組を「ぶつかり」に数えない。助言：意図したクロスは「ぶつかります」から外れ、「意図したクロス」の参考になる
+- 画面：固定した丸に鍵の印（隊形の時刻にいるときだけ）・丸のカードに「この隊形で位置を固定する（ロック）／ロックを外す」・隊形のカードに固定している人の一覧と「位置の固定を全部外す」・クロスする組の一覧（押すと意図したクロスを付け外し）・ステージの × を押しても付け外し（意図したクロスは × の輪で見分ける）
+
+### 前の版との関係・戻し方
+- 前の版（公開版 b98ed8d2・v=2 の前の cc2ff88）で作った作品：今の版で全部開ける。新しい機能を使わずに保存すると v=1 のまま・前の版でも開ける
+- 使った作品（v=2）を **v=2 の前の版（cc2ff88 など。作業ブランチで v=2 を戻したとき）** で開くと、「新しい版のアプリで作った作品です」と断り、元の文字列を別のキー（`danceFormation.v1.unreadable.…`・3件まで）にそのまま残して見本を出す。知らせの「元のデータを書き出す」で取り出せ、新しい版に戻ってから読み込める
+- **公開版 b98ed8d2 には、新しい版を断る作りが無い**（この断りは作業ブランチの段2で足した）。v=2 の作品を公開版で開くと、断らずに読み、`groups`・`group`・`lock` を黙って捨てる（位置・色などは残る）。最初の編集で主キーを上書きするので、その端末の groups・lock は消える（書き出していれば、今の版で読み込める）。試験 V2 の INFO 3件がこれ（既知の限り。直せるのは公開版の側だけ）
+- 色だけ・何も使わない作品（v=1）は、どの版に戻っても影響なし
+
+### 試験
+`C:\Users\osm12\family\tools\formation\tests\` の `run_v2_tests.js`（V1〜V4・V7・G1〜G3・L1〜L5。使い方は tests の README）。
+```text
+node run_v2_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.html baseline\index_published_8e855a1.html baseline\index_before_v2.html
+```
+結果（2026-11-26・dist sha256 526fe8f0…）：13試験・89ケース（合格 86・INFO 3＝公開版が新しい版を断らない既知の限り）。既存の T1〜T10（31ケース：PASS 28・INFO 3〈T5 の仕様判断など〉）・X1〜X14（49）・D1〜D5（40）・Y1〜Y6（75）・P1〜P3（89）・K1〜K4（48）は全部合格のまま。
+- 既存の試験の入力だけ直した（期待は変えていない）：T6・X8・X10 の「新しい版」の例 `v: 2` → `v: 99`（SCHEMA_V が 2 になり、v=2 は新しい版ではなくなったため。断る知らせの文・作品と履歴が変わらない・別キーに残る、の期待はそのまま）
+- D3 は変えていない（使わない作品では今のまま通る）。使った作品の形の見方は V7（前の形の項目が1つも消えず、増えたのは `.groups`・`.groups[].id/name/shape`・`.dancers[].group`・`.keys[].lock`・`.keys[].lock.pos/cross` だけ）
+- 試験が差を見分けること：v=2 の前の写しを「今の版」として渡すと V2〜L5 が FAIL・ENV_CRASH になる（`tests/baseline/results_v2_on_before_v2.md`）。L2 は、lock を知らない前の版と、固定なしの今の版では、同じ操作で固定の5人の座標が動くことを対照で確かめている
+- 画面の画像（幅 390）：`C:\Users\osm12\family\tools\formation\tests\screens\v2_390\`（色の選び c1〜c3・グループの形 g1〜g4・ロック l1〜l3）
+
+### 確かめていない物
+- 実機（iPhone・Android）での操作感（色の丸ボタン・鍵の印・ステージの × を押す）
+- 40人でのグループの形・鍵の印の見やすさ（画面の画像は見本の14人）
+- 固定した人が多い作品での「自動で直す」の仕上がり（座標が動かないことは試験で確認。見た目の良さは未確認）
+- 公開版に新しい版を断る作りを足すこと（公開版を直すのは別の決め事）
