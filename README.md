@@ -216,3 +216,15 @@ P1 23・P2 37・P3 29 ケースすべて合格（89ケース）。既存の T1�
 - `manifest.webmanifest:9-10`：`background_color`・`theme_color` を `#11151d` → `#0a0c11`（案C の画面の背景 `--bg`・`<meta name="theme-color">` と同じ。起動画面・上の帯の色が背景と合う）。アイコン（`icon-*.png`）の外側の色は `#11151d` に近いまま（アイコンの絵を案C に合わせるかは持ち主の好み。直していない）
 - `sw.js:2`：`CACHE` を `'formation-v1'` → `'formation-v2'`（以後、公開のたびに数字を1つ上げる。直す場所はここだけ）。`FILES`（先にしまう一覧）は変えていない（ポリシーは index.html の中にあるので、足す物は無い）。入れ替わり：新しい `sw.js` が入ると `install`→`skipWaiting`→`activate` で `formation-v1` が消え、`formation-v2` に変わる（コードを読んだ範囲。ブラウザで v1→v2 を動かしては未確認。試験 K4 は、ファイルの中身（CACHE の文字・公開版との差が1行だけ）を見る）
 - 見た目の確かめ（iPhone・Android のホーム画面から開いたときの起動画面・上の帯の色）は実機で（`docs/06`）。iPhone が manifest の色をどこまで使うかは未確認
+
+### 段3：試験（公開版との保存データの互換・同意）
+`C:\Users\osm12\family\tools\formation\tests\run_compat_tests.js`（K1〜K4。使い方はそこの README）。
+```text
+node run_compat_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.html baseline\index_published_8e855a1.html
+```
+- 比べる相手 `tests/baseline/index_published_8e855a1.html` は、今の公開版（https://zenisaibis.github.io/formation-app/index.html）を 2026-11-26 に取った物（92,827 バイト）。sha256 `b98ed8d2b9bcb04da57f00891e94d13bae8bff2c4e40683b2668157fb65b3f18` が、git の origin/main 8e855a1 の index.html、`tests/baseline/index_before.html` と同じ
+- K1：公開版の画面で作った作品（作品名・BPM・offset・人数・隊形・左右反転・隊形の名前・照明・ベース・自分・向き。ダミーの値）を、同じ origin で新しい版（dist）が全項目同じに読む。帰り（新しい版で直して公開版で開く）も。K2：同意の文・リンク・同意の印が作品の JSON（主キー・書き出す JSON）に入らない。K3：初めての同意の動き。K4：設定のカードの文とリンク・ポリシーの開け閉め・manifest・sw.js
+- 結果（2026-11-26・dist sha256 63c97989…）：K1〜K4 は 48 ケースすべて合格（K1 13・K2 10・K3 17・K4 8）。既存の T1〜T10（31 ケース：PASS 28・INFO 3〈T5 の2件・T9 の参考1件〉）・X1〜X14（49）・D1〜D5（40）・Y1〜Y6（75。Y6 は本物の YouTube に1回）・P1〜P3（89）も全部合格のまま（既存は合計 284 ケース、K は別に 48）。試験が差を見分けることは、同意の門を外した写しと公開版を渡すと K が通らない（ENV_CRASH。要素が無い）ことで確かめた
+- 既存の試験の手順の直し：`run_youtube_tests.js` の `openHttp` は同意の印を入れた端末として開く・Y2 の最後の1件に、規約とポリシーへのリンク2つを名指しで許す（期待値は変えていない。直した理由は tests の README）
+- 画面の画像（幅 390）：`C:\Users\osm12\family\tools\formation\tests\screens\privacy_390\`（`p1_setup_youtube_cards.png` 設定の YouTube のカード・`p2_consent.png` 同意の確認・`p3`〜`p5` ポリシーの上・途中・下・`p6` 同意のあと）
+- 確かめていない物：実機（iPhone・Android）での動き。iPhone のホーム画面アプリで外のリンクが新しいタブとして開くか・戻れるか。v1 の `sw.js` を持つ端末が v2 に入れ替わる動き（localhost で古い sw.js を入れた状態からの差し替えは未実施）
