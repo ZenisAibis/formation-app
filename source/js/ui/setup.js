@@ -26,8 +26,9 @@ function fillSetup() {
     const sw = el('button', { type: 'button', class: 'sw swbtn', style: `background:${d.color}`, 'aria-label': `${i + 1}人目の色を選ぶ`, 'aria-expanded': 'false' });
     const pal = el('div', { class: 'palrow', hidden: '' });
     sw.addEventListener('click', () => togglePalette(sw, pal, i));
-    box.append(el('div', { class: 'drow' }, [sw, inp]), pal);
+    box.append(el('div', { class: 'drow' }, [sw, inp, hasGroups() ? groupSelect(i) : null]), pal);
   });
+  fillGroups();
 }
 // 設定の入力欄は、change のとき（打ち終わったとき）に1回だけ履歴に積む。値が変わらなければ積まない
 $('#title').addEventListener('change', e => {
@@ -204,7 +205,7 @@ $('#audioFile').addEventListener('change', async e => {
 
 /* 保存・読み込み */
 $('#btnSave').addEventListener('click',
-  () => download(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), safeName(S.title) + '.json'));
+  () => download(new Blob([workJson(S, 1)],{ type: 'application/json' }), safeName(S.title) + '.json'));
 // 作品を丸ごと置き換える（読み込み・見本に戻す）。元に戻すと置き換える前の作品が丸ごと戻る（1つの単位）
 function replaceWork(st, count) {
   pushUndo();

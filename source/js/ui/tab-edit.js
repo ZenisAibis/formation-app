@@ -140,6 +140,7 @@ function fillDancerCard() {
   $('#cardDancerName').textContent = d.name;
   $('#cardDancerSw').style.background = d.color;
   syncDancerPalette();
+  fillDancerGroup(i);
   $('#cardDancerPos').textContent = `中央から${p[0] < 0 ? '左' : '右'} ${Math.abs(p[0]).toFixed(2)}m・前から ${p[1].toFixed(2)}m（客席から見て）`;
   $('#cardDancerBami').textContent = `バミリ ${bamiriText(p[0], p[1])}`;
   $('#cardDancerNear').textContent = `まわり（画面の左右） ${neighborText(neighborsOf(k.pos, i), S.dancers.map(x => x.name), ui.view)}`;

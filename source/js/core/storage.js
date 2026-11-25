@@ -31,6 +31,7 @@ function demoState() {
     st.keys.push(mk(nm, e, m, p));
     prev = p;
   });
+  st.v = schemaVOf(st); // 新しい項目を使っていないので 1
   return st;
 }
 
@@ -70,14 +71,19 @@ function inspectLoad(o) {
   const base = Array.isArray(o.baseKeys) ? fixKeys(o.baseKeys, true) : [];
   if (badKey !== null) return refuse(`座標が数でない隊形があります（「${badKey}」）`);
   if (!keys.length) return refuse('人数と座標の数が合う隊形がありません');
+  const groups = cleanGroups(o.groups), groupIds = new Set(groups.map(g => g.id));
   const st = {
-    v: SCHEMA_V, title: String(o.title || '無題').slice(0, 40), bpm: clampNum(o.bpm, 120, 40, 240),
+    v: 1, title: String(o.title || '無題').slice(0, 40), bpm: clampNum(o.bpm, 120, 40, 240),
     offset: clampNum(o.offset, 0, 0, 600), totalEights: Math.round(clampNum(o.totalEights, 24, 1, 400)),
     stage: { w: clampNum(o.stage && o.stage.w, 10, 3, 40), d: clampNum(o.stage && o.stage.d, 6, 2, 30) },
-    // dancers は { name, color } の配列。名前だけの文字列の配列なら、その文字列を名前に使う
-    dancers: o.dancers.map((d, i) => ({
-      name: String((typeof d === 'string' ? d : d && d.name) || ('No.' + (i + 1))).slice(0, 16),
-      color: isColor(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
+    // dancers は { name, color, group? } の配列。名前だけの文字列の配列なら、その文字列を名前に使う。group は今ある groups の id だけ（無い・知らない id は書かない）
+    dancers: o.dancers.map((d, i) => {
+      const dd = {
+        name: String((typeof d === 'string' ? d : d && d.name) || ('No.' + (i + 1))).slice(0, 16),
+        color: isColor(d && d.color) ? d.color : PALETTE[i % PALETTE.length] };
+      if (d && typeof d.group === 'string' && groupIds.has(d.group)) dd.group = d.group;
+      return dd;
+    }),
     keys: keys.sort((a, b) => a.at - b.at), baseKeys: base.length && !baseBad ? base : null,
     energy: Array.isArray(o.energy) ? o.energy.map(x => clampNum(x, 0, 0, 1)) : null };
   st.cues = (Array.isArray(o.cues) ? o.cues : [])
@@ -90,6 +96,8 @@ function inspectLoad(o) {
       target: Number.isInteger(q.target) && q.target >= 0 && q.target < n ? q.target : -1,
       fade: Math.round(clampNum(q.fade, 0, 0, 32)) }))
     .sort((a, b) => a.at - b.at);
+  if (groups.length) st.groups = groups;
+  st.v = schemaVOf(st); // 使った項目の最大の版（使っていなければ 1）
   return { ok: true, state: st, dropped, baseRemoved: baseBad };
 }
 
@@ -108,7 +116,7 @@ function flushSave() {
   clearTimeout(saveT);
   savePending = false;
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(S));
+    localStorage.setItem(LS_KEY, workJson(S));
     saveWarned = false;
   } catch (e) {
     if (!saveWarned && saveHooks.onFail) saveHooks.onFail(e);

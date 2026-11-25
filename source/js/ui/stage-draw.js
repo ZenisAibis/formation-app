@@ -52,7 +52,7 @@ function drawStage(c, w, h, count, o) {
       const [x, y] = map(p[0], p[1]);
       c.strokeStyle = S.dancers[i].color;
       c.beginPath();
-      c.arc(x, y, R * 0.9, 0, 7);
+      tokenPath(c, dancerShape(i), x, y, R * 0.9);
       c.stroke();
     });
     c.setLineDash([]);
@@ -66,7 +66,7 @@ function drawStage(c, w, h, count, o) {
       c.globalAlpha = GLOW.ghostA;
       c.fillStyle = S.dancers[i].color;
       c.beginPath();
-      c.arc(x, y, R * 0.6, 0, 7);
+      tokenPath(c, dancerShape(i), x, y, R * 0.6);
       c.fill();
       if (i === focus) return;
       c.globalAlpha = focus >= 0 ? GLOW.pathDim : GLOW.pathA;
@@ -136,7 +136,7 @@ function drawStage(c, w, h, count, o) {
     if (isMe) {
       c.globalAlpha = 0.5;
       c.beginPath();
-      c.arc(x2, y2, R * 1.05, 0, 7);
+      tokenPath(c, dancerShape(i), x2, y2, R * 1.05);
       c.setLineDash([3, 3]);
       c.stroke();
       c.setLineDash([]);
@@ -164,20 +164,20 @@ function drawStage(c, w, h, count, o) {
   // ダンサー（選んだ丸を最後＝いちばん上に描く）
   const order = [...Array(n).keys()].sort((a, b) => ((a === o.me) - (b === o.me)) || ((a === o.selDancer) - (b === o.selDancer)));
   order.forEach(i => {
-    const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, isSel = i === o.selDancer, rr = isMe ? R * 1.35 : R;
+    const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, isSel = i === o.selDancer, rr = isMe ? R * 1.35 : R, shape = dancerShape(i);
     c.globalAlpha = focus >= 0 && !isMe && !isSel ? GLOW.dim : 1;
     if (isSel) { // 選んだ丸：光る輪
       glow(c, THEME.sel, GLOW.sel, () => {
         c.strokeStyle = THEME.sel;
         c.lineWidth = 2.5;
         c.beginPath();
-        c.arc(x, y, rr + 4, 0, 7);
+        tokenPath(c, shape, x, y, rr + 4);
         c.stroke();
       });
     }
     c.fillStyle = d.color;
     c.beginPath();
-    c.arc(x, y, rr, 0, 7);
+    tokenPath(c, shape, x, y, rr);
     c.fill();
     c.lineWidth = isMe ? 3 : 1;
     c.strokeStyle = isMe ? THEME.text : '#0008';
@@ -188,7 +188,7 @@ function drawStage(c, w, h, count, o) {
       c.font = `700 ${Math.max(9, rr * 0.78)}px sans-serif`;
       c.textAlign = 'center';
       c.textBaseline = 'middle';
-      c.fillText(d.name.slice(0, 2), x, y + 0.5);
+      c.fillText(d.name.slice(0, 2), x, y + 0.5 + tokenLabelDy(shape, rr));
     }
     c.globalAlpha = 1;
   });
@@ -235,7 +235,7 @@ function drawStage(c, w, h, count, o) {
         c.strokeStyle = S.dancers[i].color;
         c.lineWidth = i === o.me ? 3 : 1.5;
         c.beginPath();
-        c.arc(x, y, i === o.me ? R * 1.35 : R, 0, 7);
+        tokenPath(c, dancerShape(i), x, y, i === o.me ? R * 1.35 : R);
         c.stroke();
       });
       c.globalAlpha = 1;

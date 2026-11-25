@@ -49,7 +49,10 @@ function legend(c, x, y, w, fs, dry = false) {
   c.font = `${fs}px sans-serif`;
   c.textBaseline = 'middle';
   c.textAlign = 'left';
-  S.dancers.forEach(d => {
+  // グループがあれば、先に「形＝グループ名」を並べ（色は文字と同じ・形だけを見せる）、そのあとにダンサー
+  const items = (S.groups || []).map(g => ({ name: g.name, color: THEME.text, shape: g.shape }))
+    .concat(S.dancers.map((d, i) => ({ name: d.name, color: d.color, shape: dancerShape(i) })));
+  items.forEach(d => {
     const tw = c.measureText(d.name).width + fs * 1.8;
     if (cx + tw > x + w) {
       cx = x;
@@ -58,7 +61,7 @@ function legend(c, x, y, w, fs, dry = false) {
     if (!dry) {
       c.fillStyle = d.color;
       c.beginPath();
-      c.arc(cx + fs * 0.5, cy, fs * 0.45, 0, 7);
+      tokenPath(c, d.shape, cx + fs * 0.5, cy, fs * 0.45);
       c.fill();
       c.fillStyle = THEME.text;
       c.fillText(d.name, cx + fs * 1.1, cy);

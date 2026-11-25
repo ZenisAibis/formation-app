@@ -46,3 +46,31 @@
 .palbtn.extra {
   border-style: dashed;
 }
+/* グループ：メンバーの一覧は1列にして、行の中にグループの選びを置く */
+.dlist.has-groups {
+  grid-template-columns: minmax(0, 1fr);
+}
+.drow select {
+  flex: 0 0 48%;
+  min-width: 0;
+  min-height: 40px;
+}
+.grow {
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+}
+.grow-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.grow-h input {
+  flex: 1;
+  min-width: 0;
+}
+.grow-h .muted {
+  white-space: nowrap;
+}

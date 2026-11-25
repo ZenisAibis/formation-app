@@ -34,7 +34,7 @@ function render() {
   const t = S.offset + ui.count * beatSec();
   const bi = ui.count >= 0 ? Math.floor(ui.count + 1e-6) % 8 : -1; // 今の拍の点（8つのうち1つだけ光る）
   for (let i = 0; i < beatEls.length; i++) beatEls[i].classList.toggle('on', i === bi);
-  const lg = '薄い丸と線＝前の隊形からの動き　× ＝クロス' + (ui.me >= 0 ? '　矢印＝自分の次の位置' : '');
+  const lg = (S.groups && S.groups.length ? groupLegendText() + '　' : '') + '薄い丸と線＝前の隊形からの動き　× ＝クロス' + (ui.me >= 0 ? '　矢印＝自分の次の位置' : '');
   if (lg !== legendText) {
     legendText = lg;
     $('#stLegend').textContent = lg;
