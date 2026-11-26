@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline'; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
-<meta name="theme-color" content="#11151d">
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'self' 'unsafe-inline' https://www.youtube.com; style-src 'unsafe-inline'; img-src 'self' data: blob:; media-src blob:; frame-src https://www.youtube-nocookie.com; manifest-src 'self'; worker-src 'self'; connect-src 'self'; base-uri 'none'; form-action 'none'">
+<meta name="theme-color" content="#0a0c11">
 <title>フォーメーション練習</title>
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-180.png">
@@ -14,19 +14,58 @@
 <meta name="apple-mobile-web-app-title" content="立ち位置">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <style>
-/* 色・基準の値 */
+/* 色・光・余白の基準の値（案C スタジオ）。光はシアン（選ぶ・今）と紫（動き）の2色だけ */
 :root {
-  --bg: #11151d;
-  --panel: #1a202b;
-  --panel2: #222a37;
-  --line: #2e3848;
-  --text: #e8ecf3;
-  --muted: #9aa5b8;
-  --accent: #4fb3ff;
-  --accent2: #1a63d6;
-  --red: #ff6b6b;
-  --amber: #ffb547;
-  --green: #3ddc97;
+  /* 面 */
+  --bg: #0a0c11;
+  --panel: #13161e;
+  --panel2: #1c202b;
+  --line: #2a303d;
+  --stage-floor: #0e1118;
+  --grid: #182031;
+  --grid-c: #24314a;
+  --edge: #2a303d;
+  --tl-a: #13161e;
+  --tl-b: #171b24;
+  --energy: rgba(156,124,255,.22);
+  --beat-off: #2a303d;
+  --tabbar-bg: rgba(10,12,17,.94);
+  /* 字 */
+  --text: #f1f4f8;
+  --muted: #a3abbb;
+  --on-token: #0b0d12;
+  /* 光の役割：選んだ物・今＝シアン、動き＝紫 */
+  --sel: #27dcf5;
+  --path-focus: #27dcf5;
+  --now: #27dcf5;
+  --path: #9c7cff;
+  --audience: #ffd93d;
+  --primary-bg: #27dcf5;
+  --primary-fg: #0a0c11;
+  /* 判定：赤は「要修正」だけ。光らせない。必ず「▲」と言葉を添える */
+  --danger: #ff5a3c;
+  --warn: #ffc23d;
+  --info: #a3abbb;
+  /* 光（再生中のボタン・今の拍・選んだ物だけ、弱く） */
+  --glow-btn: 0 0 10px rgba(39,220,245,.35);
+  --glow-dot: 0 0 6px rgba(39,220,245,.6);
+  --chip-on-shadow: 0 0 8px rgba(39,220,245,.25);
+  --tab-glow: 0 0 6px rgba(39,220,245,.5);
+  /* 字の大きさ */
+  --fs-xs: 11px;
+  --fs-s: 12px;
+  --fs-m: 14px;
+  --fs-l: 16px;
+  --fs-count: 36px;
+  /* 余白・角・押す所 */
+  --pad: 14px;
+  --card-pad: 14px;
+  --gap: 8px;
+  --stage-radius: 12px;
+  --r-s: 8px;
+  --r-m: 12px;
+  --tap: 44px;
+  --tabbar-h: 56px;
   color-scheme: dark;
 }
 /* 画面の形 */
@@ -37,8 +76,8 @@ html,body {
   margin: 0;
   background: var(--bg);
   color: var(--text);
-  font-family: -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic",sans-serif;
-  line-height: 1.55;
+  font-family: -apple-system,BlinkMacSystemFont,"Hiragino Sans","Yu Gothic UI","Yu Gothic",sans-serif;
+  line-height: 1.5;
   -webkit-text-size-adjust: 100%;
 }
 body {
@@ -47,62 +86,93 @@ body {
 main {
   max-width: 980px;
   margin: 0 auto;
-  padding: calc(8px + env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) 40px max(12px, env(safe-area-inset-left));
+  padding: calc(8px + env(safe-area-inset-top)) max(var(--pad), env(safe-area-inset-right)) calc(var(--tabbar-h) + 24px + env(safe-area-inset-bottom)) max(var(--pad), env(safe-area-inset-left));
 }
-header {
+header.app {
   display: flex;
-  align-items: baseline;
-  gap: 10px;
+  align-items: center;
+  gap: var(--gap);
   padding: 6px 0;
+  min-height: 60px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 8px;
 }
-header h1 {
-  font-size: 17px;
+header .hgroup {
+  flex: 1;
+  min-width: 0;
+}
+header .brand {
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: .12em;
+  color: var(--muted);
   margin: 0;
 }
-header #hdrTitle {
-  color: var(--muted);
-  font-size: 13px;
+header .title {
+  font-size: var(--fs-l);
+  font-weight: 700;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+button.hbtn {
+  padding: 0 10px;
+  white-space: nowrap;
+}
+.legend {
+  display: flex;
+  gap: 4px 12px;
+  flex-wrap: wrap;
+  font-size: var(--fs-xs);
+  color: var(--muted);
+  padding: 6px 2px 0;
+}
 button,select,input {
   font-family: inherit;
-  font-size: 15px;
+  font-size: 16px;
 }
 button {
   background: var(--panel2);
   color: var(--text);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   padding: 8px 12px;
-  min-height: 40px;
+  min-height: var(--tap);
+  font-size: var(--fs-m);
+  font-weight: 600;
   cursor: pointer;
 }
 button:active {
   transform: translateY(1px);
 }
 button.primary {
-  background: var(--accent2);
-  border-color: var(--accent2);
-  color: #fff;
-  font-weight: 700;
+  background: var(--primary-bg);
+  border-color: var(--primary-bg);
+  color: var(--primary-fg);
+  font-weight: 800;
+}
+body.playing #btnPlay {
+  box-shadow: var(--glow-btn);
 }
 button.small {
-  min-height: 32px;
+  min-height: 36px;
   padding: 4px 10px;
-  font-size: 13px;
+  font-size: var(--fs-s);
 }
 button:disabled {
-  opacity: .45;
+  opacity: .4;
+}
+:focus-visible {
+  outline: 2px solid var(--sel);
+  outline-offset: 2px;
 }
 select,input[type=text],input[type=number],textarea {
-  background: #0d1118;
+  background: var(--bg);
   color: var(--text);
   border: 1px solid var(--line);
-  border-radius: 8px;
+  border-radius: var(--r-s);
   padding: 7px 8px;
-  min-height: 38px;
+  min-height: var(--tap);
 }
 input[type=number] {
   width: 72px;
@@ -110,16 +180,16 @@ input[type=number] {
 textarea {
   width: 100%;
   min-height: 90px;
-  font-size: 13px;
+  font-size: var(--fs-s);
 }
 label {
-  font-size: 13px;
+  font-size: var(--fs-s);
   color: var(--muted);
 }
 #stageWrap {
   position: relative;
-  background: #0b0e14;
-  border-radius: 12px;
+  background: var(--bg);
+  border-radius: var(--stage-radius);
   overflow: hidden;
   touch-action: none;
 }
@@ -131,7 +201,7 @@ label {
   background: var(--panel);
   border-top: 1px solid var(--line);
   padding: 6px 10px;
-  font-size: 14px;
+  font-size: var(--fs-m);
   display: none;
 }
 body.proj #meInfo {
@@ -139,7 +209,7 @@ body.proj #meInfo {
   left: 12px;
   top: 10px;
   max-width: 60vw;
-  background: rgba(10,14,20,.86);
+  background: rgba(10,12,18,.88);
   border: 1px solid var(--line);
   border-radius: 10px;
   font-size: min(3vh,22px);
@@ -151,7 +221,7 @@ body.proj #meInfo {
   font-size: 22px;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
-  color: #fff;
+  color: var(--text);
   text-shadow: 0 1px 4px #000;
   pointer-events: none;
 }
@@ -194,51 +264,121 @@ body.proj #projExit,body.proj #projPlay {
   display: block;
 }
 #transport {
-  display: flex;
+  display: grid;
+  grid-template-columns: var(--tap) auto 1fr auto;
+  gap: var(--gap);
   align-items: center;
-  gap: 8px;
   margin: 8px 0;
-  flex-wrap: wrap;
 }
-#countDisp {
-  font-size: 26px;
+#transport button {
+  padding: 0 12px;
+  white-space: nowrap;
+}
+#btnBack {
+  padding: 0;
+}
+.count {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  line-height: 1;
+}
+.count-num {
+  font-size: var(--fs-count);
   font-weight: 800;
-  min-width: 76px;
-  text-align: center;
   font-variant-numeric: tabular-nums;
+  letter-spacing: .02em;
+}
+.count-sub {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  margin-top: 6px;
+}
+.beats {
+  display: flex;
+  gap: 4px;
+}
+.beats i {
+  width: 8px;
+  height: 8px;
+  border-radius: 2px;
+  background: var(--beat-off);
+  transition: background-color .12s,box-shadow .12s;
+}
+.beats i:first-child {
+  height: 10px;
+  margin-top: -1px;
+}
+.beats i.on {
+  background: var(--now);
+  box-shadow: var(--glow-dot);
 }
 #timeDisp {
   color: var(--muted);
-  font-size: 12px;
-  min-width: 44px;
+  font-size: var(--fs-xs);
+  font-variant-numeric: tabular-nums;
 }
 #timeline {
   display: block;
   width: 100%;
-  height: 64px;
+  height: 80px;
   background: var(--panel);
-  border-radius: 10px;
+  border-radius: var(--r-s);
   touch-action: none;
   cursor: pointer;
 }
 nav#tabs {
-  display: flex;
-  gap: 4px;
-  margin: 12px 0 8px;
-  border-bottom: 1px solid var(--line);
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: 980px;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: repeat(4,1fr);
+  background: var(--tabbar-bg);
+  border-top: 1px solid var(--line);
+  padding-bottom: env(safe-area-inset-bottom);
+  z-index: 5;
 }
 nav#tabs button {
+  position: relative;
   border: none;
-  border-bottom: 3px solid transparent;
   border-radius: 0;
   background: none;
   color: var(--muted);
-  flex: 1;
+  min-height: var(--tabbar-h);
+  font-size: var(--fs-s);
   font-weight: 700;
+  white-space: nowrap;
+  padding: 0 4px;
 }
 nav#tabs button.on {
   color: var(--text);
-  border-bottom-color: var(--accent);
+}
+nav#tabs button.on::before {
+  content: "";
+  position: absolute;
+  left: 22%;
+  right: 22%;
+  top: 0;
+  height: 3px;
+  border-radius: 0 0 3px 3px;
+  background: var(--sel);
+  box-shadow: var(--tab-glow);
+}
+.badge {
+  display: inline-block;
+  margin-left: 3px;
+  padding: 0 4px;
+  border-radius: 4px;
+  background: var(--danger);
+  color: var(--on-token);
+  font-size: var(--fs-xs);
+  font-weight: 800;
+  line-height: 16px;
+  vertical-align: 1px;
 }
 section.tab {
   display: none;
@@ -248,7 +388,7 @@ section.tab.on {
 }
 .row {
   display: flex;
-  gap: 8px;
+  gap: var(--gap);
   align-items: center;
   flex-wrap: wrap;
   margin: 8px 0;
@@ -256,52 +396,175 @@ section.tab.on {
 .card {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 10px;
-  padding: 10px 12px;
-  margin: 8px 0;
+  border-radius: var(--r-m);
+  padding: var(--card-pad);
+  margin: 10px 0;
 }
 .card h3 {
   margin: 0 0 6px;
-  font-size: 14px;
+  font-size: var(--fs-l);
 }
-.muted {
+.muted,.hint {
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-s);
+}
+.hint {
+  margin: 6px 0 0;
+}
+.sec-title {
+  font-size: var(--fs-s);
+  color: var(--muted);
+  font-weight: 700;
+  letter-spacing: .06em;
+  margin: 2px 0 6px;
+}
+.card-h {
+  display: flex;
+  align-items: center;
+  gap: var(--gap);
+  margin-bottom: 8px;
+}
+.card-h h3 {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
+}
+.card-h .sw {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  flex: 0 0 auto;
+  border: 1px solid #0006;
+}
+button.ghost {
+  background: transparent;
+}
+.field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--fs-s);
+  color: var(--muted);
+  margin: 8px 0;
+}
+.field select {
+  width: 100%;
+}
+/* 分割ボタン（今の状態が一目で見える） */
+.seg {
+  display: flex;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  padding: 3px;
+  gap: 3px;
+}
+.seg button {
+  flex: 1;
+  min-height: 40px;
+  border: 0;
+  border-radius: 6px;
+  background: transparent;
+  color: var(--muted);
+  font-size: var(--fs-s);
+  font-weight: 700;
+  padding: 0 4px;
+}
+.seg button[aria-pressed=true] {
+  background: var(--bg);
+  color: var(--text);
+  box-shadow: inset 0 0 0 1px var(--sel);
+}
+/* スイッチ（チェックボックスの見た目） */
+input[type=checkbox] {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 40px;
+  height: 24px;
+  border-radius: 12px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  position: relative;
+  flex: 0 0 auto;
+  margin: 0;
+  cursor: pointer;
+}
+input[type=checkbox]::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  top: 2px;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--muted);
+  transition: transform .15s;
+}
+input[type=checkbox]:checked {
+  border-color: var(--sel);
+}
+input[type=checkbox]:checked::after {
+  transform: translateX(16px);
+  background: var(--sel);
+}
+label.switch {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: var(--tap);
+  font-size: var(--fs-m);
+  color: var(--text);
+}
+.row label.switch {
+  display: inline-flex;
+}
+input[type=color] {
+  width: var(--tap);
+  height: var(--tap);
+  padding: 2px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+  background: var(--bg);
 }
 .chips {
   display: flex;
-  gap: 6px;
+  gap: var(--gap);
   overflow-x: auto;
-  padding: 4px 0 8px;
+  padding: 4px 2px 10px;
   scrollbar-width: thin;
 }
 .chip {
   flex: 0 0 auto;
   background: var(--panel2);
   border: 1px solid var(--line);
-  border-radius: 999px;
-  padding: 6px 12px;
-  font-size: 13px;
-  min-height: 34px;
+  border-radius: var(--r-m);
+  padding: 4px 14px;
+  font-size: var(--fs-m);
+  font-weight: 700;
+  min-height: var(--tap);
   white-space: nowrap;
 }
 .chip.on {
-  background: var(--accent2);
-  border-color: var(--accent2);
-  color: #fff;
+  border-color: var(--sel);
+  box-shadow: var(--chip-on-shadow);
 }
 .chip .bad {
   display: inline-block;
   min-width: 16px;
   height: 16px;
   line-height: 16px;
-  border-radius: 8px;
-  background: var(--red);
-  color: #fff;
-  font-size: 11px;
+  border-radius: 4px;
+  background: var(--danger);
+  color: var(--on-token);
+  font-size: var(--fs-xs);
+  font-weight: 800;
   text-align: center;
   margin-left: 6px;
-  padding: 0 4px;
+  padding: 0 5px;
+}
+.chip .bad::before {
+  content: "▲";
 }
 .adv {
   display: flex;
@@ -309,57 +572,91 @@ section.tab.on {
   align-items: flex-start;
   background: var(--panel);
   border: 1px solid var(--line);
-  border-left: 4px solid var(--muted);
-  border-radius: 8px;
-  padding: 8px 10px;
-  margin: 6px 0;
+  border-radius: var(--r-s);
+  padding: 10px 12px;
+  margin: 8px 0;
 }
 .adv.l0 {
-  border-left-color: var(--red);
+  border-left: 4px solid var(--danger);
 }
 .adv.l1 {
-  border-left-color: var(--amber);
-}
-.adv.l2 {
-  border-left-color: #6b7890;
+  border-left: 4px solid var(--warn);
 }
 .adv .tag {
-  font-size: 11px;
-  font-weight: 700;
+  flex: 0 0 auto;
+  font-size: var(--fs-xs);
+  font-weight: 800;
   border-radius: 4px;
-  padding: 1px 6px;
+  padding: 2px 6px;
   white-space: nowrap;
 }
 .adv.l0 .tag {
-  background: var(--red);
-  color: #fff;
+  background: var(--danger);
+  color: var(--on-token);
+}
+.adv.l0 .tag::before {
+  content: "▲ ";
 }
 .adv.l1 .tag {
-  background: var(--amber);
-  color: #1a1200;
+  border: 1.5px solid var(--warn);
+  color: var(--warn);
+}
+.adv.l1 .tag::before {
+  content: "● ";
 }
 .adv.l2 .tag {
-  background: #3a4456;
-  color: #dde;
+  border: 1px dashed var(--info);
+  color: var(--muted);
+}
+.adv.l2 .tag::before {
+  content: "i ";
 }
 .adv .body {
   flex: 1;
-  font-size: 14px;
+  font-size: var(--fs-m);
 }
 .adv .where {
-  color: var(--accent);
-  font-size: 12px;
+  color: var(--sel);
+  font-size: var(--fs-s);
+  font-weight: 700;
   cursor: pointer;
   text-decoration: underline;
 }
 .summary {
   display: flex;
-  gap: 10px;
+  gap: 6px;
   flex-wrap: wrap;
-  font-size: 14px;
+  font-size: var(--fs-s);
+  margin-bottom: 8px;
 }
-.summary b {
-  font-size: 18px;
+.summary .pill {
+  font-weight: 800;
+  border-radius: 6px;
+  padding: 3px 8px;
+}
+.summary .pill b {
+  font-size: var(--fs-l);
+}
+.summary .p0 {
+  background: var(--danger);
+  color: var(--on-token);
+}
+.summary .p0::before {
+  content: "▲ ";
+}
+.summary .p1 {
+  border: 1.5px solid var(--warn);
+  color: var(--warn);
+}
+.summary .p1::before {
+  content: "● ";
+}
+.summary .p2 {
+  border: 1px dashed var(--info);
+  color: var(--muted);
+}
+.summary .p2::before {
+  content: "i ";
 }
 .dlist {
   display: grid;
@@ -385,13 +682,14 @@ section.tab.on {
 #toast {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
-  background: #000c;
-  color: #fff;
-  padding: 10px 16px;
+  background: var(--panel2);
+  border: 1px solid var(--line);
+  color: var(--text);
+  padding: 10px 14px;
   border-radius: 10px;
-  font-size: 14px;
+  font-size: var(--fs-m);
   opacity: 0;
   transition: opacity .25s;
   pointer-events: none;
@@ -404,14 +702,14 @@ section.tab.on {
 #askBox {
   position: fixed;
   left: 50%;
-  bottom: 24px;
+  bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
   transform: translateX(-50%);
   background: var(--panel2);
-  border: 1px solid var(--accent);
+  border: 1px solid var(--sel);
   color: var(--text);
   padding: 12px 14px;
-  border-radius: 12px;
-  font-size: 14px;
+  border-radius: var(--r-m);
+  font-size: var(--fs-m);
   z-index: 30;
   width: min(92vw,420px);
   box-shadow: 0 6px 24px #0008;
@@ -422,19 +720,280 @@ section.tab.on {
 details summary {
   cursor: pointer;
   color: var(--muted);
-  font-size: 13px;
+  font-size: var(--fs-s);
 }
 .kv {
   display: grid;
   grid-template-columns: auto 1fr;
   gap: 4px 10px;
-  font-size: 13px;
+  font-size: var(--fs-s);
+}
+/* 動きを減らす：端末の「視差効果を減らす」のとき、画面の部品の移り変わり（切り替え）を止める */
+@media (prefers-reduced-motion: reduce) {
+  *,*::before,*::after {
+    transition: none!important;
+    animation: none!important;
+    scroll-behavior: auto!important;
+  }
+}
+section.tab {
+  margin-top: 12px;
+}
+/* 色の選び・グループの形・ロックの印（案C の変数だけで色を決める） */
+.swbtn {
+  position: relative;
+  padding: 0;
+  min-height: 0;
+  cursor: pointer;
+}
+.swbtn::after {
+  content: "";
+  position: absolute;
+  inset: -13px -6px;
+}
+.swbtn:focus-visible,
+.palbtn:focus-visible {
+  outline: 2px solid var(--sel);
+  outline-offset: 2px;
+}
+.dlist .palrow {
+  grid-column: 1 / -1;
+}
+.palrow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 2px 0 6px;
+}
+.palrow[hidden] {
+  display: none;
+}
+.palbtn {
+  width: 40px;
+  min-height: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid #0006;
+  color: var(--on-token);
+  font-size: 18px;
+  font-weight: 800;
+  line-height: 1;
+}
+.palbtn.on {
+  border-color: var(--text);
+  box-shadow: 0 0 0 2px var(--sel);
+}
+.palbtn.extra {
+  border-style: dashed;
+}
+/* グループ：メンバーの一覧は1列にして、行の中にグループの選びを置く */
+.dlist.has-groups {
+  grid-template-columns: minmax(0, 1fr);
+}
+.drow select {
+  flex: 0 0 48%;
+  min-width: 0;
+  min-height: 40px;
+}
+.grow {
+  margin: 8px 0;
+  padding: 8px;
+  border: 1px solid var(--line);
+  border-radius: var(--r-s);
+}
+.grow-h {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+.grow-h input {
+  flex: 1;
+  min-width: 0;
+}
+.grow-h .muted {
+  white-space: nowrap;
+}
+/* ロック：固定している人の一覧・意図したクロスの一覧 */
+.lockbox {
+  margin: 8px 0;
+}
+.crosslist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 6px 0;
+}
+.crossbtn[aria-pressed=true] {
+  box-shadow: inset 0 0 0 1px var(--sel);
+  color: var(--text);
+}
+/* YouTube の動画の枠。上に何も重ねない（枠の中に絶対配置・固定の物を入れない）。16:9・最小 200×200px */
+#ytBox {
+  max-width: 640px;
+  margin: 0 auto 8px;
+}
+#ytFrameWrap {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  min-width: 200px;
+  min-height: 200px;
+  background: #000;
+  border-radius: var(--stage-radius);
+  overflow: hidden;
+}
+#ytFrameWrap iframe {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border: 0;
+}
+#ytBox .yt-bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px var(--gap);
+  padding-top: 6px;
+}
+#ytBox .yt-bar #ytStatus {
+  flex: 1;
+  min-width: 8em;
+}
+/* プライバシーポリシーの1枚（全面）・同意の確認・設定タブのリンク */
+.terms-links {
+  margin: 8px 0;
+  padding-left: 20px;
+}
+.terms-links li {
+  margin: 4px 0;
+}
+.terms-links a,button.linklike {
+  color: var(--sel);
+  text-decoration: underline;
+}
+button.linklike {
+  background: none;
+  border: 0;
+  padding: 0;
+  min-height: 0;
+  font-size: inherit;
+  font-weight: inherit;
+  text-align: left;
+}
+.overlay {
+  outline: none;
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  background: var(--bg);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.overlay-in {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 0 var(--pad) calc(24px + env(safe-area-inset-bottom));
+  min-height: 100%;
+}
+.overlay-bar {
+  position: sticky;
+  top: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: calc(8px + env(safe-area-inset-top)) 0 8px;
+  background: var(--bg);
+}
+.overlay-in > .overlay-bar:last-child {
+  position: static;
+  padding-bottom: 0;
+}
+.policy {
+  font-size: var(--fs-m);
+  line-height: 1.7;
+}
+.policy h2 {
+  font-size: 18px;
+  margin: 4px 0 8px;
+}
+.policy h3 {
+  font-size: var(--fs-l);
+  margin: 20px 0 6px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line);
+}
+.policy h4 {
+  font-size: var(--fs-m);
+  margin: 12px 0 4px;
+  color: var(--muted);
+}
+.policy p,.policy ul {
+  margin: 4px 0;
+}
+.policy ul {
+  padding-left: 20px;
+}
+.policy a {
+  color: var(--sel);
+  margin-left: .4em;
+}
+.policy table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 6px 0;
+  font-size: var(--fs-s);
+  line-height: 1.5;
+}
+.policy th,.policy td {
+  border: 1px solid var(--line);
+  padding: 6px 8px;
+  text-align: left;
+  vertical-align: top;
+}
+.policy th {
+  background: var(--panel);
+}
+/* 同意の確認：下から出る札（askBox と同じ作り。ポリシーの全面の下に隠れる） */
+.consent {
+  position: fixed;
+  left: 50%;
+  bottom: calc(var(--tabbar-h) + 16px + env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  background: var(--panel2);
+  border: 1px solid var(--sel);
+  color: var(--text);
+  padding: 12px 14px;
+  border-radius: var(--r-m);
+  font-size: var(--fs-m);
+  z-index: 35;
+  width: min(94vw,460px);
+  max-height: calc(100vh - var(--tabbar-h) - 32px);
+  overflow-y: auto;
+  box-shadow: 0 6px 24px #0008;
+}
+.consent-title {
+  font-weight: 800;
+  margin-bottom: 4px;
 }
 </style>
 </head>
 <body>
 <main>
-<header><h1>フォーメーション練習</h1><span id="hdrTitle"></span></header>
+<header class="app">
+  <div class="hgroup"><h1 class="brand">フォーメーション練習</h1><div class="title" id="hdrTitle"></div></div>
+  <button id="btnUndo" class="hbtn" aria-label="元に戻す">↶ 戻す</button>
+  <button id="btnRedo" class="hbtn" aria-label="やり直す" title="やり直す">↷</button>
+  <button id="btnProj" class="hbtn">大きく表示</button>
+</header>
+
+<div id="ytBox" hidden>
+  <div id="ytFrameWrap"></div>
+  <div class="yt-bar">
+    <span id="ytStatus" class="muted" role="status"></span>
+    <button id="btnYtSync" class="small" title="動画の今の位置に、アプリの位置を合わせ直します">位置を合わせ直す</button>
+    <button id="btnYtClose" class="small">動画を閉じる</button>
+  </div>
+</div>
 
 <div id="stageWrap">
   <canvas id="stage" aria-label="ステージ図"></canvas>
@@ -443,68 +1002,89 @@ details summary {
   <button id="projPlay" class="primary">▶</button>
   <button id="projExit">閉じる</button>
 </div>
+<div class="legend" id="stLegend"></div>
 
 <div id="transport">
-  <button id="btnPlay" class="primary" style="min-width:64px">▶ 再生</button>
-  <button id="btnBack" title="選んだ隊形の少し前へ">⏮</button>
-  <div id="countDisp">1-1</div>
-  <div id="timeDisp"></div>
-  <label>速さ <select id="rate"><option value="0.5">0.5倍</option><option value="0.75">0.75倍</option><option value="1" selected>1倍</option></select></label>
-  <button id="btnProj">大きく表示</button>
+  <button id="btnBack" title="選んだ隊形の少し前へ" aria-label="選んだ隊形の少し前へ">⏮</button>
+  <button id="btnPlay" class="primary">▶ 再生</button>
+  <div class="count">
+    <div id="countDisp" class="count-num">1-1</div>
+    <div class="count-sub"><div class="beats" id="beats"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><span id="timeDisp"></span></div>
+  </div>
+  <button id="btnRate" title="速さ（押すたびに切り替わります）">1倍</button>
 </div>
 <canvas id="timeline" aria-label="タイムライン"></canvas>
-<div class="muted" style="margin-top:4px">タイムライン：数字は8カウントの番号。棒は曲の盛り上がり、●は隊形、横線は移動の区間、◆は照明・きっかけ。</div>
-
-<nav id="tabs">
-  <button data-tab="edit" class="on">編集</button>
-  <button data-tab="advice">アドバイス</button>
-  <button data-tab="practice">練習</button>
-  <button data-tab="setup">設定</button>
-</nav>
+<div class="legend">● 隊形　━ 移動　◆ 照明・きっかけ　│ 今（なぞって移動）</div>
 
 <!-- 編集 -->
 <section class="tab on" id="tab-edit">
+  <div class="sec-title">隊形</div>
   <div class="chips" id="keyChips"></div>
-  <div class="card">
+  <div class="row">
+    <button id="btnAddKey">＋ 隊形を追加</button>
+    <button id="btnAddCue">◆ 照明・きっかけ</button>
+    <label class="switch"><input type="checkbox" id="snap" checked> 25cm刻み</label>
+  </div>
+  <div class="hint" id="editHint">丸をドラッグして動かします。タイムラインの ● で隊形、◆ で照明を選ぶと、ここに操作が出ます。</div>
+
+  <!-- 選んだ隊形 -->
+  <div class="card" id="cardKey" hidden>
+    <div class="card-h"><h3 id="cardKeyTitle">隊形</h3><button class="ghost small" id="btnCloseKey">閉じる</button></div>
     <div class="row">
       <label>名前 <input type="text" id="kName" style="width:9em" maxlength="20"></label>
       <label>始まり <input type="number" id="kEight" min="1" step="1">-<input type="number" id="kCount" min="1" max="8" step="1" style="width:56px"></label>
       <label>移動 <input type="number" id="kMove" min="1" max="64" step="1" style="width:60px">カウント</label>
     </div>
     <div class="row">
-      <button id="btnAddKey">＋ 隊形を追加</button>
+      <button id="btnMirror">左右反転</button>
+      <button id="btnCenter">中央に寄せる</button>
       <button id="btnDelKey">削除</button>
-      <button id="btnUndo">↶ 元に戻す</button>
-      <button id="btnRedo">↷ やり直す</button>
-      <label><input type="checkbox" id="snap" checked> 25cm刻み</label>
     </div>
     <div class="row">
       <select id="tplSel"></select>
       <button id="btnTpl">形を当てはめる</button>
-      <button id="btnMirror">左右反転</button>
-      <button id="btnCenter">中央に寄せる</button>
     </div>
-    <div class="muted" id="editHint">丸をドラッグして立ち位置を動かせます。薄い丸と線は、ひとつ前の隊形からの動きです。黄色の×はクロスする場所です。</div>
+    <div class="lockbox">
+      <div class="muted" id="lockSummary"></div>
+      <div class="row" id="rowLockClear" hidden><button class="small" id="btnLockClear">位置の固定を全部外す</button></div>
+      <div id="crossBox" hidden>
+        <div class="muted">クロスする組：押すと「意図したクロス」の印を付け外し（ぶつかりの警告と行き先の入れ替えの対象から外れます）</div>
+        <div class="crosslist" id="crossList"></div>
+      </div>
+    </div>
+    <div class="hint">薄い丸と線は、ひとつ前の隊形からの動きです。黄色の×はクロスする場所です（押すと、意図したクロスの印を付け外しできます）。鍵の印の丸は、位置を固定しています。</div>
   </div>
-  <div class="card">
-    <h3>照明・きっかけ</h3>
+
+  <!-- 選んだ丸（ダンサー） -->
+  <div class="card" id="cardDancer" hidden>
+    <div class="card-h"><button type="button" class="sw swbtn" id="cardDancerSw" aria-label="色を選ぶ" aria-expanded="false"></button><h3 id="cardDancerName"></h3><button class="ghost small" id="btnCloseDancer">閉じる</button></div>
+    <div class="palrow" id="cardDancerPal" hidden></div>
+    <p class="kv" id="cardDancerPos"></p>
+    <p class="kv" id="cardDancerBami"></p>
+    <div class="row" id="cardDancerGroupRow" hidden><label>グループ <select id="cardDancerGroupSel"></select></label></div>
+    <p class="kv" id="cardDancerNear"></p>
+    <div class="hint">ドラッグで動かせます（ロック中の丸は動きません）。</div>
+    <div class="row"><button id="btnLockDancer" aria-pressed="false">この隊形で位置を固定する（ロック）</button></div>
+    <div class="hint" id="cardDancerLockHint" hidden>ロック中：この隊形では、自動の直し・反転・中央寄せ・形の当てはめ・ドラッグでも、この人の位置は動きません。</div>
+    <div class="row"><button id="btnSetMe">この人を「自分」にする</button></div>
+  </div>
+
+  <!-- 選んだ照明・きっかけ（直すとすぐ反映。元に戻すで戻せる） -->
+  <div class="card" id="cardCue" hidden>
+    <div class="card-h"><h3>◆ 照明・きっかけ</h3><button class="ghost small" id="btnCloseCue">閉じる</button></div>
     <div class="chips" id="cueChips"></div>
     <div class="row">
       <select id="cKind"></select>
       <input type="text" id="cName" maxlength="20" placeholder="名前（例：サビ前の暗転）" style="width:12em">
-      <label>色 <input type="color" id="cColor" value="#ff3b6b" style="width:44px;height:36px;padding:0;border:none;background:none"></label>
+      <label>色 <input type="color" id="cColor" value="#7a5cff"></label>
       <label>当てる人 <select id="cTarget"></select></label>
     </div>
     <div class="row">
       <label>時刻 <input type="number" id="cEight" min="1" step="1">-<input type="number" id="cCount" min="1" max="8" step="1" style="width:56px"></label>
       <label>フェード <input type="number" id="cFade" min="0" max="32" step="1" style="width:60px">カウント</label>
     </div>
-    <div class="row">
-      <button id="btnAddCue">＋ 今のカウントに追加</button>
-      <button id="btnUpdCue">選んだものを更新</button>
-      <button id="btnDelCue">削除</button>
-    </div>
-    <div class="muted">照明が変わる所や、音のきっかけ（歌い出し・ドラムなど）を入れると、練習画面と動画に「あと何カウント」で出ます。暗転中も立ち位置は線で見えます。</div>
+    <div class="row"><button id="btnDelCue">削除</button></div>
+    <div class="hint">変えるとすぐ反映されます（元に戻すで戻せます）。照明が変わる所や、音のきっかけ（歌い出し・ドラムなど）を入れると、練習画面と動画に「あと何カウント」で出ます。暗転中も立ち位置は線で見えます。</div>
   </div>
 </section>
 
@@ -514,19 +1094,19 @@ details summary {
     <div class="summary" id="advSummary"></div>
     <div class="row">
       <button class="primary" id="btnImprove">まとめて改善して完成形へ</button>
-      <label><input type="checkbox" id="allowSwap" checked> 立ち位置の入れ替えも許可</label>
     </div>
     <div class="row">
-      <label><input type="checkbox" id="compare"> ベース（改善前）を点線で重ねる</label>
+      <label class="switch"><input type="checkbox" id="allowSwap" checked> 立ち位置の入れ替えも許可</label>
+      <label class="switch"><input type="checkbox" id="compare"> ベース（改善前）を点線で重ねる</label>
+    </div>
+    <div class="row">
       <button class="small" id="btnRestoreBase">ベースに戻す</button>
       <button class="small" id="btnSetBase">今の形をベースにする</button>
-      <button class="small" id="btnUndo2">↶ 元に戻す</button>
-      <button class="small" id="btnRedo2">↷ やり直す</button>
     </div>
     <div class="row">
       <button class="small" id="btnAiText">AIに相談する文章をコピー</button>
-      <span class="muted">Claude や ChatGPT に貼ると、振付の観点の意見をもらえます。</span>
     </div>
+    <div class="hint">Claude や ChatGPT に貼ると、振付の観点の意見をもらえます。</div>
   </div>
   <div id="advList"></div>
 </section>
@@ -534,16 +1114,27 @@ details summary {
 <!-- 練習 -->
 <section class="tab" id="tab-practice">
   <div class="card">
-    <div class="row">
-      <label>自分 <select id="meSel"></select></label>
-      <label>向き <select id="viewSel"><option value="audience">客席から見る（正面が下）</option><option value="dancer">ダンサー目線（正面が上）</option></select></label>
+    <label class="field">自分 <select id="meSel"></select></label>
+    <div class="field">向き
+      <div class="seg" id="viewSeg">
+        <button data-view="audience" aria-pressed="true">客席から（上手が右）</button>
+        <button data-view="dancer" aria-pressed="false">ダンサー目線（上手が左）</button>
+      </div>
     </div>
-    <div class="row">
-      <label><input type="checkbox" id="showNames" checked> 名前を表示</label>
-      <label><input type="checkbox" id="showPaths"> 次の位置への矢印（全員）</label>
-      <label><input type="checkbox" id="clickOn"> カウント音（1拍ごとにクリック）</label>
+    <div class="field">速さ
+      <div class="seg" id="rateSeg">
+        <button data-rate="0.5" aria-pressed="false">0.5倍</button>
+        <button data-rate="0.75" aria-pressed="false">0.75倍</button>
+        <button data-rate="1" aria-pressed="true">1倍</button>
+      </div>
     </div>
-    <div class="muted">「自分」を選ぶと、自分の丸が大きくなり、次の立ち位置と移動の向きが出ます。プロジェクターに映すときは「大きく表示」を使ってください（スペースキーで再生・停止）。</div>
+    <div>
+      <label class="switch"><input type="checkbox" id="showNames" checked> 名前を表示</label>
+      <label class="switch"><input type="checkbox" id="showPaths"> 次の位置への矢印（全員）</label>
+      <label class="switch"><input type="checkbox" id="showBamiri" checked> バミリ番号（前の縁に中央0・1mごと）</label>
+      <label class="switch"><input type="checkbox" id="clickOn"> カウント音（1拍ごとにクリック）</label>
+    </div>
+    <div class="hint">「自分」を選ぶと、自分の丸が大きくなり、次の立ち位置と移動の向きが出ます。プロジェクターに映すときは、上の「大きく表示」を使ってください（スペースキーで再生・停止）。</div>
   </div>
   <div class="card">
     <h3>書き出し</h3>
@@ -552,7 +1143,7 @@ details summary {
       <button id="btnKeyPng">今の隊形を画像に</button>
       <button id="btnVideo">動画に書き出す</button>
     </div>
-    <div class="muted" id="videoNote">動画は最初から最後まで実際の速さで再生しながら作ります。曲を読み込んでいると音も入ります。</div>
+    <div class="hint" id="videoNote">動画は最初から最後まで実際の速さで再生しながら作ります。曲を読み込んでいると音も入ります。</div>
   </div>
 </section>
 
@@ -584,10 +1175,35 @@ details summary {
     <div class="row"><button id="btnNowIsOne">再生中の「今」を 1-1 にする</button></div>
     <div class="muted">自動で測ったBPMや頭の位置は、ずれることがあります。曲を流しながら数字が合っているかを確かめ、上のボタンで直してください。</div>
   </div>
+  <div class="card" id="cardYtTerms">
+    <h3>YouTube の動画を使う前に</h3>
+    <div>YouTube の動画を使うと YouTube 利用規約に同意したことになります。</div>
+    <ul class="terms-links" id="ytTermsLinks">
+      <li><a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube 利用規約</a></li>
+      <li><a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google のプライバシーポリシー</a></li>
+      <li><button type="button" class="linklike" data-open-privacy>このアプリのプライバシーポリシー</button></li>
+    </ul>
+    <div class="muted">初めて動画を出すときに、同意を1回だけ確かめます。YouTube の動画を使わないあいだは、YouTube に通信しません。</div>
+  </div>
+  <div class="card" id="cardYt">
+    <h3>YouTube の動画</h3>
+    <div class="row">
+      <input type="text" id="ytUrl" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="YouTube の URL" aria-label="YouTube の URL" style="flex:1;min-width:12em">
+      <button id="btnYtOpen">動画を出す</button>
+    </div>
+    <div class="muted" id="ytMsg" role="status"></div>
+    <div class="muted">URL は youtube.com/watch?v=… ・ youtu.be/… ・ youtube.com/shorts/… が使えます。動画は画面の上に出て、再生・停止・位置の移動にアプリの位置が追いかけます。上の「曲」と同じ BPM と1カウント目の時刻で拍に合わせます（ずれたら「位置を合わせ直す」）。速さは YouTube の側（動画の歯車）で変えてください。曲のファイルとは同時に使えません。動画は保存されず、開いたこの端末にだけ ID が残ります。</div>
+  </div>
   <div class="card">
     <h3>メンバー（<span id="dCount"></span>人）</h3>
     <div class="dlist" id="dancerList"></div>
     <div class="row"><button class="small" id="btnAddDancer">＋ 1人追加</button><button class="small" id="btnDelDancer">最後の1人を削除</button></div>
+  </div>
+  <div class="card" id="cardGroups">
+    <h3>グループ（形で見分ける）</h3>
+    <div class="muted">グループごとに丸の形を変えます（丸・四角・三角・ひし形）。色だけに頼らず見分けられます。メンバーの行で、その人のグループを選びます。1人は1つのグループまで・グループは8つまでです。</div>
+    <div id="groupList"></div>
+    <div class="row"><button class="small" id="btnAddGroup">＋ グループを追加</button></div>
   </div>
   <div class="card">
     <h3>保存・読み込み</h3>
@@ -607,9 +1223,127 @@ details summary {
     </div>
   </div>
 </section>
+
+<!-- 画面の下に固定のタブ -->
+<nav id="tabs" role="tablist">
+  <button data-tab="edit" class="on">編集</button>
+  <button data-tab="advice">アドバイス<span class="badge" id="advBadge" hidden></span></button>
+  <button data-tab="practice">練習</button>
+  <button data-tab="setup">設定</button>
+</nav>
 </main>
 <div id="toast"></div>
 <div id="askBox" hidden></div>
+<!-- プライバシーポリシーの1枚（アプリの中。設定タブのボタン・同意の確認から開く）。元の下書き：formation\docs\04_プライバシーポリシー_下書き_2026-11-26.md -->
+<div id="privacyBox" class="overlay" tabindex="-1" role="dialog" aria-modal="true" aria-labelledby="privacyTitle" hidden>
+  <div class="overlay-in">
+    <div class="overlay-bar">
+      <button id="btnPrivacyClose" class="primary">閉じる</button>
+    </div>
+    <article class="policy">
+      <h2 id="privacyTitle">フォーメーション練習 プライバシーポリシー</h2>
+      <p class="muted">最終改定日：2026年11月26日（下書き。公開する日に書き直します）</p>
+
+      <h3>1. このアプリについて</h3>
+      <p>「フォーメーション練習」は、ダンサーの立ち位置や動きを画面で確かめる練習アプリです。</p>
+      <p>運営する人：準備中</p>
+
+      <h3>2. 集める物・集めない物</h3>
+      <h4>集めない物</h4>
+      <p>このアプリは、次の物を集めません。送りません。</p>
+      <ul>
+        <li>お名前・メールアドレス・電話番号・住所</li>
+        <li>位置情報</li>
+        <li>アクセス解析・広告のための情報（そのための部品は入れていません）</li>
+        <li>ログイン情報（このアプリにログインはありません。Google や YouTube のアカウントにもつながりません）</li>
+      </ul>
+      <h4>端末の中だけに置く物</h4>
+      <p>次の物は、お使いの端末（iPhone や Android のブラウザー）の中だけに保存します。運営する人のところには届きません。ほかのサーバーにも送りません。</p>
+      <table>
+        <thead><tr><th>物</th><th>中身</th><th>消えるとき</th></tr></thead>
+        <tbody>
+          <tr><td>作った作品</td><td>隊形・人の名前・ステージの大きさ・照明のきっかけなど</td><td>作り直すまで残る</td></tr>
+          <tr><td>自分の選び・向きの選び</td><td>「自分」にした人の番号・客席から／ダンサー目線</td><td>変えるまで残る</td></tr>
+          <tr><td>YouTube の動画の番号</td><td>入れた URL の中の11文字の動画 ID だけ（別のしまい場所）</td><td>「動画を閉じる」を押すと消える</td></tr>
+          <tr><td>同意の印</td><td>YouTube の動画を使うことに同意した日付だけ（別のしまい場所。作品には入りません）</td><td>端末のデータを消すまで残る</td></tr>
+          <tr><td>読めなかった作品の写し</td><td>起動のとき読めなかった保存データを、そのまま3件まで</td><td>古い物から入れ替わる</td></tr>
+        </tbody>
+      </table>
+      <ul>
+        <li>曲のファイルは、端末の中だけで解析します。どこにも送りません。曲は保存しません（開き直したら読み込み直します）。</li>
+        <li>「ファイルに保存」「画像に書き出す」「動画に書き出す」は、押したときだけ、端末にファイルを作ります。それを誰に渡すかは、お使いの方が決めます。</li>
+      </ul>
+
+      <h3>3. YouTube の動画を使うとき</h3>
+      <h4>いつ YouTube につながるか</h4>
+      <p>設定タブで YouTube の URL を入れて「動画を出す」を押したときだけ、YouTube（運営は Google）につながります。動画を出さないあいだは、YouTube にまったく通信しません。開き直しても、前の動画は自動では出ません。動画は自動では再生されません。再生ボタンを押したときだけ再生します。</p>
+      <p>初めて動画を出すときに、この文書と YouTube の利用規約を読んで同意するかを、1回だけ確かめます。</p>
+      <h4>使っている仕組み</h4>
+      <ul>
+        <li>このアプリは <strong>YouTube API サービス（YouTube の埋め込みプレーヤーと IFrame Player API）</strong> を使っています。</li>
+        <li>動画の枠は、YouTube の「プライバシー強化モード」の埋め込み（youtube-nocookie.com）です。YouTube のヘルプでは、この方式だと「埋め込み動画を見たことが、YouTube でのおすすめの表示に使われない。広告も、個人に合わせた広告にならない」と説明されています。</li>
+      </ul>
+      <h4>YouTube に送られる物</h4>
+      <p>動画の枠が読み込まれると、YouTube の仕組みにより、YouTube（Google）にお使いの端末の基本的な情報が送られます。YouTube の開発者向けの決まりには、次のように書かれています。</p>
+      <ul>
+        <li>枠を読み込んだとき：動画の題名や画像を出す・再生できるかを調べる・不正を防ぐために、基本的な利用者の情報が YouTube と共有される。</li>
+        <li>動画を再生したとき：プレーヤーを整えるために、さらに情報が集められ共有される。</li>
+      </ul>
+      <p>何が送られるかの細かい一覧は、YouTube の側が決めています。このアプリは、YouTube に作品・曲・名前・動画の ID の保存内容を送りません（プレーヤーに動画の ID を伝えるのは、動画を出すためです）。</p>
+      <h4>端末への保存・広告について</h4>
+      <ul>
+        <li>YouTube の枠は、端末に Cookie など、情報を保存したり読み出したりする仕組みを使うことがあります。</li>
+        <li>YouTube の動画には、広告が出ることがあります。広告は YouTube（Google）が出すもので、このアプリは広告を出しません。</li>
+      </ul>
+      <h4>YouTube の規約と Google のプライバシーポリシー</h4>
+      <ul>
+        <li>このアプリの動画の機能を使うと、<strong>YouTube の利用規約</strong>に同意したことになります。<a href="https://www.youtube.com/t/terms" target="_blank" rel="noopener noreferrer">YouTube 利用規約</a></li>
+        <li>YouTube を通じて集められる情報の扱いは、<strong>Google のプライバシーポリシー</strong>に書かれています。<a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google のプライバシーポリシー</a></li>
+      </ul>
+      <h4>子ども向けの動画</h4>
+      <p>YouTube には「子ども向け」と表示された動画があります。このアプリは、どの動画が子ども向けかを調べていません。</p>
+
+      <h3>4. 端末のデータの消し方</h3>
+      <p>消すと、作品も消えます。戻せません。先に「ファイルに保存」で書き出してください。</p>
+      <h4>アプリの中で消せる物</h4>
+      <ul>
+        <li>YouTube の動画の番号：設定タブの「動画を閉じる」</li>
+        <li>作品：設定タブの「見本の作品に戻す」（今の作品が見本に置き換わります。「元に戻す」で戻せるのは、アプリを閉じるまでです）</li>
+        <li>同意の印・読めなかった作品の写し：アプリの中に消すボタンはありません。下の端末の操作で消してください（同意の印を消すと、次に動画を出すとき、もう一度同意を確かめます）。</li>
+      </ul>
+      <h4>全部まとめて消す</h4>
+      <ul>
+        <li>iPhone（Safari）：「設定」→「アプリ」→「Safari」→「詳細」→「Webサイトデータ」→「すべてのWebサイトデータを削除」（画面の文字は、iOS の版で少し違います）</li>
+        <li>ホーム画面に追加したアプリの場合：消し方は準備中です。上の Safari の操作で消えるかは、まだ確かめていません。</li>
+        <li>Android（Chrome）：Chrome の「設定」→「プライバシーとセキュリティ」→「閲覧履歴データの削除」→「Cookie とサイトデータ」にチェック→「データを削除」（画面の文字は版で違います）</li>
+      </ul>
+      <p>YouTube の側に残る情報（YouTube を見たときの記録など）は、Google のアカウントの設定から確かめます。<a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google のプライバシーポリシー</a></p>
+
+      <h3>5. 子どもの利用</h3>
+      <p>準備中です。このアプリは、子ども向けとして作っていません。</p>
+
+      <h3>6. このポリシーの変更</h3>
+      <p>内容を変えるときは、この文を書き直し、「最終改定日」を新しくします。</p>
+
+      <h3>7. 問い合わせ先</h3>
+      <p>準備中</p>
+    </article>
+    <div class="overlay-bar">
+      <button id="btnPrivacyClose2">閉じる</button>
+    </div>
+  </div>
+</div>
+<!-- YouTube の動画を初めて出すときの同意（1回だけ。同意の印は端末の中の別のキー） -->
+<div id="ytConsentBox" class="consent" role="dialog" aria-labelledby="ytConsentTitle" hidden>
+  <div id="ytConsentTitle" class="consent-title">YouTube の動画を使う前に</div>
+  <div id="ytConsentText">YouTube の動画を使うと YouTube 利用規約に同意したことになります。動画の枠を出すと、YouTube（Google）に通信します。下の3つを読んで、よければ「同意して動画を出す」を押してください。</div>
+  <div id="ytConsentLinks"></div>
+  <div class="muted">同意した日付だけが、この端末の中に印として残ります（作品のデータには入りません）。</div>
+  <div class="row" style="margin:8px 0 0">
+    <button id="btnYtAgree" class="primary">同意して動画を出す</button>
+    <button id="btnYtDecline">やめる</button>
+  </div>
+</div>
 <audio id="audio" preload="auto"></audio>
 
 <script>
@@ -617,11 +1351,18 @@ details summary {
 'use strict';
 /* ===== 基本 ===== */
 const $ = s => document.querySelector(s);
+// ダンサーの色（10色）。赤（「要修正」の色）は使わない。丸の中の字は --on-token の濃い色
 const PALETTE = [
-  '#ff6b6b','#ffa53d','#ffd93d','#9be15d','#3ddc97','#3dd6d0','#4fb3ff','#7b93ff','#a77bff',
-  '#e47bff','#ff7bc0','#d0a77e','#b6c3cc','#f4f4f4','#ff9e9e','#c4e86b','#7fe0ff','#ffc58a'];
+  '#3fe0ff','#5b8cff','#a77bff','#e86bff','#ff7bc8','#ffb547','#d9b98a','#b6f05a','#3ddc97','#c3cad6'];
 const LS_KEY = 'danceFormation.v1';
-const SCHEMA_V = 1;        // 作品のデータの版。これより大きい版の作品は読み込まない
+// 新しい項目を使った作品に付ける版。使っていない作品は v=1 のまま（schema.js の schemaVOf）。足すときはここに1行
+const FEATURE_V = { groups: 2, lock: 2 };
+const SCHEMA_V = Math.max(1, ...Object.values(FEATURE_V)); // このアプリが読める作品の版の最大。これより大きい版の作品は読み込まない
+const MAX_GROUPS = 8;         // グループの数の上限
+const GROUP_NAME_MAX = 12;    // グループの名前の字数の上限
+const GROUP_SHAPES = { circle: '丸', square: '四角', triangle: '三角', diamond: 'ひし形' };
+const GROUP_SHAPE_LIST = Object.keys(GROUP_SHAPES);
+const GROUP_GLYPH = { circle: '●', square: '■', triangle: '▲', diamond: '◆' };
 const UNDO_LIMIT = 60;     // 元に戻す・やり直すの、積める数
 const SAVE_DELAY_MS = 300; // 編集から保存までの待ち（閉じる・隠れるときは待たずに保存する）
 const MAX_DANCERS = 40;
@@ -632,7 +1373,8 @@ const hyp = Math.hypot;
 let S = null;
 const ui = { sel: 0, selDancer: -1, me: -1, view: 'audience', compare: false, playing: false, count: 0,
   rate: 1, selCue: null, clockT0: 0, clockC0: 0, showNames: true, showPaths: false, drag: null, dragMoved: false,
-  recording: false };
+  recording: false, showBamiri: true,
+  card: null }; // 編集タブで開いているカード：null（ふだん）・'key'・'dancer'・'cue'。保存しない画面の状態
 
 const beatSec = () => 60 / S.bpm;
 const cLabel = c => {
@@ -672,7 +1414,7 @@ function crossesInto(i) { // 隊形 i-1 → i の移動で起きるクロス
         front = px[1] <= py[1] ? x : y;
       }
     }
-    out.push({ a: x, b: y, pt, count: ms + bt * dur, front, gap: bd });
+    out.push({ a: x, b: y, pt, count: ms + bt * dur, front, gap: bd, intended: isIntendedCross(k, x, y) });
   }
   return out.sort((p, q) => p.count - q.count);
 }
@@ -718,10 +1460,11 @@ function hungarian(cost) {
   for (let j = 1; j <= n; j++) ans[p[j] - 1] = j - 1;
   return ans;
 }
-function assignSpots(from, spots) {
-  const cost = from.map(a => spots.map(b => hyp(a[0] - b[0], a[1] - b[1])));
+// anchor[i]＝位置を固定した人の今の座標（無ければ undefined）。その人は自分の座標のまま、いちばん近い場所を使ったことにして、ほかの人が残りの場所に入る
+function assignSpots(from, spots, anchor = []) {
+  const cost = from.map((a, i) => spots.map(b => { const o = anchor[i] || a; return hyp(o[0] - b[0], o[1] - b[1]); }));
   const ans = hungarian(cost);
-  return from.map((_, i) => [spots[ans[i]][0], spots[ans[i]][1]]);
+  return from.map((_, i) => anchor[i] ? [anchor[i][0], anchor[i][1]] : [spots[ans[i]][0], spots[ans[i]][1]]);
 }
 
 const totalDist = (a, b) => a.reduce((s, p, i) => s + hyp(p[0] - b[i][0], p[1] - b[i][1]), 0);
@@ -858,6 +1601,132 @@ function lightAt(c) {
 function nextCue(c, within = 1e9) {
   return (S.cues || []).find(q => q.at > c + 1e-6 && q.at - c <= within) || null;
 }
+// グループ（丸の形で見分ける）：作品の groups［{ id, name, shape }］とダンサーの group（グループの id）。画面に触らない
+'use strict';
+/* ===== グループ ===== */
+// 作品に groups が無い・ダンサーに group が無い＝全員が丸（今までと同じ）。空の入れ物は残さない
+const groupById = id => (S.groups || []).find(g => g.id === id) || null;
+function dancerGroup(i) {
+  const d = S.dancers[i];
+  return d && d.group ? groupById(d.group) : null;
+}
+function dancerShape(i) {
+  const g = dancerGroup(i);
+  return g ? g.shape : 'circle';
+}
+const usesGroups = st => !!(st.groups && st.groups.length) || (st.dancers || []).some(d => d && d.group);
+// 読み込みの確かめ：知らない形・使えない id・重なった id・9個目以降は、その1件だけ捨てる（作品は断らない）
+function cleanGroups(raw) {
+  const out = [], seen = new Set();
+  if (!Array.isArray(raw)) return out;
+  for (const g of raw) {
+    if (out.length >= MAX_GROUPS) break;
+    if (!g || typeof g !== 'object' || typeof g.id !== 'string' || !/^[A-Za-z0-9_-]{1,16}$/.test(g.id)) continue;
+    if (seen.has(g.id) || !GROUP_SHAPE_LIST.includes(g.shape)) continue;
+    seen.add(g.id);
+    out.push({ id: g.id, name: String(g.name == null ? '' : g.name).trim().slice(0, GROUP_NAME_MAX) || `グループ${out.length + 1}`, shape: g.shape });
+  }
+  return out;
+}
+// 新しいグループの id（今ある id と重ならない g1・g2…）と、まだ使っていない形
+function nextGroupId() {
+  let n = (S.groups || []).length + 1;
+  while ((S.groups || []).some(g => g.id === 'g' + n)) n++;
+  return 'g' + n;
+}
+function nextGroupShape() {
+  const used = (S.groups || []).map(g => g.shape);
+  return ['square', 'triangle', 'diamond', 'circle'].find(s => !used.includes(s)) || 'square';
+}
+// 画面の凡例の文：「● チームA　■ チームB」（グループが無ければ空）
+const groupLegendText = () => (S.groups || []).map(g => `${GROUP_GLYPH[g.shape]} ${g.name}`).join('　');
+// ロック：隊形 k の keys[k].lock = { pos: [人の番号…], cross: [[小, 大]…] }。画面に触らない
+// pos＝その隊形で位置を固定する人（自動の直し・反転・中央寄せ・形の当てはめ・ドラッグで動かさない）
+// cross＝前の隊形→k の移動で、わざと交わる2人の組（ぶつかりの警告と行き先の入れ替えの対象から外す）
+// 両方空なら lock ごと書かない（ロックを使わない作品は今までと同じ JSON のまま）
+'use strict';
+/* ===== ロック ===== */
+const lockPosOf = k => (k && k.lock && k.lock.pos) || [];
+const lockCrossOf = k => (k && k.lock && k.lock.cross) || [];
+const isLockedPos = (k, i) => lockPosOf(k).includes(i);
+const isIntendedCross = (k, a, b) => lockCrossOf(k).some(c => c[0] === Math.min(a, b) && c[1] === Math.max(a, b));
+const usesLock = st => [st.keys, st.baseKeys].some(ks => (ks || []).some(k => lockPosOf(k).length > 0 || lockCrossOf(k).length > 0));
+// 行き先の入れ替えで、行き先を動かさない人：位置を固定した人と、意図したクロスの2人
+function assignPins(k) {
+  const s = new Set(lockPosOf(k));
+  lockCrossOf(k).forEach(c => { s.add(c[0]); s.add(c[1]); });
+  return [...s];
+}
+// ダンサーの番号を含む項目の確かめ（読み込みと「ダンサーを消す」の両方から使う）。k.lock を、人数 n の範囲に直して置き直す。
+// 範囲外の番号・番号でない値・重なり・自分どうしの組は、その1件だけ捨てる（作品は断らない）。空になったら lock ごと消す
+function cleanDancerRefs(k, n) {
+  const raw = k.lock;
+  delete k.lock;
+  if (!raw || typeof raw !== 'object') return k;
+  const okIdx = v => Number.isInteger(v) && v >= 0 && v < n;
+  const pos = [...new Set((Array.isArray(raw.pos) ? raw.pos : []).filter(okIdx))].sort((a, b) => a - b);
+  const seen = new Set(), cross = [];
+  (Array.isArray(raw.cross) ? raw.cross : []).forEach(c => {
+    if (!Array.isArray(c) || c.length !== 2 || !okIdx(c[0]) || !okIdx(c[1]) || c[0] === c[1]) return;
+    const a = Math.min(c[0], c[1]), b = Math.max(c[0], c[1]), key = a + ',' + b;
+    if (seen.has(key)) return;
+    seen.add(key);
+    cross.push([a, b]);
+  });
+  cross.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+  if (pos.length || cross.length) {
+    k.lock = {};
+    if (pos.length) k.lock.pos = pos;
+    if (cross.length) k.lock.cross = cross;
+  }
+  return k;
+}
+// 隊形の位置を作り直すときは、かならずここを通す。固定した人の座標は、いまの座標のまま残す
+function setPos(k, pos) {
+  k.pos = lockedPos(k, pos);
+}
+// pos の中の固定した人を、k のいまの座標に戻した物（k は変えない）
+function lockedPos(k, pos) {
+  const L = lockPosOf(k);
+  return L.length ? pos.map((p, i) => L.includes(i) && k.pos[i] ? [k.pos[i][0], k.pos[i][1]] : p) : pos;
+}
+// 付け外し（呼ぶ側が先に pushUndo する）。空になったら lock ごと消す
+function tidyLock(k) {
+  if (!lockPosOf(k).length) delete k.lock.pos;
+  if (!lockCrossOf(k).length) delete k.lock.cross;
+  if (!Object.keys(k.lock).length) delete k.lock;
+}
+function toggleLockPos(k, i) {
+  if (!k.lock) k.lock = {};
+  const L = lockPosOf(k).slice();
+  const at = L.indexOf(i);
+  if (at >= 0) L.splice(at, 1);
+  else L.push(i);
+  k.lock.pos = L.sort((a, b) => a - b);
+  tidyLock(k);
+}
+function toggleLockCross(k, a, b) {
+  if (!k.lock) k.lock = {};
+  const lo = Math.min(a, b), hi = Math.max(a, b), C = lockCrossOf(k).filter(c => !(c[0] === lo && c[1] === hi));
+  if (C.length === lockCrossOf(k).length) C.push([lo, hi]);
+  k.lock.cross = C.sort((p, q) => p[0] - q[0] || p[1] - q[1]);
+  tidyLock(k);
+}
+// 作品の版：使った項目の最大の版だけを書く（使っていない作品は v=1 のまま。前の版のアプリでも読める）
+'use strict';
+/* ===== 版の付け方 ===== */
+// 作品が使っている新しい項目の名前（FEATURE_V の鍵）。baseKeys の中の使用も数える（前の版は黙って捨てるため）
+function usedFeatures(st) {
+  const f = [];
+  if (usesGroups(st)) f.push('groups');
+  if (usesLock(st)) f.push('lock');
+  return f;
+}
+const schemaVOf = st => Math.max(1, ...usedFeatures(st).map(f => FEATURE_V[f]));
+// 保存・書き出しの文字列。v は使った項目の最大の版に付け替える（S の v の位置は変えない）。indent は書き出し用
+function workJson(st, indent) {
+  return JSON.stringify(Object.assign({}, st, { v: schemaVOf(st) }), null, indent);
+}
 // 見本・読み込みの確かめ・保存
 function demoState() {
   const names = ['あおい', 'いつき', 'うた', 'えま', 'おと', 'かい', 'きら', 'くう', 'けい', 'こはる', 'さな', 'しゅん', 'すず', 'せな'];
@@ -866,11 +1735,11 @@ function demoState() {
     dancers: names.map((nm, i) => ({ name: nm, color: PALETTE[i % PALETTE.length] })), keys: [], baseKeys: null, energy: null, cues: [] };
   const cue = (eight, count, kind, name, o = {}) => ({
     id: newId(), at: (eight - 1) * 8 + count - 1, kind, name,
-    color: o.color || '#ff3b6b', target: o.target == null ? -1 : o.target, fade: o.fade || 0 });
+    color: o.color || '#7a5cff', target: o.target == null ? -1 : o.target, fade: o.fade || 0 });
   st.cues = [
     cue(1, 1, 'full', '明転'),
     cue(8, 5, 'memo', 'ドラムが入る'),
-    cue(13, 1, 'color', '赤の照明', { color: '#ff2d55', fade: 2 }),
+    cue(13, 1, 'color', '紫の照明', { color: '#7a5cff', fade: 2 }),
     cue(17, 1, 'spot', 'スポット', { target: 0, fade: 1 }),
     cue(20, 5, 'black', '暗転', { fade: 2 }),
     cue(21, 1, 'full', '明転')];
@@ -891,6 +1760,7 @@ function demoState() {
     st.keys.push(mk(nm, e, m, p));
     prev = p;
   });
+  st.v = schemaVOf(st); // 新しい項目を使っていないので 1
   return st;
 }
 
@@ -921,23 +1791,29 @@ function inspectLoad(o) {
     else if (kind === 'len') dropped++;
     else if (badKey === null) badKey = String((k && k.name) || '名前なし').slice(0, 20);
     return false;
-  }).map((k, i) => ({
+  }).map((k, i) => cleanDancerRefs({
     id: newId(), name: String(k.name || ('隊形' + (i + 1))).slice(0, 20),
     at: Math.max(0, Math.round(clampNum(k.at, i * 32, 0, 4000))),
     move: Math.round(clampNum(k.move, 4, 1, 64)),
-    pos: k.pos.map(p => [clampNum(p[0], 0, -50, 50), clampNum(p[1], 0, -50, 50)]) }));
+    pos: k.pos.map(p => [clampNum(p[0], 0, -50, 50), clampNum(p[1], 0, -50, 50)]),
+    lock: k.lock }, n)); // lock は人数の範囲に確かめて置き直す（無ければ書かない）
   const keys = fixKeys(o.keys);
   const base = Array.isArray(o.baseKeys) ? fixKeys(o.baseKeys, true) : [];
   if (badKey !== null) return refuse(`座標が数でない隊形があります（「${badKey}」）`);
   if (!keys.length) return refuse('人数と座標の数が合う隊形がありません');
+  const groups = cleanGroups(o.groups), groupIds = new Set(groups.map(g => g.id));
   const st = {
-    v: SCHEMA_V, title: String(o.title || '無題').slice(0, 40), bpm: clampNum(o.bpm, 120, 40, 240),
+    v: 1, title: String(o.title || '無題').slice(0, 40), bpm: clampNum(o.bpm, 120, 40, 240),
     offset: clampNum(o.offset, 0, 0, 600), totalEights: Math.round(clampNum(o.totalEights, 24, 1, 400)),
     stage: { w: clampNum(o.stage && o.stage.w, 10, 3, 40), d: clampNum(o.stage && o.stage.d, 6, 2, 30) },
-    // dancers は { name, color } の配列。名前だけの文字列の配列なら、その文字列を名前に使う
-    dancers: o.dancers.map((d, i) => ({
-      name: String((typeof d === 'string' ? d : d && d.name) || ('No.' + (i + 1))).slice(0, 16),
-      color: isColor(d && d.color) ? d.color : PALETTE[i % PALETTE.length] })),
+    // dancers は { name, color, group? } の配列。名前だけの文字列の配列なら、その文字列を名前に使う。group は今ある groups の id だけ（無い・知らない id は書かない）
+    dancers: o.dancers.map((d, i) => {
+      const dd = {
+        name: String((typeof d === 'string' ? d : d && d.name) || ('No.' + (i + 1))).slice(0, 16),
+        color: isColor(d && d.color) ? d.color : PALETTE[i % PALETTE.length] };
+      if (d && typeof d.group === 'string' && groupIds.has(d.group)) dd.group = d.group;
+      return dd;
+    }),
     keys: keys.sort((a, b) => a.at - b.at), baseKeys: base.length && !baseBad ? base : null,
     energy: Array.isArray(o.energy) ? o.energy.map(x => clampNum(x, 0, 0, 1)) : null };
   st.cues = (Array.isArray(o.cues) ? o.cues : [])
@@ -950,6 +1826,8 @@ function inspectLoad(o) {
       target: Number.isInteger(q.target) && q.target >= 0 && q.target < n ? q.target : -1,
       fade: Math.round(clampNum(q.fade, 0, 0, 32)) }))
     .sort((a, b) => a.at - b.at);
+  if (groups.length) st.groups = groups;
+  st.v = schemaVOf(st); // 使った項目の最大の版（使っていなければ 1）
   return { ok: true, state: st, dropped, baseRemoved: baseBad };
 }
 
@@ -968,7 +1846,7 @@ function flushSave() {
   clearTimeout(saveT);
   savePending = false;
   try {
-    localStorage.setItem(LS_KEY, JSON.stringify(S));
+    localStorage.setItem(LS_KEY, workJson(S));
     saveWarned = false;
   } catch (e) {
     if (!saveWarned && saveHooks.onFail) saveHooks.onFail(e);
@@ -1029,7 +1907,7 @@ function load() {
   startupProblem = { reason, key: keepUnreadable(text), text };
   return result && result.ok ? result.state : demoState();
 }
-// 元に戻す・やり直す。単位は作品 S の全部（title・bpm・offset・totalEights・stage・dancers・keys・baseKeys・cues・energy）
+// 元に戻す・やり直す。単位は作品 S の全部（title・bpm・offset・totalEights・stage・dancers〔group を含む〕・groups・keys〔lock を含む〕・baseKeys・cues・energy）。S の中に置いた項目は、ここに作りを足さなくても一緒に戻る
 let undoStack = [];
 let redoStack = [];
 
@@ -1090,12 +1968,15 @@ const spreadOf = pos => {
   const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length, cy = pos.reduce((s, p) => s + p[1], 0) / pos.length;
   return Math.sqrt(pos.reduce((s, p) => s + (p[0] - cx) ** 2 + (p[1] - cy) ** 2, 0) / pos.length);
 };
-function minPathGap(a, b) {
+// skip＝意図したクロスの組 [[小, 大]…]。この組は「ぶつかり」として数えない
+function minPathGap(a, b, skip = []) {
   let best = 1e9, pair = null, at = 0;
+  const skipSet = new Set(skip.map(c => c[0] + ',' + c[1]));
   for (let s = 0; s <= 24; s++) {
     const u = s / 24;
     const p = a.map((q, j) => [q[0] + (b[j][0] - q[0]) * u, q[1] + (b[j][1] - q[1]) * u]);
     for (let i = 0; i < p.length; i++) for (let j = i + 1; j < p.length; j++) {
+      if (skipSet.size && skipSet.has(i + ',' + j)) continue;
       const d = hyp(p[i][0] - p[j][0], p[i][1] - p[j][1]);
       if (d < best) {
         best = d;
@@ -1127,22 +2008,25 @@ function analyze() {
   const eHigh = eSorted.length ? eSorted[Math.floor(eSorted.length * 0.7)] : null;
   const sMed = [...spreads].sort((a, b) => a - b)[Math.floor(spreads.length / 2)];
   K.forEach((k, i) => {
+    const lk = lockPosOf(k), crossSkip = lockCrossOf(k), pins = assignPins(k);
+    // 位置を固定した人が問題の人に含まれるとき、動かさないことを添える
+    const lockNote = ids => ids.some(j => lk.includes(j)) ? `（位置を固定している人は動かしません：${names(ids.filter(j => lk.includes(j)))}）` : '';
     const o = outOf(k.pos);
-    if (o.length) add(0, i, `${names(o)} がステージの端からはみ出しています。`, '内側に入れる', () => { k.pos = clampPos(k.pos); });
+    if (o.length) add(0, i, `${names(o)} がステージの端からはみ出しています。${lockNote(o)}`, '内側に入れる', () => { setPos(k, clampPos(k.pos)); });
     const hid = hiddenOf(k.pos);
     if (hid.length) add(0, i,
-      `${names(hid.map(h => h[1]))} がすぐ前の人の真後ろにいて、客席から見えません。前の列と半人分ずらす（千鳥にする）と全員が見えます。`,
-      '千鳥にずらす', () => { k.pos = fixFormation(k.pos); });
+      `${names(hid.map(h => h[1]))} がすぐ前の人の真後ろにいて、客席から見えません。前の列と半人分ずらす（千鳥にする）と全員が見えます。${lockNote(hid.flat())}`,
+      '千鳥にずらす', () => { setPos(k, fixFormation(k.pos, lk)); });
     const tp = tightPairs(k.pos);
     if (tp.length) add(0, i,
-      `${tp.length}組の間隔が${TH.space * 100}cmより狭く、腕を広げるとぶつかります（例：${nm(tp[0][0])}と${nm(tp[0][1])}）。`,
-      '間隔を広げる', () => { k.pos = fixFormation(k.pos); });
+      `${tp.length}組の間隔が${TH.space * 100}cmより狭く、腕を広げるとぶつかります（例：${nm(tp[0][0])}と${nm(tp[0][1])}）。${lockNote(tp.flat())}`,
+      '間隔を広げる', () => { setPos(k, fixFormation(k.pos, lk)); });
     const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length;
     if (Math.abs(cx) > W * 0.12) add(1, i,
       `全体が${cx > 0 ? '上手（客席から見て右）' : '下手（客席から見て左）'}に${Math.abs(cx).toFixed(1)}m寄っています。意図した演出でなければ中央に寄せると見栄えが安定します。`,
-      '中央に寄せる', () => { k.pos = centerPos(k.pos); });
+      '中央に寄せる', () => { setPos(k, centerPos(k.pos)); });
     if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreads[i] < sMed * 0.95)
-      add(1, i, `曲が盛り上がる所なのに、隊形がこぢんまりしています。ステージを広く使うと迫力が出ます。`, 'ステージ全体に広げる', () => { k.pos = fixFormation(spreadOut(k.pos)); });
+      add(1, i, `曲が盛り上がる所なのに、隊形がこぢんまりしています。ステージを広く使うと迫力が出ます。`, 'ステージ全体に広げる', () => { setPos(k, fixFormation(lockedPos(k, spreadOut(k.pos)), lk)); });
     if (i > 0) {
       const p = K[i - 1], gap = k.at - p.at, nd = neededMove(p.pos, k.pos);
       if (k.move > gap) add(0, i, `移動が${k.move}カウントですが、前の隊形からここまで${gap}カウントしかありません。`, `移動を${gap}カウントにする`, () => { k.move = gap; });
@@ -1158,10 +2042,10 @@ function analyze() {
           can > k.move ? `移動を${can}カウントにする` : null,
           can > k.move ? () => { k.move = can; } : null);
       }
-      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
-      const g = minPathGap(p.pos, k.pos);
+      const opt = optimalNext(p.pos, k.pos, pins), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
+      const g = minPathGap(p.pos, k.pos, crossSkip);
       if (g.d < TH.crash) {
-        const g2 = minPathGap(p.pos, opt);
+        const g2 = minPathGap(p.pos, opt, crossSkip);
         const c = Math.round(k.at - k.move * (1 - g.u));
         add(0, i,
           `移動の途中（${cLabel(c)}ごろ）で ${nm(g.pair[0])} と ${nm(g.pair[1])} がぶつかります。`
@@ -1169,17 +2053,22 @@ function analyze() {
             ? '行き先を入れ替えると、ぶつからずに済みます。'
             : '通る道を前後にずらすか、移動のタイミングを1カウントずらしてください。'),
           g2.d >= TH.crash ? '行き先を入れ替える' : null,
-          g2.d >= TH.crash ? () => { k.pos = opt; } : null);
+          g2.d >= TH.crash ? () => { setPos(k, opt); } : null);
       } else if (cur - best > Math.max(2, cur * 0.15)) {
         add(1, i,
           `行き先を入れ替えると、全員の移動の合計が${cur.toFixed(1)}m → ${best.toFixed(1)}mに減ります（センターや見せ場の人が変わることがあります）。`,
-          '行き先を入れ替える', () => { k.pos = opt; });
+          '行き先を入れ替える', () => { setPos(k, opt); });
       }
-      const crs = crossesInto(i).filter(x => x.gap >= TH.crash);
+      const crsAll = crossesInto(i).filter(x => x.gap >= TH.crash || x.intended);
+      const crs = crsAll.filter(x => !x.intended), ics = crsAll.filter(x => x.intended);
       if (crs.length) add(2, i,
         `この移動で${crs.length}組がクロスします（練習で合わせる所）：`
         + crs.slice(0, 4).map(x => `${nm(x.a)}×${nm(x.b)}（${cLabel(x.count)}ごろ、${nm(x.front)}が前）`).join('、')
         + (crs.length > 4 ? ` ほか${crs.length - 4}組` : '') + '。');
+      if (ics.length) add(2, i,
+        `この移動で${ics.length}組は意図したクロスです（ロック。ぶつかりの警告と行き先の入れ替えの対象から外しています）：`
+        + ics.slice(0, 4).map(x => `${nm(x.a)}×${nm(x.b)}（${cLabel(x.count)}ごろ、${nm(x.front)}が前）`).join('、')
+        + (ics.length > 4 ? ` ほか${ics.length - 4}組` : '') + '。');
       const md = cur / k.pos.length;
       if (md < 0.3 && gap >= 16) add(2, i, `前の隊形（${p.name}）とほとんど同じ形です。見ている人には変化が伝わりにくいので、形を変えるか、レベル（高さ）や向きで変化を付けると良くなります。`);
     }
@@ -1214,9 +2103,12 @@ function clampPos(pos) {
   const W = S.stage.w, D = S.stage.d, m = 0.3;
   return pos.map(p => [r2(Math.min(W / 2 - m, Math.max(-W / 2 + m, p[0]))), r2(Math.min(D - m, Math.max(m, p[1])))]);
 }
-function relax(pos0) {
-  const W = S.stage.w, D = S.stage.d, m = 0.3, DMIN = 0.95, OCC = 0.58, n = pos0.length;
-  const p = clampPos(pos0).map(a => [a[0], a[1]]), anchor = p.map(a => [a[0], a[1]]);
+// fixed＝位置を固定した人の番号。その人は動かさず、ほかの人が避ける（固定した人の座標は pos0 のまま）
+function relax(pos0, fixed = []) {
+  const W = S.stage.w, D = S.stage.d, m = 0.3, DMIN = 0.95, OCC = 0.58, n = pos0.length, fx = new Set(fixed);
+  const p = clampPos(pos0).map(a => [a[0], a[1]]);
+  fixed.forEach(i => { if (pos0[i]) p[i] = [pos0[i][0], pos0[i][1]]; });
+  const anchor = p.map(a => [a[0], a[1]]);
   for (let it = 0; it < 500; it++) {
     const g = p.map(() => [0, 0]);
     for (let i = 0; i < n; i++) {
@@ -1224,6 +2116,9 @@ function relax(pos0) {
       g[i][1] += 0.04 * (anchor[i][1] - p[i][1]);
     }
     for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const fi = fx.has(i), fj = fx.has(j);
+      if (fi && fj) continue; // 固定した人どうしは動かさない
+      const w = fi || fj ? 2 : 1; // 片方が固定なら、動く側が全部を避ける
       const dx = p[j][0] - p[i][0], dy = p[j][1] - p[i][1], d = hyp(dx, dy);
       if (d < DMIN) {
         let ux, uy;
@@ -1234,27 +2129,28 @@ function relax(pos0) {
           ux = dx / d;
           uy = dy / d;
         }
-        const f = (DMIN - d) * 0.5;
+        const f = (DMIN - d) * 0.5 * w;
         g[i][0] -= ux * f;
         g[i][1] -= uy * f;
         g[j][0] += ux * f;
         g[j][1] += uy * f;
       }
       if (Math.abs(dy) > TH.hideDy - 0.05 && Math.abs(dy) < TH.hideFar + 0.1 && Math.abs(dx) < OCC) {
-        const sx = Math.abs(dx) < 1e-6 ? ((i + j) % 2 ? 1 : -1) : Math.sign(dx), f = (OCC - Math.abs(dx)) * 0.5;
+        const sx = Math.abs(dx) < 1e-6 ? ((i + j) % 2 ? 1 : -1) : Math.sign(dx), f = (OCC - Math.abs(dx)) * 0.5 * w;
         g[i][0] -= sx * f;
         g[j][0] += sx * f;
       }
     }
     for (let i = 0; i < n; i++) {
+      if (fx.has(i)) continue;
       p[i][0] = Math.min(W / 2 - m, Math.max(-W / 2 + m, p[i][0] + g[i][0] * 0.6));
       p[i][1] = Math.min(D - m, Math.max(m, p[i][1] + g[i][1] * 0.6));
     }
   }
   return p.map(a => [r2(a[0]), r2(a[1])]);
 }
-function groupRows(pos) {
-  const idx = pos.map((_, i) => i).sort((a, b) => pos[a][1] - pos[b][1]), rows = [];
+function groupRows(pos, skip = []) { // skip＝列に入れない人（位置を固定した人）
+  const idx = pos.map((_, i) => i).filter(i => !skip.includes(i)).sort((a, b) => pos[a][1] - pos[b][1]), rows = [];
   idx.forEach(i => {
     const r = rows[rows.length - 1];
     if (r && pos[i][1] - pos[r[0]][1] < TH.hideDy) r.push(i);
@@ -1262,9 +2158,9 @@ function groupRows(pos) {
   });
   return rows;
 }
-function zigzag(pos) { // 1列に入りきらない列を互い違いにする
+function zigzag(pos, fixed = []) { // 1列に入りきらない列を互い違いにする
   const W = S.stage.w, D = S.stage.d, p = pos.map(a => [a[0], a[1]]);
-  groupRows(p).forEach(r => {
+  groupRows(p, fixed).forEach(r => {
     if (r.length < 3 || (r.length - 1) * 0.95 <= W - 0.6) return;
     const s = r.slice().sort((a, b) => p[a][0] - p[b][0]), span = W - 0.8;
     const y0 = Math.min(D - 0.75, Math.max(0.75, p[r[0]][1]));
@@ -1275,8 +2171,8 @@ function zigzag(pos) { // 1列に入りきらない列を互い違いにする
   });
   return p;
 }
-function staggerRows(pos) { // 後ろの列を横にずらして、すぐ前の人と重ならないようにする
-  const W = S.stage.w, p = pos.map(a => [a[0], a[1]]), rows = groupRows(p);
+function staggerRows(pos, fixed = []) { // 後ろの列を横にずらして、すぐ前の人と重ならないようにする
+  const W = S.stage.w, p = pos.map(a => [a[0], a[1]]), rows = groupRows(p, fixed);
   for (let r = 1; r < rows.length; r++) {
     const front = rows.slice(0, r).flat();
     let best = 0, bs = 1e9;
@@ -1299,7 +2195,7 @@ function staggerRows(pos) { // 後ろの列を横にずらして、すぐ前の�
   }
   return p;
 }
-const fixFormation = pos => relax(staggerRows(zigzag(pos)));
+const fixFormation = (pos, fixed = []) => relax(staggerRows(zigzag(pos, fixed), fixed), fixed);
 function spreadOut(pos) {
   const W = S.stage.w, D = S.stage.d, cy = D / 2;
   const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length;
@@ -1311,8 +2207,10 @@ const centerPos = pos => {
   const cx = pos.reduce((s, p) => s + p[0], 0) / pos.length;
   return clampPos(pos.map(p => [p[0] - cx, p[1]]));
 };
-function optimalNext(prev, next) {
-  const cost = prev.map(a => next.map(b => hyp(a[0] - b[0], a[1] - b[1])));
+// pins＝行き先を動かさない人（位置を固定した人・意図したクロスの2人）。その人は自分の行き先に決まり、ほかの人はその行き先を使わない
+function optimalNext(prev, next, pins = []) {
+  const pin = new Set(pins);
+  const cost = prev.map((a, i) => next.map((b, j) => pin.size && (pin.has(i) || pin.has(j)) ? (i === j ? 0 : 1e6) : hyp(a[0] - b[0], a[1] - b[1])));
   const ans = hungarian(cost);
   return prev.map((_, i) => [next[ans[i]][0], next[ans[i]][1]]);
 }
@@ -1409,7 +2307,126 @@ function energyPerEight(a) {
   const mx = Math.max(...out, 1e-9);
   return out.map(v => r2(v / mx));
 }
-// 画面の土台・ステージの描画・タイムライン・再生・ドラッグ
+// YouTube の URL から動画 ID を取り出す（画面に触らない）
+/* ===== YouTube の URL ===== */
+const YT_ID_RE = /^[A-Za-z0-9_-]{11}$/;
+const YT_HOSTS = ['youtube.com', 'www.youtube.com', 'm.youtube.com'];
+// 受ける形：youtube.com/watch?v=ID・youtu.be/ID・youtube.com/shorts/ID（先頭の http・https の指定はあってもなくても可）。
+// それ以外（再生リスト・チャンネル・埋め込み用の URL・別のサイト・ID だけ）は断る。
+// 戻り値：{ ok: true, id } か { ok: false, reason }。reason は 'empty'（空）・'form'（URL の形でない）・'host'（YouTube でない）・'id'（動画 ID が無い・形が違う）
+function ytParseUrl(text) {
+  const s = String(text == null ? '' : text).trim();
+  if (!s) return { ok: false, reason: 'empty' };
+  if (s.length > 300 || /\s/.test(s)) return { ok: false, reason: 'form' };
+  const full = s.indexOf('://') >= 0 ? s : 'https://' + s;
+  let u;
+  try { u = new URL(full); } catch (e) { return { ok: false, reason: 'form' }; }
+  const scheme = u.protocol.slice(0, -1);
+  if (scheme !== 'http' && scheme !== 'https') return { ok: false, reason: 'form' };
+  if (u.username || u.password || u.port) return { ok: false, reason: 'form' };
+  const host = u.hostname.toLowerCase();
+  let id = null;
+  if (host === 'youtu.be') {
+    const m = u.pathname.match(/^\/([^/]+)\/?$/);
+    id = m && m[1];
+  } else if (YT_HOSTS.indexOf(host) >= 0) {
+    if (u.pathname === '/watch') id = u.searchParams.get('v');
+    else {
+      const m = u.pathname.match(/^\/shorts\/([^/]+)\/?$/);
+      id = m && m[1];
+    }
+  } else return { ok: false, reason: 'host' };
+  if (!id || !YT_ID_RE.test(id)) return { ok: false, reason: 'id' };
+  return { ok: true, id };
+}
+// バミリ番号と「まわりの人」の計算（画面に触らない・保存しない。毎回の表示のときに計算する）
+'use strict';
+/* ===== 上手・下手の向き ===== */
+// 画面の左右と、正面（客席側の縁）が上か下か。x がプラス＝客席から見て右＝上手（ステージの座標）
+// 客席から：正面が下・左が下手・右が上手　／　ダンサー目線（舞台の奥から客席を向く）：正面が上・左が上手・右が下手
+function stageSides(view) {
+  return view !== 'audience'
+    ? { frontAtTop: true, left: '上手', right: '下手' }
+    : { frontAtTop: false, left: '下手', right: '上手' };
+}
+
+/* ===== バミリ番号 ===== */
+// 前の縁の中央を 0 とし、左右へ 1m ごとに 1・2・3…（現場でテープを貼る間隔）。上手・下手は文字で添える
+const BAMIRI_STEP_M = 1;
+const BAMIRI_MIN_PX = 20; // 番号どうしの画面上の間隔の下限。狭い画面・広いステージでは 2・5・10 個おきにする
+const bamiriNum = v => Math.abs(Math.round(v * 100) / 100); // 2.5 → 2.5・2.35 → 2.35（0.01m まで。-0 にしない）
+// 前の縁に出す番号：[{ x: ステージの x(m), n: 番号 }]。every 個おき（every は 1・2・5…）
+function bamiriTicks(stageW, every = 1) {
+  const out = [], half = stageW / 2, max = Math.floor(half / BAMIRI_STEP_M + 1e-9);
+  for (let k = -max; k <= max; k++) if (k % every === 0) out.push({ x: k * BAMIRI_STEP_M, n: Math.abs(k) });
+  return out;
+}
+// 1m あたり sc px の画面で、番号を何個おきに出すか
+function bamiriEvery(sc) {
+  const need = BAMIRI_MIN_PX / (sc * BAMIRI_STEP_M);
+  return [1, 2, 5, 10, 20].find(m => m >= need) || 20;
+}
+// 横の位置の読み：「上手2.5」「下手1」「中央0」
+function bamiriX(x) {
+  const a = bamiriNum(x);
+  return a === 0 ? '中央0' : (x > 0 ? '上手' : '下手') + a;
+}
+// 立ち位置の読み：「上手2.5・前から2.35m」
+const bamiriText = (x, y) => `${bamiriX(x)}・前から${bamiriNum(y)}m`;
+
+/* ===== まわりの人（目印の仲間） ===== */
+// 隣・前後と呼ぶ最大の距離（m）。見本の並び（0.9〜2m 間隔）の隣は入り、4m 以上離れた人は入らないように決めた値
+const NEAR_MAX_M = 2.5;
+// i 番の人のまわり。ほかの人を、向き（|dx|≥|dy| なら横、そうでなければ前後）で4つに分け、それぞれ最も近い1人（距離 NEAR_MAX_M 以内）
+// 戻り値 { kami, shimo, front, back }：それぞれ { j: 人の番号, d: 距離 } か null。前＝客席側（y が小さい）、後＝奥
+function neighborsOf(pos, i, maxM = NEAR_MAX_M) {
+  const out = { kami: null, shimo: null, front: null, back: null }, p = pos[i];
+  if (!p) return out;
+  for (let j = 0; j < pos.length; j++) {
+    const q = pos[j];
+    if (j === i || !q) continue;
+    const dx = q[0] - p[0], dy = q[1] - p[1], d = Math.hypot(dx, dy);
+    if (d < 0.01 || d > maxM) continue; // 同じ場所（重なり）と遠い人は出さない
+    const key = Math.abs(dx) >= Math.abs(dy) ? (dx > 0 ? 'kami' : 'shimo') : (dy < 0 ? 'front' : 'back');
+    if (!out[key] || d < out[key].d) out[key] = { j, d };
+  }
+  return out;
+}
+// 「左 けい・右 しゅ・前 こは・後 うた」。左右は画面の左右（今の向きに合わせる）。いない側は「なし」
+function neighborText(near, names, view) {
+  const sd = stageSides(view), pick = side => (side === '上手' ? near.kami : near.shimo);
+  const nm = o => (o ? names[o.j] : 'なし');
+  return `左 ${nm(pick(sd.left))}・右 ${nm(pick(sd.right))}・前 ${nm(near.front)}・後 ${nm(near.back)}`;
+}
+// 描画（canvas）の色と光。CSS の変数（styles/tokens.css）から読み、1か所の表 THEME にまとめる
+const THEME = {};
+// 光の強さ（canvas の shadowBlur ＝ ぼかしの大きさ px）と、薄さ（0〜1）。案Cの値
+const GLOW = { sel: 6, path: 2.4, now: 3, ghostA: 0.26, pathA: 0.55, pathDim: 0.28, dim: 0.72, spotA: 0.05 };
+function loadTheme() {
+  const cs = getComputedStyle(document.documentElement);
+  const names = {
+    bg: '--bg', panel: '--panel', panel2: '--panel2', floor: '--stage-floor', grid: '--grid', gridC: '--grid-c', edge: '--edge',
+    tlA: '--tl-a', tlB: '--tl-b', energy: '--energy', text: '--text', muted: '--muted', onToken: '--on-token',
+    sel: '--sel', pathFocus: '--path-focus', now: '--now', path: '--path', audience: '--audience', warn: '--warn' };
+  Object.keys(names).forEach(k => { THEME[k] = cs.getPropertyValue(names[k]).trim(); });
+}
+loadTheme();
+// '#rrggbb' に透明度を付けた rgba 文字列（色が '#rrggbb' でないときはそのまま返す）
+function withAlpha(hex, a) {
+  const m = /^#([0-9a-f]{6})$/i.exec(hex || '');
+  if (!m) return hex;
+  const n = parseInt(m[1], 16);
+  return `rgba(${n >> 16},${(n >> 8) & 255},${n & 255},${a})`;
+}
+// 光らせて描く（fn の中の描画に shadowBlur をかける）。光は選んだ物と今の位置だけに使う
+function glow(c, color, blur, fn) {
+  c.save();
+  c.shadowColor = color;
+  c.shadowBlur = blur;
+  fn();
+  c.restore();
+}
+// 画面の土台：知らせ（toast）・要素を作る関数・ステージの canvas と配置の計算
 let audioReady = false, analysis = null, wakeLock = null;
 const audio = $('#audio');
 
@@ -1444,16 +2461,105 @@ function stageLayout(w, h, view) {
   const inv = view === 'audience' ? (sx, sy) => [(sx - ox) / sc - W / 2, D - (sy - oy) / sc] : (sx, sy) => [W / 2 - (sx - ox) / sc, (sy - oy) / sc];
   return { sc, ox, oy, sw, sd, map, inv, lab };
 }
+// ステージの前の縁のバミリ番号（中央0・左右に1m ごと）。画面・書き出しの画像・動画で共有する
+// 番号の字の大きさ（px）と、ダンサー目線（前の縁が上）のとき、照明・きっかけの文字を下げる高さ
+const rulerFont = L => Math.max(9, Math.min(L.sc * 0.36, 15));
+const rulerTopPad = (L, view) => (stageSides(view).frontAtTop ? rulerFont(L) + 8 : 0);
+function drawFrontRuler(c, L, view) {
+  const every = bamiriEvery(L.sc), top = stageSides(view).frontAtTop, [, fy] = L.map(0, 0);
+  c.save();
+  c.font = `600 ${rulerFont(L)}px sans-serif`;
+  c.textAlign = 'center';
+  c.textBaseline = top ? 'top' : 'bottom';
+  c.globalAlpha = 0.85;
+  bamiriTicks(S.stage.w, every).forEach(t => {
+    const [x] = L.map(t.x, 0);
+    c.fillStyle = t.n === 0 ? THEME.text : THEME.muted;
+    c.fillText(String(t.n), x, top ? fy + 4 : fy - 4); // 縁の内側に書く
+  });
+  c.restore();
+}
+// 前の縁の左右の「上手」「下手」（今の向きの画面の左右に合わせる）と、客席（正面）
+function drawFrontLabels(c, L, w, view, fs) {
+  const sd = stageSides(view), [, fy] = L.map(0, 0), ly = sd.frontAtTop ? fy - L.lab * 0.55 : fy + L.lab * 0.55, pad = L.sc * 0.1;
+  c.font = `700 ${fs}px sans-serif`;
+  c.fillStyle = THEME.audience;
+  c.textAlign = 'center';
+  c.textBaseline = 'middle';
+  c.fillText('客席（正面）', w / 2, ly);
+  c.font = `${fs * 0.8}px sans-serif`;
+  c.fillStyle = THEME.muted;
+  c.textAlign = 'left';
+  c.fillText(sd.left, L.ox + pad, ly);
+  c.textAlign = 'right';
+  c.fillText(sd.right, L.ox + L.sw - pad, ly);
+}
+// 丸の形の描き方（グループの形）。丸・四角・三角・ひし形の道すじを1か所で作る。画面・書き出し・凡例が同じ物を使う
+/* ===== 丸の形 ===== */
+// c に形の道すじを足す（beginPath は呼ぶ側）。circle は今までと同じ円。r は丸の半径。四角・三角・ひし形は同じくらいの面積に見える大きさ
+function tokenPath(c, shape, x, y, r) {
+  if (shape === 'square') {
+    const h = r * 0.92;
+    if (c.roundRect) c.roundRect(x - h, y - h, 2 * h, 2 * h, r * 0.32);
+    else c.rect(x - h, y - h, 2 * h, 2 * h); // 古いブラウザでは角丸にしない
+  } else if (shape === 'triangle') {
+    const R = r * 1.45;
+    c.moveTo(x, y - R);
+    c.lineTo(x + R * 0.866, y + R * 0.5);
+    c.lineTo(x - R * 0.866, y + R * 0.5);
+    c.closePath();
+  } else if (shape === 'diamond') {
+    const R = r * 1.25;
+    c.moveTo(x, y - R);
+    c.lineTo(x + R, y);
+    c.lineTo(x, y + R);
+    c.lineTo(x - R, y);
+    c.closePath();
+  } else {
+    c.arc(x, y, r, 0, 7);
+  }
+}
+// 位置を固定した丸の右上に付ける、小さな鍵（色に頼らず形で分かる。丸の色が何色でも読めるよう、白い鍵に黒い縁）
+function drawLockMark(c, x, y, r) {
+  const s = Math.max(6, r * 0.62), bx = x + r * 0.62, by = y - r * 0.62;
+  c.save();
+  c.lineWidth = Math.max(2, s * 0.26);
+  c.strokeStyle = '#0b0d12';
+  c.beginPath();
+  c.arc(bx, by - s * 0.15, s * 0.32, Math.PI, 0);
+  c.stroke(); // つる（黒い縁）
+  c.lineWidth = Math.max(1, s * 0.13);
+  c.strokeStyle = THEME.text;
+  c.beginPath();
+  c.arc(bx, by - s * 0.15, s * 0.32, Math.PI, 0);
+  c.stroke(); // つる（白）
+  c.fillStyle = THEME.text;
+  c.strokeStyle = '#0b0d12';
+  c.lineWidth = 1;
+  c.fillRect(bx - s * 0.5, by - s * 0.15, s, s * 0.72);
+  c.strokeRect(bx - s * 0.5, by - s * 0.15, s, s * 0.72); // 本体
+  c.restore();
+}
+// 形の中に名前を書くときの、縦の位置のずれ（三角は重心が下にある）
+const tokenLabelDy = (shape, r) => shape === 'triangle' ? r * 0.3 : 0;
+// ステージの描き方（drawStage）。画面・書き出しの画像・動画で共有する
 function drawStage(c, w, h, count, o) {
   const L = stageLayout(w, h, o.view), W = S.stage.w, D = S.stage.d, { map, sc } = L;
-  c.fillStyle = '#0b0e14';
+  c.fillStyle = THEME.bg;
   c.fillRect(0, 0, w, h);
-  c.fillStyle = '#18202d';
+  c.fillStyle = THEME.floor;
   c.fillRect(L.ox, L.oy, L.sw, L.sd);
+  { // 床の中央にごく薄いスポット（シアン 5%）
+    const gx = L.ox + L.sw / 2, gy = L.oy + L.sd / 2, gr = Math.max(L.sw, L.sd) * 0.65, g = c.createRadialGradient(gx, gy, 0, gx, gy, gr);
+    g.addColorStop(0, withAlpha(THEME.sel, GLOW.spotA));
+    g.addColorStop(1, withAlpha(THEME.sel, 0));
+    c.fillStyle = g;
+    c.fillRect(L.ox, L.oy, L.sw, L.sd);
+  }
   c.lineWidth = 1;
   for (let x = Math.ceil(-W / 2); x <= W / 2; x++) {
     const [a, b] = map(x, 0), [, d] = map(x, D);
-    c.strokeStyle = x === 0 ? '#3a4a63' : '#232d3d';
+    c.strokeStyle = x === 0 ? THEME.gridC : THEME.grid;
     c.beginPath();
     c.moveTo(a, b);
     c.lineTo(a, d);
@@ -1461,35 +2567,26 @@ function drawStage(c, w, h, count, o) {
   }
   for (let y = 1; y < D; y++) {
     const [a, b] = map(-W / 2, y), [e] = map(W / 2, y);
-    c.strokeStyle = '#232d3d';
+    c.strokeStyle = THEME.grid;
     c.beginPath();
     c.moveTo(a, b);
     c.lineTo(e, b);
     c.stroke();
   }
+  c.strokeStyle = THEME.edge;
+  c.strokeRect(L.ox, L.oy, L.sw, L.sd);
   // 客席側の線と文字
   const [fx1, fy] = map(-W / 2, 0), [fx2] = map(W / 2, 0);
-  c.strokeStyle = '#ffd93d';
+  c.strokeStyle = THEME.audience;
   c.lineWidth = Math.max(2, sc * 0.05);
   c.beginPath();
   c.moveTo(fx1, fy);
   c.lineTo(fx2, fy);
   c.stroke();
-  const fs = Math.max(11, Math.min(L.lab * 0.55, 22));
-  c.font = `700 ${fs}px sans-serif`;
-  c.fillStyle = '#ffd93d';
-  c.textAlign = 'center';
-  c.textBaseline = 'middle';
-  c.fillText('客席（正面）', w / 2, o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55);
-  c.font = `${fs * 0.8}px sans-serif`;
-  c.fillStyle = '#7d8aa0';
-  const [kx] = map(W / 2 - 0.1, 0), [sx] = map(-W / 2 + 0.1, 0);
-  const ly = o.view === 'audience' ? fy + L.lab * 0.55 : fy - L.lab * 0.55;
-  c.textAlign = kx > sx ? 'right' : 'left';
-  c.fillText('上手', kx, ly);
-  c.textAlign = kx > sx ? 'left' : 'right';
-  c.fillText('下手', sx, ly);
-  const pos = positionsAt(S.keys, count), R = Math.max(8, 0.27 * sc), n = pos.length;
+  if (o.bamiri !== false) drawFrontRuler(c, L, o.view); // 前の縁のバミリ番号
+  drawFrontLabels(c, L, w, o.view, Math.max(11, Math.min(L.lab * 0.55, 22))); // 客席（正面）と、画面の左右の上手・下手
+  const pos = positionsAt(S.keys, count), R = Math.max(8, sc * (pos.length > 20 ? 0.31 : 0.35)), n = pos.length;
+  const focus = o.selDancer >= 0 ? o.selDancer : o.me; // 光と動線を集める人：選んだ丸（なければ「自分」）
   // ベースの比較
   if (o.compare && S.baseKeys) {
     const bp = positionsAt(S.baseKeys, count);
@@ -1499,30 +2596,54 @@ function drawStage(c, w, h, count, o) {
       const [x, y] = map(p[0], p[1]);
       c.strokeStyle = S.dancers[i].color;
       c.beginPath();
-      c.arc(x, y, R * 0.9, 0, 7);
+      tokenPath(c, dancerShape(i), x, y, R * 0.9);
       c.stroke();
     });
     c.setLineDash([]);
   }
-  // 編集中：前の隊形から
+  // 編集中：前の隊形から。ふだんは紫の細い線、選んだ人（focus）の線だけシアンで太く光らせ、ほかは薄くする
   if (o.ghostPrev) {
     const prev = S.keys[o.ghostPrev - 1];
     c.lineWidth = 1.5;
     prev.pos.forEach((p, i) => {
       const [x, y] = map(p[0], p[1]), [x2, y2] = map(pos[i][0], pos[i][1]);
-      c.globalAlpha = 0.3;
+      c.globalAlpha = GLOW.ghostA;
       c.fillStyle = S.dancers[i].color;
       c.beginPath();
-      c.arc(x, y, R * 0.6, 0, 7);
+      tokenPath(c, dancerShape(i), x, y, R * 0.6);
       c.fill();
-      c.globalAlpha = 0.45;
-      c.strokeStyle = S.dancers[i].color;
+      if (i === focus) return;
+      c.globalAlpha = focus >= 0 ? GLOW.pathDim : GLOW.pathA;
+      c.strokeStyle = THEME.path;
       c.beginPath();
       c.moveTo(x, y);
       c.lineTo(x2, y2);
       c.stroke();
     });
     c.globalAlpha = 1;
+    if (focus >= 0 && prev.pos[focus] && pos[focus]) {
+      const [x, y] = map(prev.pos[focus][0], prev.pos[focus][1]), [x2, y2] = map(pos[focus][0], pos[focus][1]);
+      const len = hyp(x2 - x, y2 - y);
+      glow(c, THEME.pathFocus, GLOW.path, () => {
+        c.strokeStyle = THEME.pathFocus;
+        c.fillStyle = THEME.pathFocus;
+        c.lineWidth = 2.6;
+        c.lineCap = 'round';
+        c.beginPath();
+        c.moveTo(x, y);
+        c.lineTo(x2, y2);
+        c.stroke();
+        if (len > R * 2.2) { // 矢印は丸の手前に置く
+          const ux = (x2 - x) / len, uy = (y2 - y) / len, bx = x2 - ux * (R + 3), by = y2 - uy * (R + 3), hs = 7;
+          c.beginPath();
+          c.moveTo(bx, by);
+          c.lineTo(bx - ux * hs - uy * hs * 0.6, by - uy * hs + ux * hs * 0.6);
+          c.lineTo(bx - ux * hs + uy * hs * 0.6, by - uy * hs - ux * hs * 0.6);
+          c.closePath();
+          c.fill();
+        }
+      });
+    }
   }
   // 次の位置への矢印
   const ki = keyIndexAt(count), nextK = S.keys[ki + 1];
@@ -1533,8 +2654,14 @@ function drawStage(c, w, h, count, o) {
     const [x, y] = map(pos[i][0], pos[i][1]), [x2, y2] = map(nextK.pos[i][0], nextK.pos[i][1]);
     if (hyp(x2 - x, y2 - y) < R * 0.8) return;
     const isMe = i === o.me;
-    c.strokeStyle = S.dancers[i].color;
-    c.globalAlpha = isMe ? 0.95 : 0.4;
+    const ac = isMe ? THEME.sel : THEME.path;
+    c.save();
+    if (isMe) {
+      c.shadowColor = THEME.sel;
+      c.shadowBlur = GLOW.path;
+    }
+    c.strokeStyle = ac;
+    c.globalAlpha = isMe ? 0.95 : GLOW.pathA;
     c.lineWidth = isMe ? 3 : 1.5;
     c.setLineDash(isMe ? [] : [5, 4]);
     c.beginPath();
@@ -1548,16 +2675,17 @@ function drawStage(c, w, h, count, o) {
     c.lineTo(x2 - hs * Math.cos(a - 0.45), y2 - hs * Math.sin(a - 0.45));
     c.lineTo(x2 - hs * Math.cos(a + 0.45), y2 - hs * Math.sin(a + 0.45));
     c.closePath();
-    c.fillStyle = S.dancers[i].color;
+    c.fillStyle = ac;
     c.fill();
     if (isMe) {
       c.globalAlpha = 0.5;
       c.beginPath();
-      c.arc(x2, y2, R * 1.05, 0, 7);
+      tokenPath(c, dancerShape(i), x2, y2, R * 1.05);
       c.setLineDash([3, 3]);
       c.stroke();
       c.setLineDash([]);
     }
+    c.restore();
     c.globalAlpha = 1;
   });
   // クロスの場所
@@ -1566,7 +2694,7 @@ function drawStage(c, w, h, count, o) {
     const mine = o.me >= 0 && (cr.a === o.me || cr.b === o.me);
     if (o.me >= 0 && !mine && !o.ghostPrev) return;
     const [x, y] = map(cr.pt[0], cr.pt[1]), z = mine ? 9 : 6;
-    c.strokeStyle = '#ffd93d';
+    c.strokeStyle = THEME.warn;
     c.lineWidth = mine ? 3 : 2;
     c.globalAlpha = mine ? 1 : 0.8;
     c.beginPath();
@@ -1575,29 +2703,63 @@ function drawStage(c, w, h, count, o) {
     c.moveTo(x + z, y - z);
     c.lineTo(x - z, y + z);
     c.stroke();
-    c.globalAlpha = 1;
-  });
-  // ダンサー
-  const order = [...Array(n).keys()].sort((a, b) => (a === o.me) - (b === o.me));
-  order.forEach(i => {
-    const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, rr = isMe ? R * 1.35 : R;
-    c.globalAlpha = o.me >= 0 && !isMe ? 0.55 : 1;
-    c.fillStyle = d.color;
-    c.beginPath();
-    c.arc(x, y, rr, 0, 7);
-    c.fill();
-    c.lineWidth = isMe || i === o.selDancer ? 3 : 1;
-    c.strokeStyle = isMe || i === o.selDancer ? '#fff' : '#0008';
-    c.stroke();
-    if (o.names) {
-      c.fillStyle = '#111';
-      c.font = `700 ${Math.max(9, rr * 0.78)}px sans-serif`;
-      c.textAlign = 'center';
-      c.textBaseline = 'middle';
-      c.fillText(d.name.slice(0, 2), x, y + 0.5);
+    if (cr.intended) { // 意図したクロス（ロック）：×のまわりに輪
+      c.lineWidth = 1.5;
+      c.beginPath();
+      c.arc(x, y, z + 4, 0, 7);
+      c.stroke();
     }
     c.globalAlpha = 1;
   });
+  // ダンサー（選んだ丸を最後＝いちばん上に描く）
+  const order = [...Array(n).keys()].sort((a, b) => ((a === o.me) - (b === o.me)) || ((a === o.selDancer) - (b === o.selDancer)));
+  order.forEach(i => {
+    const [x, y] = map(pos[i][0], pos[i][1]), d = S.dancers[i], isMe = i === o.me, isSel = i === o.selDancer, rr = isMe ? R * 1.35 : R, shape = dancerShape(i);
+    c.globalAlpha = focus >= 0 && !isMe && !isSel ? GLOW.dim : 1;
+    if (isSel) { // 選んだ丸：光る輪
+      glow(c, THEME.sel, GLOW.sel, () => {
+        c.strokeStyle = THEME.sel;
+        c.lineWidth = 2.5;
+        c.beginPath();
+        tokenPath(c, shape, x, y, rr + 4);
+        c.stroke();
+      });
+    }
+    c.fillStyle = d.color;
+    c.beginPath();
+    tokenPath(c, shape, x, y, rr);
+    c.fill();
+    c.lineWidth = isMe ? 3 : 1;
+    c.strokeStyle = isMe ? THEME.text : '#0008';
+    c.stroke();
+    if (o.lockPos && o.lockPos.includes(i)) drawLockMark(c, x, y, rr); // 位置を固定した丸に鍵の印
+    // 名前：丸が小さい（人数が多い）画面では、自分以外は丸の中に書かない（選んだ丸は下の吹き出しで）
+    if (o.names && (!o.screen || R >= 11 || isMe)) {
+      c.fillStyle = THEME.onToken;
+      c.font = `700 ${Math.max(9, rr * 0.78)}px sans-serif`;
+      c.textAlign = 'center';
+      c.textBaseline = 'middle';
+      c.fillText(d.name.slice(0, 2), x, y + 0.5 + tokenLabelDy(shape, rr));
+    }
+    c.globalAlpha = 1;
+  });
+  if (o.screen && R < 11 && o.selDancer >= 0 && pos[o.selDancer]) { // 小さい丸を選んだとき、名前の吹き出し
+    const [x, y] = map(pos[o.selDancer][0], pos[o.selDancer][1]), nm = S.dancers[o.selDancer].name;
+    c.font = '700 12px sans-serif';
+    const bw = c.measureText(nm).width + 18, by = Math.max(12, y - R - 18);
+    c.fillStyle = THEME.panel2;
+    c.strokeStyle = THEME.sel;
+    c.lineWidth = 1;
+    c.beginPath();
+    if (c.roundRect) c.roundRect(x - bw / 2, by - 10, bw, 20, 10);
+    else c.rect(x - bw / 2, by - 10, bw, 20); // 古いブラウザでは角丸にしない
+    c.fill();
+    c.stroke();
+    c.fillStyle = THEME.text;
+    c.textAlign = 'center';
+    c.textBaseline = 'middle';
+    c.fillText(nm, x, by + 0.5);
+  }
   // 照明
   if (o.lights !== false) {
     const Lt = lightAt(count);
@@ -1624,30 +2786,32 @@ function drawStage(c, w, h, count, o) {
         c.strokeStyle = S.dancers[i].color;
         c.lineWidth = i === o.me ? 3 : 1.5;
         c.beginPath();
-        c.arc(x, y, i === o.me ? R * 1.35 : R, 0, 7);
+        tokenPath(c, dancerShape(i), x, y, i === o.me ? R * 1.35 : R);
         c.stroke();
       });
       c.globalAlpha = 1;
     }
     const fs2 = Math.max(11, Math.min(sc * 0.32, 26));
+    const rulerTop = o.bamiri !== false ? rulerTopPad(L, o.view) : 0; // ダンサー目線では前の縁（番号）が上なので、その下から書く
     c.font = `700 ${fs2}px sans-serif`;
     c.textBaseline = 'top';
     c.textAlign = 'left';
     if (Lt.name) {
-      c.fillStyle = '#ffd93d';
-      c.fillText('💡 ' + Lt.name, L.ox + 6, L.oy + 6);
+      c.fillStyle = THEME.text;
+      c.fillText('💡 ' + Lt.name, L.ox + 6, L.oy + 6 + rulerTop);
     }
     const nq = nextCue(count, 8);
     if (nq && count >= 0) {
       const left = Math.ceil(nq.at - count - 1e-6);
       c.textAlign = 'center';
-      c.fillStyle = nq.kind === 'memo' ? '#7fe0ff' : '#ffb547';
+      c.fillStyle = nq.kind === 'memo' ? '#7fe0ff' : THEME.text;
       c.font = `800 ${fs2 * 1.15}px sans-serif`;
-      c.fillText(`あと${left}：${nq.name}`, L.ox + L.sw / 2, L.oy + 6);
+      c.fillText(`あと${left}：${nq.name}`, L.ox + L.sw / 2, L.oy + 6 + rulerTop);
     }
   }
   return L;
 }
+// ステージの大きさ合わせ・1コマの描き直し・「自分」の案内文
 function fitCanvas() {
   const wrap = $('#stageWrap'), dpr = window.devicePixelRatio || 1;
   let w, h;
@@ -1668,21 +2832,33 @@ function fitCanvas() {
   requestRender();
 }
 let lastLayout = null;
+const beatEls = $('#beats').children;
+let legendText = '';
 function render() {
   const dpr = window.devicePixelRatio || 1, w = cv.width / dpr, h = cv.height / dpr;
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
   const editing = isEditable(), k = S.keys[ui.sel];
   lastLayout = drawStage(ctx, w, h, ui.count, {
-    view: ui.view, me: ui.me, compare: ui.compare, names: ui.showNames, showPaths: ui.showPaths && !editing,
-    ghostPrev: editing && ui.sel > 0 ? ui.sel : 0, selDancer: editing ? ui.selDancer : -1,
+    view: ui.view, me: ui.me, compare: ui.compare, names: ui.showNames, showPaths: ui.showPaths && !editing, bamiri: ui.showBamiri,
+    ghostPrev: editing && ui.sel > 0 ? ui.sel : 0, selDancer: editing ? ui.selDancer : -1, screen: true,
+    lockPos: lockMarksAt(ui.count),
   });
   $('#countDisp').textContent = cLabel(ui.count);
   $('#countBig').textContent = document.body.classList.contains('proj') ? cLabel(ui.count) : '';
   const t = S.offset + ui.count * beatSec();
+  const bi = ui.count >= 0 ? Math.floor(ui.count + 1e-6) % 8 : -1; // 今の拍の点（8つのうち1つだけ光る）
+  for (let i = 0; i < beatEls.length; i++) beatEls[i].classList.toggle('on', i === bi);
+  const lg = (S.groups && S.groups.length ? groupLegendText() + '　' : '') + '薄い丸と線＝前の隊形からの動き　× ＝クロス' + (ui.me >= 0 ? '　矢印＝自分の次の位置' : '');
+  if (lg !== legendText) {
+    legendText = lg;
+    $('#stLegend').textContent = lg;
+  }
+  if (ui.card === 'dancer') fillDancerCard();
   $('#timeDisp').textContent = t >= 0 ? `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}` : '';
   renderMeInfo();
   renderTimeline();
   $('#btnPlay').textContent = ui.playing ? '⏸ 停止' : '▶ 再生';
+  document.body.classList.toggle('playing', ui.playing);
   $('#projPlay').textContent = ui.playing ? '⏸' : '▶';
 }
 function renderMeInfo() {
@@ -1691,12 +2867,20 @@ function renderMeInfo() {
     box.style.display = 'none';
     return;
   }
-  const i = keyIndexAt(ui.count), nk = S.keys[i + 1], pos = positionsAt(S.keys, ui.count)[ui.me];
+  const i = keyIndexAt(ui.count), nk = S.keys[i + 1], all = positionsAt(S.keys, ui.count), pos = all[ui.me];
   box.style.display = 'block';
   box.textContent = '';
   const nameEl = el('b', { text: S.dancers[ui.me].name, style: `color:${S.dancers[ui.me].color}` });
+  const info = []; // 立ち位置のバミリ番号（出す設定のとき）と、まわりの人
+  if (ui.showBamiri) {
+    const h = S.keys[i].pos[ui.me];
+    info.push(`📍 立ち位置 ${bamiriText(h[0], h[1])}${nk ? ` → 次 ${bamiriText(nk.pos[ui.me][0], nk.pos[ui.me][1])}` : ''}`);
+  }
+  info.push(`👥 まわり（画面の左右） ${neighborText(neighborsOf(all, ui.me), S.dancers.map(x => x.name), ui.view)}`);
+  const addInfo = () => info.forEach(t => box.append(el('div', { text: t, style: 'font-size:13px;color:var(--muted)' })));
   if (!nk) {
     box.append(nameEl, ` ／ 最後の隊形（${S.keys[i].name}）です`);
+    addInfo();
     return;
   }
   const dx = nk.pos[ui.me][0] - pos[0], dy = nk.pos[ui.me][1] - pos[1], d = hyp(dx, dy);
@@ -1711,20 +2895,22 @@ function renderMeInfo() {
     const cr = crossesInto(j).find(x => (x.a === ui.me || x.b === ui.me) && x.count >= ui.count - 0.5);
     if (cr) {
       const other = cr.a === ui.me ? cr.b : cr.a;
-      extra.push(`✕ ${cLabel(cr.count)}ごろ ${S.dancers[other].name} とクロス（${cr.front === ui.me ? 'あなたが前' : 'あなたが後ろ'}を通る）`);
+      extra.push(`✕ ${cLabel(cr.count)}ごろ ${S.dancers[other].name} とクロス（${cr.front === ui.me ? 'あなたが前' : 'あなたが後ろ'}を通る${cr.intended ? '・意図したクロス' : ''}）`);
     }
   }
   const nq = nextCue(ui.count);
   if (nq) extra.push(`💡 次のきっかけ ${cLabel(nq.at)}「${nq.name}」（あと${Math.ceil(nq.at - ui.count - 1e-6)}カウント）`);
+  addInfo();
   extra.forEach(t => box.append(el('div', { text: t, style: 'font-size:13px;color:var(--muted)' })));
 }
 function isEditable() {
   const k = S.keys[ui.sel];
   return !ui.playing && currentTab === 'edit' && k && Math.abs(ui.count - k.at) < 0.01;
 }
-
+// タイムライン（描く・押す・なぞる）
 /* ===== タイムライン ===== */
 const tl = $('#timeline'), tctx = tl.getContext('2d');
+const TL_KEY_Y = 44, TL_CUE_Y = 66; // 高さ80px のうち、隊形（●）の段と、照明・きっかけ（◆）の段
 function renderTimeline() {
   const dpr = window.devicePixelRatio || 1, w = tl.clientWidth, h = tl.clientHeight;
   if (tl.width !== Math.round(w * dpr) || tl.height !== Math.round(h * dpr)) {
@@ -1736,41 +2922,46 @@ function renderTimeline() {
   c.clearRect(0, 0, w, h);
   const total = S.totalEights * 8, px = w / total;
   for (let e = 0; e < S.totalEights; e++) {
-    c.fillStyle = e % 2 ? '#1d2532' : '#202937';
+    c.fillStyle = e % 2 ? THEME.tlB : THEME.tlA;
     c.fillRect(e * 8 * px, 0, 8 * px, h);
     if (S.energy && S.energy[e] != null) {
-      const eh = S.energy[e] * (h - 30);
-      c.fillStyle = '#3b4f6d';
-      c.fillRect(e * 8 * px + 1, h - 4 - eh, 8 * px - 2, eh);
+      const eh = S.energy[e] * (h - 40);
+      c.fillStyle = THEME.energy;
+      c.fillRect(e * 8 * px + 1, h - 3 - eh, 8 * px - 2, eh);
     }
     const step = S.totalEights > 48 ? 8 : S.totalEights > 24 ? 4 : 2;
     if (e % step === 0) {
-      c.fillStyle = '#8a96aa';
-      c.font = '10px sans-serif';
+      c.fillStyle = THEME.muted;
+      c.font = '11px sans-serif';
       c.textAlign = 'left';
       c.textBaseline = 'top';
-      c.fillText(String(e + 1), e * 8 * px + 2, 2);
+      c.fillText(String(e + 1), e * 8 * px + 3, 3);
     }
   }
   S.keys.forEach((k, i) => {
-    const x = k.at * px, y = 30;
+    const x = Math.max(6, k.at * px), y = TL_KEY_Y;
     if (i > 0) {
       const ms = Math.max(S.keys[i - 1].at, k.at - k.move);
-      c.strokeStyle = '#ffb547';
+      c.strokeStyle = THEME.path;
       c.lineWidth = 3;
       c.beginPath();
-      c.moveTo(ms * px, y);
+      c.moveTo(Math.max(6, ms * px), y);
       c.lineTo(x, y);
       c.stroke();
     }
-    c.fillStyle = i === ui.sel ? '#4fb3ff' : '#e8ecf3';
+    c.fillStyle = i === ui.sel ? THEME.sel : THEME.text;
     c.beginPath();
-    c.arc(x, y, i === ui.sel ? 6 : 4.5, 0, 7);
+    c.arc(x, y, i === ui.sel ? 7 : 5, 0, 7);
     c.fill();
+    if (i === ui.sel) {
+      c.strokeStyle = THEME.bg;
+      c.lineWidth = 2;
+      c.stroke();
+    }
   });
   (S.cues || []).forEach(q => {
-    const x = q.at * px, y = 50, z = q.id === ui.selCue ? 6 : 4.5;
-    c.fillStyle = q.kind === 'memo' ? '#7fe0ff' : q.kind === 'black' ? '#000' : q.kind === 'color' ? q.color : '#ffd93d';
+    const x = Math.max(7, q.at * px), y = TL_CUE_Y, z = q.id === ui.selCue ? 7 : 6;
+    c.fillStyle = q.kind === 'memo' ? '#7fe0ff' : q.kind === 'black' ? '#000' : q.kind === 'color' ? q.color : q.kind === 'spot' ? '#ffffff' : '#ffd93d';
     c.beginPath();
     c.moveTo(x, y - z);
     c.lineTo(x + z, y);
@@ -1778,29 +2969,38 @@ function renderTimeline() {
     c.lineTo(x - z, y);
     c.closePath();
     c.fill();
-    c.strokeStyle = q.id === ui.selCue ? '#4fb3ff' : '#fff8';
-    c.lineWidth = 1;
+    c.strokeStyle = q.id === ui.selCue ? THEME.sel : 'rgba(255,255,255,.55)';
+    c.lineWidth = q.id === ui.selCue ? 2.5 : 1;
     c.stroke();
   });
-  const x = Math.max(0, ui.count) * px;
-  c.strokeStyle = '#ff6b6b';
-  c.lineWidth = 2;
-  c.beginPath();
-  c.moveTo(x, 0);
-  c.lineTo(x, h);
-  c.stroke();
+  const x = Math.max(1, Math.max(0, ui.count) * px);
+  glow(c, THEME.now, GLOW.now, () => { // 今（再生位置）の線と頭の三角：要修正の赤とは別の、シアン
+    c.strokeStyle = THEME.now;
+    c.fillStyle = THEME.now;
+    c.lineWidth = 2;
+    c.beginPath();
+    c.moveTo(x, 0);
+    c.lineTo(x, h);
+    c.stroke();
+    c.beginPath();
+    c.moveTo(x - 5, 0);
+    c.lineTo(x + 5, 0);
+    c.lineTo(x, 7);
+    c.closePath();
+    c.fill();
+  });
 }
 function tlSeek(ev) {
   const r = tl.getBoundingClientRect(), total = S.totalEights * 8, c = ((ev.clientX - r.left) / r.width) * total;
   let hit = -1;
   S.keys.forEach((k, i) => {
-    if (Math.abs(k.at - c) * r.width / total < 12 && Math.abs(ev.clientY - r.top - 30) < 18) hit = i;
+    if (Math.abs(k.at - c) * r.width / total < 12 && Math.abs(ev.clientY - r.top - TL_KEY_Y) < 18) hit = i;
   });
   if (hit >= 0) {
     selectKey(hit);
     return;
   }
-  const cq = (S.cues || []).find(q => Math.abs(q.at - c) * r.width / total < 12 && Math.abs(ev.clientY - r.top - 50) < 12);
+  const cq = (S.cues || []).find(q => Math.abs(q.at - c) * r.width / total < 12 && Math.abs(ev.clientY - r.top - TL_CUE_Y) < 12);
   if (cq) {
     selectCue(cq.id);
     return;
@@ -1825,11 +3025,12 @@ tl.addEventListener('pointermove', e => {
   }
 });
 tl.addEventListener('pointerup', () => { tlDown = false; });
-
+// 再生・停止・1コマごとの進み（tick）
 /* ===== 再生 ===== */
 function setCount(c) {
   ui.count = c;
-  if (audioReady) {
+  if (ytActive()) ytSeekCount(c);
+  else if (audioReady) {
     const t = S.offset + c * beatSec();
     audio.currentTime = Math.max(0, t);
   }
@@ -1841,6 +3042,7 @@ function setCount(c) {
 }
 async function play() {
   if (ui.playing) return;
+  if (ytActive()) return ytPlay(); // 動画の再生はプレーヤーに頼む。始まったら onStateChange で ui.playing が立つ
   if (ui.count >= S.totalEights * 8 - 0.5) setCount(0);
   ui.playing = true;
   ui.clockT0 = performance.now();
@@ -1863,6 +3065,7 @@ async function play() {
 function pause() {
   if (!ui.playing) return;
   ui.playing = false;
+  if (ytActive()) ytPause();
   if (audioReady) audio.pause();
   try { if (wakeLock) {
     wakeLock.release();
@@ -1874,7 +3077,8 @@ function pause() {
 const toggle = () => ui.playing ? pause() : play();
 function tick() {
   if (ui.playing) {
-    if (audioReady) ui.count = (audio.currentTime - S.offset) / beatSec();
+    if (ytActive()) ui.count = ytCount(); // 動画の時刻が正
+    else if (audioReady) ui.count = (audio.currentTime - S.offset) / beatSec();
     else ui.count = ui.clockC0 + (performance.now() - ui.clockT0) / 1000 / beatSec() * ui.rate;
     const bi = Math.floor(ui.count);
     if ($('#clickOn').checked && bi >= 0 && lastBeat !== null && bi !== lastBeat) clickSound(bi % 8 === 0);
@@ -1893,6 +3097,7 @@ function tick() {
     }
     needRender = true;
   }
+  if (!ui.playing && ytActive() && ytFollowIdle()) needRender = true; // 止まっている間の、動画側での位置の移動
   if (needRender) {
     needRender = false;
     render();
@@ -1900,7 +3105,7 @@ function tick() {
   }
   requestAnimationFrame(tick);
 }
-
+// ステージ上の丸のドラッグ
 /* ===== ステージ上のドラッグ ===== */
 function ptr(e) {
   const r = cv.getBoundingClientRect();
@@ -1922,21 +3127,36 @@ cv.addEventListener('pointerdown', e => {
     }
   });
   if (best >= 0 && bd < Math.max(R, 22)) {
+    ui.selDancer = best;
+    setCard('dancer'); // 選んだ丸のカードを出す
+    if (isLockedPos(k, best)) { // ロック中の丸は動かさない（選ぶだけ。カードで外すと動かせる）
+      toast('ロック中です。丸のカードの「ロックを外す」で動かせます', 3200);
+      requestRender();
+      e.preventDefault();
+      return;
+    }
     // 押しただけでは履歴に積まない（実際に動いた最初の時に1回だけ積む。下の pointermove）
     ui.drag = best;
     ui.dragMoved = false;
-    ui.selDancer = best;
     cv.setPointerCapture(e.pointerId);
     requestRender();
     e.preventDefault();
   } else {
+    const cr = crossHitAt(x, y); // ステージの × を押すと、意図したクロスの印を付け外し
+    if (cr) {
+      toggleCrossIntent(cr.a, cr.b);
+      e.preventDefault();
+      return;
+    }
     ui.selDancer = -1;
+    if (ui.card === 'dancer') setCard(null);
     requestRender();
   }
 });
 cv.addEventListener('pointermove', e => {
   if (ui.drag == null) return;
   const [x, y] = ptr(e), k = S.keys[ui.sel];
+  if (isLockedPos(k, ui.drag)) return; // ロック中の丸は動かさない
   let [mx, my] = lastLayout.inv(x, y);
   if ($('#snap').checked) {
     mx = Math.round(mx * 4) / 4;
@@ -1963,8 +3183,7 @@ const endDrag = () => {
 };
 cv.addEventListener('pointerup', endDrag);
 cv.addEventListener('pointercancel', endDrag);
-// 編集・照明・アドバイス・練習・書き出しの各タブ
-// 戻す・やり直す：作品の全部を置き換え、選びを範囲内に直してから描き直す
+// 戻す・やり直す・変更のあとの描き直し（作品の全部を置き換え、選びを範囲内に直してから描き直す）
 let songNoticed = false; // 「曲は読み込んだ物のまま」の知らせは1回だけ
 // 曲を読み込む前の作品に戻したとき：曲（analysis・audio）は S の外にあるので、作品の盛り上がりと食い違う
 function songMismatch() {
@@ -2006,10 +3225,261 @@ function changed(all) {
   else {
     renderKeyChips();
     renderAdvice();
+    renderLockCard(); // クロスの組・固定の一覧は、動かした・反転したあとで変わる
   }
   requestRender();
 }
-
+// ダンサーの色の選び：既定の10色（PALETTE）の丸ボタンの列から選ぶ。自由な色の入力は入れない
+// （赤・暗い色が選べると、案Cの「赤は要修正だけ」と丸の中の濃い字が読めなくなるため）。
+// 保存の形は変えない（dancers[i].color はもともと保存している）。古い作品でパレットに無い色の人は、その色のまま出し、選び直せる。
+/* ===== 色の選び ===== */
+const isInPalette = c => PALETTE.includes(String(c).toLowerCase());
+// 1人の色を変える。同じ色なら何もしない。変えるときは1つの元に戻す単位（名前の変更と同じ）
+function setDancerColor(i, color) {
+  const d = S.dancers[i];
+  if (!d || d.color === color) return;
+  pushUndo();
+  d.color = color;
+  save();
+  fillSetup();
+  syncDancerPalette();
+  requestRender();
+}
+// 色の丸ボタンの列を host に作る。パレットに無い今の色は、先頭に「いまの色」として出す
+function fillPalette(host, i) {
+  const cur = S.dancers[i].color, list = isInPalette(cur) ? PALETTE : [cur, ...PALETTE];
+  host.textContent = '';
+  host.dataset.d = String(i);
+  host.setAttribute('role', 'group');
+  host.setAttribute('aria-label', `${S.dancers[i].name} の色を選ぶ`);
+  list.forEach((c, n) => {
+    const on = c.toLowerCase() === String(cur).toLowerCase(), extra = !isInPalette(c);
+    host.append(el('button', {
+      type: 'button', class: 'palbtn' + (on ? ' on' : '') + (extra ? ' extra' : ''), style: `background:${c}`,
+      'aria-pressed': on ? 'true' : 'false',
+      'aria-label': extra ? 'いまの色（パレットに無い色）' : `色 ${n + 1}${on ? '（いま）' : ''}`,
+      text: on ? '✓' : '',
+      onclick: () => setDancerColor(i, c) }));
+  });
+}
+// 設定の行の色見本を押すと、その下に色の列が開く（もう一度押すと閉じる）。ほかの列は閉じる
+function togglePalette(btn, host, i) {
+  const open = host.hidden;
+  document.querySelectorAll('#dancerList .palrow').forEach(h => { h.hidden = true; });
+  document.querySelectorAll('#dancerList .swbtn').forEach(b => b.setAttribute('aria-expanded', 'false'));
+  if (!open) return;
+  fillPalette(host, i);
+  host.hidden = false;
+  btn.setAttribute('aria-expanded', 'true');
+}
+// 丸のカードの色見本：押すとカードの中に色の列が開く。選んでいる人が変わったら閉じる
+function syncDancerPalette() {
+  const host = $('#cardDancerPal');
+  if (!host) return;
+  if (host.hidden) return;
+  if (ui.card !== 'dancer' || ui.selDancer < 0 || host.dataset.d !== String(ui.selDancer)) {
+    host.hidden = true;
+    $('#cardDancerSw').setAttribute('aria-expanded', 'false');
+    return;
+  }
+  fillPalette(host, ui.selDancer);
+}
+$('#cardDancerSw').addEventListener('click', () => {
+  const host = $('#cardDancerPal');
+  if (ui.selDancer < 0) return;
+  host.hidden = !host.hidden;
+  $('#cardDancerSw').setAttribute('aria-expanded', host.hidden ? 'false' : 'true');
+  if (!host.hidden) fillPalette(host, ui.selDancer);
+});
+// グループの画面：設定タブのグループの一覧（名前・形・削除・追加）、メンバーの行と丸のカードでのグループの選び
+// 変えるときは、1つの操作＝1つの元に戻す単位。グループが1つも無くなったら S.groups は書かない（空の入れ物を残さない）
+/* ===== グループの画面 ===== */
+const hasGroups = () => !!(S.groups && S.groups.length);
+function afterGroupChange() {
+  save();
+  fillSetup();
+  requestRender();
+}
+function setDancerGroup(i, gid) {
+  const d = S.dancers[i];
+  if (!d || (d.group || '') === gid) return;
+  pushUndo();
+  if (gid) d.group = gid;
+  else delete d.group;
+  afterGroupChange();
+}
+const groupOptionText = g => `${GROUP_GLYPH[g.shape]} ${g.name}`;
+// メンバーの行に置く、グループの選び（グループが1つも無いときは置かない）
+function groupSelect(i) {
+  const d = S.dancers[i], s = el('select', { 'aria-label': `${d.name} のグループ` });
+  s.append(el('option', { value: '', text: 'グループなし（丸）' }));
+  S.groups.forEach(g => s.append(el('option', { value: g.id, text: groupOptionText(g) })));
+  s.value = d.group || '';
+  s.addEventListener('change', () => setDancerGroup(i, s.value));
+  return s;
+}
+function addGroup() {
+  if (hasGroups() && S.groups.length >= MAX_GROUPS) {
+    toast(`グループは${MAX_GROUPS}つまでです`);
+    return;
+  }
+  pushUndo();
+  if (!S.groups) S.groups = [];
+  S.groups.push({ id: nextGroupId(), name: `グループ${S.groups.length + 1}`, shape: nextGroupShape() });
+  afterGroupChange();
+  toast('グループを足しました。メンバーの行で、その人のグループを選んでください', 3600);
+}
+function renameGroup(id, text, input) {
+  const g = groupById(id);
+  if (!g) return;
+  const nv = String(text).trim().slice(0, GROUP_NAME_MAX) || g.name;
+  input.value = nv;
+  if (nv === g.name) return;
+  pushUndo();
+  g.name = nv;
+  afterGroupChange();
+}
+function setGroupShape(id, shape) {
+  const g = groupById(id);
+  if (!g || g.shape === shape || !GROUP_SHAPE_LIST.includes(shape)) return;
+  pushUndo();
+  g.shape = shape;
+  afterGroupChange();
+}
+function deleteGroup(id) {
+  if (!groupById(id)) return;
+  pushUndo();
+  S.groups = S.groups.filter(g => g.id !== id);
+  S.dancers.forEach(d => { if (d.group === id) delete d.group; });
+  if (!S.groups.length) delete S.groups;
+  afterGroupChange();
+}
+// 設定タブのグループの一覧。メンバーの一覧は、グループがあるときは1列にして、行の中にグループの選びを置く
+function fillGroups() {
+  const box = $('#groupList');
+  box.textContent = '';
+  $('#dancerList').classList.toggle('has-groups', hasGroups());
+  $('#btnAddGroup').disabled = hasGroups() && S.groups.length >= MAX_GROUPS;
+  (S.groups || []).forEach(g => {
+    const name = el('input', { type: 'text', maxlength: String(GROUP_NAME_MAX), value: g.name, 'aria-label': 'グループの名前' });
+    name.addEventListener('change', () => renameGroup(g.id, name.value, name));
+    const members = S.dancers.filter(d => d.group === g.id).length;
+    const seg = el('div', { class: 'seg', role: 'group', 'aria-label': `${g.name} の形` },
+      GROUP_SHAPE_LIST.map(s => el('button', {
+        type: 'button', 'aria-pressed': g.shape === s ? 'true' : 'false', 'data-shape': s,
+        text: `${GROUP_GLYPH[s]} ${GROUP_SHAPES[s]}`, onclick: () => setGroupShape(g.id, s) })));
+    box.append(el('div', { class: 'grow' }, [
+      el('div', { class: 'grow-h' }, [name, el('span', { class: 'muted', text: `${members}人` }),
+        el('button', { type: 'button', class: 'small', text: '削除', 'aria-label': `${g.name} を削除`, onclick: () => deleteGroup(g.id) })]),
+      seg]));
+  });
+}
+$('#btnAddGroup').addEventListener('click', addGroup);
+// 丸のカードのグループの選び。描き直しのたびに呼ばれるので、選びの中身は groups が変わったときだけ作り直す（開いた選びを閉じない）
+let groupSelSig = '';
+function fillDancerGroup(i) {
+  const row = $('#cardDancerGroupRow'), sel = $('#cardDancerGroupSel');
+  row.hidden = !hasGroups();
+  if (!hasGroups()) {
+    groupSelSig = '';
+    return;
+  }
+  const sig = JSON.stringify(S.groups);
+  if (sig !== groupSelSig) {
+    groupSelSig = sig;
+    sel.textContent = '';
+    sel.append(el('option', { value: '', text: 'グループなし（丸）' }));
+    S.groups.forEach(g => sel.append(el('option', { value: g.id, text: groupOptionText(g) })));
+  }
+  const want = (S.dancers[i] && S.dancers[i].group) || '';
+  if (sel.value !== want) sel.value = want;
+}
+$('#cardDancerGroupSel').addEventListener('change', e => {
+  if (ui.selDancer >= 0) setDancerGroup(ui.selDancer, e.target.value);
+});
+// ロックの画面：丸のカードの「固定する／外す」・隊形のカードの固定の一覧と意図したクロスの付け外し・ステージの × を押して付け外し
+// 変えるときは、1つの操作＝1つの元に戻す単位（保存の形は core/locks.js）
+/* ===== ロックの画面 ===== */
+function commitLockChange() {
+  changed(false); // 保存・助言の描き直し・カードの一覧の描き直しまで行う
+}
+// ステージに鍵の印を出す人：カウントがちょうど隊形の時刻にあるとき、その隊形で固定している人（移動の途中では出さない）
+function lockMarksAt(count) {
+  const k = S.keys[keyIndexAt(count)];
+  return k && Math.abs(count - k.at) < 0.01 ? lockPosOf(k) : [];
+}
+// 丸のカード：選んだ丸を、いま選んでいる隊形で固定する・外す
+function fillDancerLock(i) {
+  const k = S.keys[ui.sel], on = !!k && isLockedPos(k, i), b = $('#btnLockDancer');
+  const text = on ? 'ロックを外す（動かせるようにする）' : 'この隊形で位置を固定する（ロック）';
+  if (b.textContent !== text) b.textContent = text;
+  b.setAttribute('aria-pressed', on ? 'true' : 'false');
+  $('#cardDancerLockHint').hidden = !on;
+}
+$('#btnLockDancer').addEventListener('click', () => {
+  const k = S.keys[ui.sel], i = ui.selDancer;
+  if (!k || i < 0 || i >= S.dancers.length) return;
+  const was = isLockedPos(k, i);
+  pushUndo();
+  toggleLockPos(k, i);
+  commitLockChange();
+  toast(was ? `${S.dancers[i].name} のロックを外しました。動かせます`
+    : `${S.dancers[i].name} の位置を固定しました（この隊形では、自動の直し・反転・中央寄せ・ドラッグでも動きません）`, 3600);
+});
+// 意図したクロスの付け外し（隊形 ui.sel に着く移動の中の2人。ステージの × とカードの一覧の両方から）
+function toggleCrossIntent(a, b) {
+  const k = S.keys[ui.sel];
+  if (!k || ui.sel <= 0) return;
+  const was = isIntendedCross(k, a, b);
+  pushUndo();
+  toggleLockCross(k, a, b);
+  commitLockChange();
+  toast(was ? '意図したクロスの印を外しました'
+    : `${nm(a)} と ${nm(b)} のクロスを「意図したクロス」にしました（ぶつかりの警告と行き先の入れ替えの対象から外れます）`, 3800);
+}
+// ステージの × の近く（18px 以内）を押したときの、そのクロス（無ければ null）
+function crossHitAt(sx, sy) {
+  if (ui.sel <= 0 || !lastLayout) return null;
+  let best = null, bd = 18;
+  crossesInto(ui.sel).forEach(cr => {
+    const [x, y] = lastLayout.map(cr.pt[0], cr.pt[1]), d = hyp(x - sx, y - sy);
+    if (d < bd) {
+      bd = d;
+      best = cr;
+    }
+  });
+  return best;
+}
+// 隊形のカード：固定している人の一覧・全部外す・クロスする組の一覧（押すと意図したクロスを付け外し）
+const CROSS_LIST_MAX = 12;
+function renderLockCard() {
+  const k = S.keys[ui.sel];
+  if (!k) return;
+  const L = lockPosOf(k);
+  $('#lockSummary').textContent = L.length ? `位置を固定している人（${L.length}人）：${names(L)}` : '位置を固定している人はいません（丸を押すと、カードで固定できます）';
+  $('#rowLockClear').hidden = !L.length;
+  const items = (ui.sel > 0 ? crossesInto(ui.sel) : []).map(cr => ({ a: cr.a, b: cr.b, on: cr.intended, now: true }));
+  lockCrossOf(k).forEach(c => { if (!items.some(x => x.a === c[0] && x.b === c[1])) items.push({ a: c[0], b: c[1], on: true, now: false }); });
+  items.sort((p, q) => (q.on - p.on) || (p.a - q.a) || (p.b - q.b));
+  const box = $('#crossList');
+  box.textContent = '';
+  $('#crossBox').hidden = !items.length;
+  items.slice(0, CROSS_LIST_MAX).forEach(it => box.append(el('button', {
+    type: 'button', class: 'small crossbtn', 'aria-pressed': it.on ? 'true' : 'false',
+    text: `${it.on ? '◎ 意図 ' : ''}${nm(it.a)} × ${nm(it.b)}${it.now ? '' : '（今は交わっていません）'}`,
+    onclick: () => toggleCrossIntent(it.a, it.b) })));
+  if (items.length > CROSS_LIST_MAX) box.append(el('span', { class: 'muted', text: `ほか ${items.length - CROSS_LIST_MAX} 組（ステージの × を押しても付け外しできます）` }));
+}
+$('#btnLockClear').addEventListener('click', () => {
+  const k = S.keys[ui.sel];
+  if (!k || !lockPosOf(k).length) return;
+  pushUndo();
+  delete k.lock.pos;
+  tidyLock(k);
+  commitLockChange();
+  toast('この隊形の位置の固定を全部外しました');
+});
+// 編集タブ：隊形の一覧・入力欄・追加・削除・形の当てはめ
 /* ===== 編集タブ ===== */
 let currentTab = 'edit';
 function selectKey(i) {
@@ -2018,6 +3488,7 @@ function selectKey(i) {
   setCount(S.keys[i].at);
   renderKeyChips();
   fillKeyForm();
+  setCard('key');
 }
 function renderKeyChips() {
   const box = $('#keyChips');
@@ -2035,16 +3506,19 @@ function renderKeyChips() {
 function fillKeyForm() {
   const k = S.keys[ui.sel];
   if (!k) return;
+  $('#cardKeyTitle').textContent = `隊形 ${ui.sel + 1}「${k.name}」`;
   $('#kName').value = k.name;
   $('#kEight').value = Math.floor(k.at / 8) + 1;
   $('#kCount').value = k.at % 8 + 1;
   $('#kMove').value = k.move;
   $('#kMove').disabled = ui.sel === 0;
+  renderLockCard();
 }
 $('#kName').addEventListener('change', e => {
   pushUndo();
   S.keys[ui.sel].name = e.target.value.slice(0, 20) || '隊形';
   changed(false);
+  fillKeyForm();
 });
 function atFromForm() {
   const e = Math.max(1, parseInt($('#kEight').value) || 1), c = Math.min(8, Math.max(1, parseInt($('#kCount').value) || 1));
@@ -2095,19 +3569,20 @@ $('#btnDelKey').addEventListener('click', () => {
     ui.sel = Math.max(0, ui.sel - 1);
     changed(true);
     setCount(S.keys[ui.sel].at);
+    setCard(null);
   });
 });
 $('#btnUndo').addEventListener('click', undo);
-$('#btnUndo2').addEventListener('click', undo);
 $('#btnRedo').addEventListener('click', redo);
-$('#btnRedo2').addEventListener('click', redo);
 Object.keys(TEMPLATES).forEach(t => $('#tplSel').append(el('option', { value: t, text: t })));
 $('#btnTpl').addEventListener('click', () => {
   const k = S.keys[ui.sel], spots = TEMPLATES[$('#tplSel').value](S.dancers.length, S.stage.w, S.stage.d);
   pushUndo();
   const from = ui.sel > 0 ? S.keys[ui.sel - 1].pos : k.pos;
-  k.pos = assignSpots(from, spots).map(p => [r2(p[0]), r2(p[1])]);
-  k.pos = clampPos(k.pos);
+  const anchor = [];
+  lockPosOf(k).forEach(i => { anchor[i] = k.pos[i]; }); // 位置を固定した人は、いまの座標のまま
+  setPos(k, assignSpots(from, spots, anchor).map(p => [r2(p[0]), r2(p[1])]));
+  setPos(k, clampPos(k.pos));
   if (k.name.startsWith('隊形')) k.name = $('#tplSel').value.replace(/（.*）/, '');
   changed(true);
   toast('前の隊形から近い人が近い場所に行くように割り当てました');
@@ -2115,16 +3590,64 @@ $('#btnTpl').addEventListener('click', () => {
 $('#btnMirror').addEventListener('click', () => {
   pushUndo();
   const k = S.keys[ui.sel];
-  k.pos = k.pos.map(p => [-p[0], p[1]]);
+  setPos(k, k.pos.map(p => [-p[0], p[1]]));
   changed(false);
 });
 $('#btnCenter').addEventListener('click', () => {
   pushUndo();
   const k = S.keys[ui.sel];
-  k.pos = centerPos(k.pos);
+  setPos(k, centerPos(k.pos));
   changed(false);
 });
 
+/* 選んだ物のカード：ふだんは出さず、隊形・丸（ダンサー）・照明を選んだときだけ、その物のカードを出す */
+function syncCards() {
+  // 選びが無くなっていたら、そのカードは閉じる
+  if (ui.card === 'dancer' && ui.selDancer < 0) ui.card = null;
+  if (ui.card === 'cue' && ui.selCue == null) ui.card = null;
+  $('#cardKey').hidden = ui.card !== 'key';
+  $('#cardDancer').hidden = ui.card !== 'dancer';
+  $('#cardCue').hidden = ui.card !== 'cue';
+  $('#editHint').hidden = ui.card !== null;
+  if (ui.card === 'dancer') fillDancerCard();
+  else syncDancerPalette();
+}
+function setCard(c) {
+  ui.card = c;
+  syncCards();
+}
+// 丸のカード：名前・色・今の位置（客席から見て。x は中央が0で上手＝右がプラス、y は客席側の端が0）
+function fillDancerCard() {
+  const i = ui.selDancer, d = S.dancers[i], k = S.keys[ui.sel];
+  if (!d || !k || !k.pos[i]) return;
+  const p = k.pos[i];
+  $('#cardDancerName').textContent = d.name;
+  $('#cardDancerSw').style.background = d.color;
+  syncDancerPalette();
+  fillDancerGroup(i);
+  fillDancerLock(i);
+  $('#cardDancerPos').textContent = `中央から${p[0] < 0 ? '左' : '右'} ${Math.abs(p[0]).toFixed(2)}m・前から ${p[1].toFixed(2)}m（客席から見て）`;
+  $('#cardDancerBami').textContent = `バミリ ${bamiriText(p[0], p[1])}`;
+  $('#cardDancerNear').textContent = `まわり（画面の左右） ${neighborText(neighborsOf(k.pos, i), S.dancers.map(x => x.name), ui.view)}`;
+  $('#btnSetMe').textContent = ui.me === i ? '「自分」を外す' : 'この人を「自分」にする';
+}
+$('#btnCloseKey').addEventListener('click', () => setCard(null));
+$('#btnCloseDancer').addEventListener('click', () => {
+  ui.selDancer = -1;
+  setCard(null);
+  requestRender();
+});
+$('#btnCloseCue').addEventListener('click', () => {
+  ui.selCue = null;
+  renderCueChips();
+  setCard(null);
+  requestRender();
+});
+$('#btnSetMe').addEventListener('click', () => {
+  setMe(ui.me === ui.selDancer ? -1 : ui.selDancer);
+  fillDancerCard();
+});
+// 編集タブの照明・きっかけ（◆ の追加とカード）／拍のクリック音
 /* 照明・きっかけ */
 Object.entries(LIGHT_KINDS).forEach(([k, v]) => $('#cKind').append(el('option', { value: k, text: v })));
 function fillCueTargets() {
@@ -2146,7 +3669,7 @@ function fillCueForm() {
   const q = S.cues.find(x => x.id === ui.selCue);
   $('#cKind').value = q ? q.kind : $('#cKind').options[0].value;
   $('#cName').value = q ? q.name : '';
-  $('#cColor').value = q ? q.color : '#ff3b6b';
+  $('#cColor').value = q ? q.color : '#7a5cff';
   $('#cTarget').value = q ? String(q.target) : '-1';
   $('#cFade').value = q ? q.fade : '';
   $('#cEight').value = q ? Math.floor(q.at / 8) + 1 : '';
@@ -2160,6 +3683,7 @@ function selectCue(id) {
   setCount(q.at);
   fillCueForm();
   renderCueChips();
+  setCard('cue');
 }
 function cueFromForm(at) {
   const kind = $('#cKind').value;
@@ -2168,36 +3692,46 @@ function cueFromForm(at) {
     color: $('#cColor').value, target: parseInt($('#cTarget').value),
     fade: Math.max(0, Math.min(32, parseInt($('#cFade').value) || 0)), at };
 }
+// 「◆ 照明・きっかけ」：今のカウントに、まず「きっかけ」を1つ足して選ぶ。種類・名前・時刻などはカードで直す
 $('#btnAddCue').addEventListener('click', () => {
   const at = Math.max(0, Math.round(ui.count));
   pushUndo();
-  const q = Object.assign({ id: newId() }, cueFromForm(at));
-  if (q.kind === 'spot' && q.target < 0) q.target = ui.me >= 0 ? ui.me : 0;
+  const q = { id: newId(), kind: 'memo', name: 'きっかけ', color: '#7a5cff', target: -1, fade: 0, at };
   S.cues.push(q);
   S.cues.sort((a, b) => a.at - b.at);
   ui.selCue = q.id;
   save();
+  fillCueForm();
   renderCueChips();
   renderAdvice();
   requestRender();
-  toast(`${cLabel(at)} に「${q.name}」を追加しました`);
+  setCard('cue');
+  toast(`${cLabel(at)} に「${q.name}」を追加しました。種類や名前は下のカードで直せます`);
 });
-$('#btnUpdCue').addEventListener('click', () => {
+// カードの入力欄を直すと、すぐ選んでいる照明に反映する（値が変わったときだけ、1回の元に戻す単位で積む）
+function updateCue() {
   const q = S.cues.find(x => x.id === ui.selCue);
-  if (!q) {
-    toast('先に上の一覧から選んでください');
+  if (!q) return;
+  const e = Math.max(1, parseInt($('#cEight').value) || 1), cc = Math.min(8, Math.max(1, parseInt($('#cCount').value) || 1));
+  const nv = cueFromForm((e - 1) * 8 + cc - 1);
+  if (nv.kind === 'spot' && nv.target < 0) nv.target = ui.me >= 0 ? ui.me : 0;
+  const cur = { kind: q.kind, name: q.name, color: q.color, target: q.target, fade: q.fade, at: q.at };
+  if (JSON.stringify(nv) === JSON.stringify(cur)) {
+    fillCueForm();
     return;
   }
   pushUndo();
-  const e = Math.max(1, parseInt($('#cEight').value) || 1), cc = Math.min(8, Math.max(1, parseInt($('#cCount').value) || 1));
-  Object.assign(q, cueFromForm((e - 1) * 8 + cc - 1));
+  const moved = nv.at !== q.at;
+  Object.assign(q, nv);
   S.cues.sort((a, b) => a.at - b.at);
   save();
+  fillCueForm();
   renderCueChips();
+  renderAdvice();
   requestRender();
-  setCount(q.at);
-  toast('更新しました');
-});
+  if (moved) setCount(q.at);
+}
+['#cKind', '#cName', '#cColor', '#cTarget', '#cEight', '#cCount', '#cFade'].forEach(s => $(s).addEventListener('change', updateCue));
 $('#btnDelCue').addEventListener('click', () => {
   const i = S.cues.findIndex(x => x.id === ui.selCue);
   if (i < 0) {
@@ -2208,8 +3742,10 @@ $('#btnDelCue').addEventListener('click', () => {
   S.cues.splice(i, 1);
   ui.selCue = null;
   save();
+  fillCueForm();
   renderCueChips();
   requestRender();
+  setCard(null);
 });
 let clickCtx = null, lastBeat = null;
 function clickSound(strong) {
@@ -2233,8 +3769,7 @@ $('#clickOn').addEventListener('change', e => {
     } catch (x) { }
   }
 });
-
-
+// アドバイスタブ：点検の表示・直す・ベース・自動で直す
 /* ===== アドバイスタブ ===== */
 function renderAdvice() {
   const list = $('#advList'), adv = analyze();
@@ -2244,9 +3779,13 @@ function renderAdvice() {
   const sm = $('#advSummary');
   sm.textContent = '';
   sm.append(
-    el('span', {}, [el('b', { text: String(c[0]), style: 'color:var(--red)' }), ' 要修正']),
-    el('span', {}, [el('b', { text: String(c[1]), style: 'color:var(--amber)' }), ' 提案']),
-    el('span', {}, [el('b', { text: String(c[2]) }), ' 参考']));
+    el('span', { class: 'pill p0' }, [el('b', { text: String(c[0]) }), ' 要修正']),
+    el('span', { class: 'pill p1' }, [el('b', { text: String(c[1]) }), ' 提案']),
+    el('span', { class: 'pill p2' }, [el('b', { text: String(c[2]) }), ' 参考']));
+  const badge = $('#advBadge');
+  badge.textContent = `▲${c[0]}`;
+  badge.hidden = c[0] === 0;
+  badge.setAttribute('aria-label', `要修正${c[0]}件`);
   if (S.baseKeys) sm.append(el('span', { class: 'muted', text: '（ベースを保存済み）' }));
   if (!adv.length) list.append(el('div', { class: 'card', text: '気になる所は見つかりませんでした。完成形です。' }));
   adv.forEach(a => {
@@ -2327,18 +3866,18 @@ function autoImprove() {
   const eHigh = eS.length ? eS[Math.floor(eS.length * 0.7)] : null;
   const sMed = [...S.keys.map(k => spreadOf(k.pos))].sort((a, b) => a - b)[Math.floor(S.keys.length / 2)];
   S.keys.forEach((k, i) => {
-    k.pos = clampPos(k.pos);
+    setPos(k, clampPos(k.pos)); // 位置を固定した人は、どの段でも動かさない（setPos が元の座標に戻す）
     const cx = k.pos.reduce((s, p) => s + p[0], 0) / k.pos.length;
-    if (Math.abs(cx) > S.stage.w * 0.12) k.pos = centerPos(k.pos);
-    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreadOf(k.pos) < sMed * 0.95) k.pos = spreadOut(k.pos);
-    k.pos = fixFormation(k.pos);
+    if (Math.abs(cx) > S.stage.w * 0.12) setPos(k, centerPos(k.pos));
+    if (eHigh != null && energies[i] != null && energies[i] >= eHigh && spreadOf(k.pos) < sMed * 0.95) setPos(k, spreadOut(k.pos));
+    setPos(k, fixFormation(k.pos, lockPosOf(k)));
   });
   for (let i = 1; i < S.keys.length; i++) {
-    const p = S.keys[i - 1], k = S.keys[i], gap = k.at - p.at;
+    const p = S.keys[i - 1], k = S.keys[i], gap = k.at - p.at, skip = lockCrossOf(k);
     if (allowSwap) {
-      const opt = optimalNext(p.pos, k.pos), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
-      const crash = minPathGap(p.pos, k.pos).d < TH.crash, crash2 = minPathGap(p.pos, opt).d < TH.crash;
-      if ((crash && !crash2) || cur - best > Math.max(2, cur * 0.15)) k.pos = opt;
+      const opt = optimalNext(p.pos, k.pos, assignPins(k)), cur = totalDist(p.pos, k.pos), best = totalDist(p.pos, opt);
+      const crash = minPathGap(p.pos, k.pos, skip).d < TH.crash, crash2 = minPathGap(p.pos, opt, skip).d < TH.crash;
+      if ((crash && !crash2) || cur - best > Math.max(2, cur * 0.15)) setPos(k, opt);
     }
     if (k.move > gap) k.move = gap;
     const v = Math.max(...p.pos.map((q, j) => hyp(q[0] - k.pos[j][0], q[1] - k.pos[j][1]))) / (k.move * beatSec());
@@ -2349,7 +3888,7 @@ function autoImprove() {
   const na = after.filter(a => a.lv === 0).length, sa = after.filter(a => a.lv === 1).length;
   toast(`要修正 ${nb}→${na}件、提案 ${ns}→${sa}件になりました。気に入らなければ「元に戻す」で戻せます。`, 4200);
 }
-
+// 練習タブ：自分・向き・名前・線
 /* ===== 練習タブ ===== */
 function fillMeSel() {
   const s = $('#meSel');
@@ -2359,16 +3898,43 @@ function fillMeSel() {
   if (ui.me >= S.dancers.length) ui.me = -1;
   s.value = String(ui.me);
 }
-$('#meSel').addEventListener('change', e => {
-  ui.me = parseInt(e.target.value);
+// 「自分」を選ぶ（練習タブの選択欄と、丸のカードの「この人を自分にする」から）
+function setMe(i) {
+  ui.me = i;
   try { localStorage.setItem(LS_KEY + '.me', String(ui.me)); } catch (x) { }
+  $('#meSel').value = String(ui.me);
   requestRender();
-});
-$('#viewSel').addEventListener('change', e => {
-  ui.view = e.target.value;
+}
+$('#meSel').addEventListener('change', e => setMe(parseInt(e.target.value)));
+// 向き：分割ボタン（今の向きが押された見た目）
+function syncViewUi() {
+  document.querySelectorAll('#viewSeg button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.view === ui.view)));
+}
+function setView(v) {
+  ui.view = v;
   try { localStorage.setItem(LS_KEY + '.view', ui.view); } catch (x) { }
+  syncViewUi();
   requestRender();
-});
+}
+document.querySelectorAll('#viewSeg button').forEach(b => b.addEventListener('click', () => setView(b.dataset.view)));
+// 速さ：練習タブの分割ボタンと、再生の列のボタン（押すたびに 0.5→0.75→1→0.5…）
+const RATES = [0.5, 0.75, 1];
+function syncRateUi() {
+  document.querySelectorAll('#rateSeg button').forEach(b => b.setAttribute('aria-pressed', String(parseFloat(b.dataset.rate) === ui.rate)));
+  $('#btnRate').textContent = `${ui.rate}倍`;
+}
+function setRate(r) {
+  if (ytActive()) return ytSetRate(r); // 動画の速さは YouTube が決める。変わったかを見てから画面に反映する
+  ui.rate = r;
+  if (audioReady) audio.playbackRate = ui.rate;
+  if (ui.playing) {
+    ui.clockT0 = performance.now();
+    ui.clockC0 = ui.count;
+  }
+  syncRateUi();
+}
+document.querySelectorAll('#rateSeg button').forEach(b => b.addEventListener('click', () => setRate(parseFloat(b.dataset.rate))));
+$('#btnRate').addEventListener('click', () => setRate(RATES[(RATES.indexOf(ui.rate) + 1) % RATES.length]));
 $('#showNames').addEventListener('change', e => {
   ui.showNames = e.target.checked;
   requestRender();
@@ -2377,6 +3943,12 @@ $('#showPaths').addEventListener('change', e => {
   ui.showPaths = e.target.checked;
   requestRender();
 });
+// バミリ番号：画面の状態だけ（保存しない）。前の縁の番号と、書き出し画像の一覧に効く
+$('#showBamiri').addEventListener('change', e => {
+  ui.showBamiri = e.target.checked;
+  requestRender();
+});
+// 書き出しの共通部品：保存・共有・確認の画面・凡例
 let dlCap; // claude.ai の中で開いたときは、保存の仕組み（downloads）を使う
 if (window.claude && window.claude.use) dlCap = window.claude.use('downloads').catch(() => null);
 async function download(blob, name) {
@@ -2421,27 +3993,58 @@ function ask(msg, okLabel, fn, cancelLabel = 'やめる') { // 画面の中で�
   box.hidden = false;
 }
 const safeName = s => (s || 'formation').replace(/[\\/:*?"<>|\s]+/g, '_').slice(0, 30);
-function legend(c, x, y, w, fs) {
+// dry が true のときは描かず、できあがりの下端の y だけ返す（画像の高さを先に決めるため）
+function legend(c, x, y, w, fs, dry = false) {
   let cx = x, cy = y;
   c.font = `${fs}px sans-serif`;
   c.textBaseline = 'middle';
   c.textAlign = 'left';
-  S.dancers.forEach(d => {
+  // グループがあれば、先に「形＝グループ名」を並べ（色は文字と同じ・形だけを見せる）、そのあとにダンサー
+  const items = (S.groups || []).map(g => ({ name: g.name, color: THEME.text, shape: g.shape }))
+    .concat(S.dancers.map((d, i) => ({ name: d.name, color: d.color, shape: dancerShape(i) })));
+  items.forEach(d => {
     const tw = c.measureText(d.name).width + fs * 1.8;
     if (cx + tw > x + w) {
       cx = x;
       cy += fs * 1.6;
     }
-    c.fillStyle = d.color;
-    c.beginPath();
-    c.arc(cx + fs * 0.5, cy, fs * 0.45, 0, 7);
-    c.fill();
-    c.fillStyle = '#e8ecf3';
-    c.fillText(d.name, cx + fs * 1.1, cy);
+    if (!dry) {
+      c.fillStyle = d.color;
+      c.beginPath();
+      tokenPath(c, d.shape, cx + fs * 0.5, cy, fs * 0.45);
+      c.fill();
+      c.fillStyle = THEME.text;
+      c.fillText(d.name, cx + fs * 1.1, cy);
+    }
     cx += tw;
   });
   return cy + fs;
 }
+// 各ダンサーのバミリ番号の一覧（画像の下）。見出し1行と、「名前　上手2.5・前から2.35m」を幅に合わせて何列かに並べる
+function bamiriListLayout(c, w, fs, pos, names) {
+  c.font = `700 ${fs}px sans-serif`;
+  const items = pos.map((p, i) => ({ name: names[i] || '', text: bamiriText(p[0], p[1]) }));
+  const colW = Math.ceil(Math.max(1, ...items.map(t => c.measureText(t.name).width + fs * 0.8 + c.measureText(t.text).width)) + fs * 1.5);
+  const cols = Math.max(1, Math.floor(w / colW)), rows = Math.ceil(items.length / cols), rowH = fs * 1.55;
+  return { items, colW, cols, rows, rowH, height: fs * 2 + rows * rowH };
+}
+function drawBamiriList(c, x, y, w, fs, lay) {
+  c.textBaseline = 'top';
+  c.textAlign = 'left';
+  c.font = `700 ${fs}px sans-serif`;
+  c.fillStyle = THEME.muted;
+  c.fillText('バミリ番号（前の縁の中央が0・1mごと・上手は客席から見て右）', x, y);
+  lay.items.forEach((t, i) => {
+    const cx = x + (i % lay.cols) * lay.colW, cy = y + fs * 2 + Math.floor(i / lay.cols) * lay.rowH;
+    c.font = `700 ${fs}px sans-serif`;
+    c.fillStyle = S.dancers[i] ? S.dancers[i].color : THEME.text;
+    c.fillText(t.name, cx, cy);
+    c.font = `${fs}px sans-serif`;
+    c.fillStyle = THEME.text;
+    c.fillText(t.text, cx + c.measureText(t.name).width + fs * 0.8, cy);
+  });
+}
+// 書き出し：全隊形の画像・今の隊形の画像・動画
 $('#btnSheet').addEventListener('click', () => {
   const cols = S.keys.length > 4 ? 3 : 2, cw = 520;
   const ch = Math.round(cw * (S.stage.d + 1.3) / (S.stage.w + 0.6)) + 34, rows = Math.ceil(S.keys.length / cols);
@@ -2449,9 +4052,9 @@ $('#btnSheet').addEventListener('click', () => {
   c.width = W;
   c.height = H;
   const x = c.getContext('2d');
-  x.fillStyle = '#0b0e14';
+  x.fillStyle = THEME.bg;
   x.fillRect(0, 0, W, H);
-  x.fillStyle = '#fff';
+  x.fillStyle = THEME.text;
   x.font = '700 28px sans-serif';
   x.textBaseline = 'top';
   x.textAlign = 'left';
@@ -2460,9 +4063,9 @@ $('#btnSheet').addEventListener('click', () => {
     const ox = 10 + (i % cols) * cw, oy = 70 + Math.floor(i / cols) * (ch + 10);
     x.save();
     x.translate(ox, oy + 34);
-    drawStage(x, cw - 10, ch - 34, k.at, { view: ui.view, me: -1, names: true });
+    drawStage(x, cw - 10, ch - 34, k.at, { view: ui.view, me: -1, names: true, bamiri: ui.showBamiri });
     x.restore();
-    x.fillStyle = '#4fb3ff';
+    x.fillStyle = THEME.sel;
     x.font = '700 20px sans-serif';
     x.textBaseline = 'top';
     x.textAlign = 'left';
@@ -2472,23 +4075,29 @@ $('#btnSheet').addEventListener('click', () => {
   c.toBlob(b => download(b, safeName(S.title) + '_全隊形.png'), 'image/png');
 });
 $('#btnKeyPng').addEventListener('click', () => {
-  const c = document.createElement('canvas'), w = 1200, h = Math.round(w * (S.stage.d + 1.3) / (S.stage.w + 0.6)) + 140;
+  // 高さ：見出し60＋ステージ＋凡例（人数が多いと何行かになる）＋バミリ番号の一覧（出す設定のとき）。画像の大きさだけが変わる
+  const w = 1200, stageH = Math.round(w * (S.stage.d + 1.3) / (S.stage.w + 0.6)), m = document.createElement('canvas').getContext('2d');
+  const legY = stageH + 80, legBottom = legend(m, 16, legY, w - 32, 20, true);
+  const pos = positionsAt(S.keys, ui.count), lay = bamiriListLayout(m, w - 32, 18, pos, S.dancers.map(d => d.name));
+  const listY = legBottom + 14, h = ui.showBamiri ? listY + lay.height + 20 : legBottom + 40;
+  const c = document.createElement('canvas');
   c.width = w;
   c.height = h;
   const x = c.getContext('2d');
-  x.fillStyle = '#0b0e14';
+  x.fillStyle = THEME.bg;
   x.fillRect(0, 0, w, h);
   x.save();
   x.translate(0, 60);
-  drawStage(x, w, h - 140, ui.count, { view: ui.view, me: ui.me, names: true });
+  drawStage(x, w, stageH, ui.count, { view: ui.view, me: ui.me, names: true, bamiri: ui.showBamiri });
   x.restore();
   const k = S.keys[keyIndexAt(ui.count)];
-  x.fillStyle = '#fff';
+  x.fillStyle = THEME.text;
   x.font = '700 30px sans-serif';
   x.textBaseline = 'top';
   x.textAlign = 'left';
   x.fillText(`${S.title} ／ ${cLabel(ui.count)} ${k.name}`, 16, 14);
-  legend(x, 16, h - 60, w - 32, 20);
+  legend(x, 16, legY, w - 32, 20);
+  if (ui.showBamiri) drawBamiriList(x, 16, listY, w - 32, 18, lay);
   c.toBlob(b => download(b, `${safeName(S.title)}_${cLabel(ui.count)}.png`), 'image/png');
 });
 /* 動画 */
@@ -2496,8 +4105,8 @@ let rec = null, recChunks = [], recCanvas = null, recCtx = null, audioCtx = null
 function drawRecFrame() {
   if (!recCtx) return;
   const w = recCanvas.width, h = recCanvas.height;
-  drawStage(recCtx, w, h, ui.count, { view: ui.view, me: ui.me, names: true, showPaths: ui.showPaths });
-  recCtx.fillStyle = '#fff';
+  drawStage(recCtx, w, h, ui.count, { view: ui.view, me: ui.me, names: true, showPaths: ui.showPaths, bamiri: ui.showBamiri });
+  recCtx.fillStyle = THEME.text;
   recCtx.font = '800 64px sans-serif';
   recCtx.textAlign = 'right';
   recCtx.textBaseline = 'top';
@@ -2514,6 +4123,10 @@ $('#btnVideo').addEventListener('click', async () => {
   }
   if (ui.recording) {
     stopRecording();
+    return;
+  }
+  if (ytActive()) {
+    toast('動画に書き出すときは、先に YouTube の動画を閉じてください（YouTube の音は書き出せません）');
     return;
   }
   pause();
@@ -2564,6 +4177,346 @@ function stopRecording() {
   ui.recording = false;
   try { if (rec && rec.state !== 'inactive') rec.stop(); } catch (e) { }
 }
+// プライバシーポリシーの1枚と、YouTube の動画を初めて出すときの同意（1回だけ）
+/* ===== プライバシーポリシー・同意 ===== */
+const YT_CONSENT_KEY = LS_KEY + '.ytConsent'; // 同意した日付（YYYY-MM-DD）だけ。端末の中だけ。作品の JSON には入れない
+const YT_POLICY_DATE = '2026-11-26';          // 今のポリシーの最終改定日（同意の印に書く）
+const YT_CONSENT_RE = /^\d{4}-\d{2}-\d{2}$/;
+let privacyOpener = null;   // ポリシーを開く前に押されていた物（閉じたら戻す）
+let consentResume = null;   // 同意されたら続ける処理（動画を出す）
+
+function ytHasConsent() {
+  try { return YT_CONSENT_RE.test(localStorage.getItem(YT_CONSENT_KEY) || ''); } catch (e) { return false; }
+}
+function ytSaveConsent() {
+  try { localStorage.setItem(YT_CONSENT_KEY, YT_POLICY_DATE); } catch (e) { }
+}
+
+function openPrivacy() {
+  privacyOpener = document.activeElement;
+  $('#privacyBox').hidden = false;
+  $('#privacyBox').scrollTop = 0;
+  $('#btnPrivacyClose').focus();
+}
+function closePrivacy() {
+  $('#privacyBox').hidden = true;
+  const o = privacyOpener;
+  privacyOpener = null;
+  try { if (o && o.focus && document.contains(o) && !o.closest('[hidden]')) o.focus(); } catch (e) { }
+}
+
+function closeConsent() {
+  $('#ytConsentBox').hidden = true;
+  consentResume = null;
+}
+// 同意を確かめる（next：同意されたあとに続ける処理）。リンクは設定タブのカードの物を写して使う（アドレスを1か所にするため）
+function ytAskConsent(next) {
+  consentResume = next;
+  const links = $('#ytTermsLinks').cloneNode(true);
+  links.removeAttribute('id');
+  $('#ytConsentLinks').textContent = '';
+  $('#ytConsentLinks').append(links);
+  $('#ytConsentBox').hidden = false;
+  $('#btnYtAgree').focus();
+}
+
+// 「このアプリのプライバシーポリシー」のボタン（設定タブのカードと同意の確認の中。写した物にも効くよう、まとめて受ける）
+document.addEventListener('click', e => {
+  if (e.target.closest && e.target.closest('[data-open-privacy]')) openPrivacy();
+});
+$('#btnPrivacyClose').addEventListener('click', closePrivacy);
+$('#btnPrivacyClose2').addEventListener('click', closePrivacy);
+$('#btnYtAgree').addEventListener('click', () => {
+  const go = consentResume;
+  ytSaveConsent();
+  closeConsent();
+  if (go) go();
+});
+$('#btnYtDecline').addEventListener('click', () => {
+  closeConsent();
+  $('#ytMsg').textContent = '同意しないと YouTube の動画は使えません。曲のファイルは、そのまま使えます';
+});
+// 開いている間は、Space で再生・停止にならないようにする。Esc で閉じる
+['#privacyBox', '#ytConsentBox'].forEach(sel => $(sel).addEventListener('keydown', e => {
+  if (e.code === 'Space') e.stopPropagation();
+  if (e.key === 'Escape') {
+    e.stopPropagation();
+    if (sel === '#privacyBox') closePrivacy();
+    else $('#btnYtDecline').click();
+  }
+}));
+// YouTube の動画の枠（IFrame Player API）。プレーヤーの時刻を正とし、アプリの再生位置が追いかける
+/* ===== YouTube の動画 ===== */
+const YT_STORE_KEY = LS_KEY + '.youtube'; // 動画 ID（11字）だけ。端末の中だけ。作品の JSON には入れない
+const YT_API_SRC = 'https://www.youtube.com/iframe_api';
+const YT_EMBED = 'https://www.youtube-nocookie.com/embed/';
+const YT_READY_WAIT_MS = 15000; // 枠の準備を待つ上限（自動の再試行はしない）
+const YT_POLL_MS = 250;         // 止まっている間、プレーヤーの時刻を読む間隔
+const YT_HOLD_MS = 400;         // アプリから位置を動かした直後、プレーヤーの古い時刻を読まない間
+const YT_MIN_PX = 200;          // プレーヤーの幅・高さの最小（YouTube の決まり）
+const YT_ERRORS = {
+  2: '動画の URL が正しくありません',
+  5: 'この動画は埋め込みの再生に対応していません',
+  100: '動画が見つかりません（削除または非公開）',
+  101: '持ち主が、埋め込みでの再生を許可していません',
+  150: '持ち主が、埋め込みでの再生を許可していません',
+  153: '公開版（https）で開くと使えます（開いた元を YouTube に伝えられませんでした）',
+};
+const yt = { id: null, player: null, ready: false, state: -1, rate: 1, last: { t: 0, at: 0 }, hold: 0, poll: 0, timer: null, apiP: null, seq: 0 };
+
+const ytActive = () => !!(yt.ready && yt.player);
+function ytSay(msg) { $('#ytStatus').textContent = msg; }
+// 入れ口の下の知らせ（URL が悪い・使えない開き方など）。画面の下の知らせ（toast）にも出す
+function ytNote(msg) {
+  $('#ytMsg').textContent = msg;
+  toast(msg, 5000);
+}
+// file:// など、http・https でない開き方では YouTube の枠が使えない（エラー 153）
+const ytCanEmbed = () => /^https?$/.test(location.protocol.slice(0, -1));
+
+// IFrame Player API の読み込み（1回だけ。失敗しても落とさず、次に押したとき改めて試す）
+function ytLoadApi() {
+  if (window.YT && window.YT.Player) return Promise.resolve();
+  if (yt.apiP) return yt.apiP;
+  yt.apiP = new Promise((resolve, reject) => {
+    const done = () => (window.YT && window.YT.Player ? resolve() : reject(new Error('YT.Player が無い')));
+    window.onYouTubeIframeAPIReady = done;
+    const s = document.createElement('script');
+    s.src = YT_API_SRC;
+    s.async = true;
+    s.onerror = () => reject(new Error('読み込めない'));
+    document.head.append(s);
+    setTimeout(() => reject(new Error('時間切れ')), YT_READY_WAIT_MS);
+  });
+  yt.apiP.catch(() => { yt.apiP = null; });
+  return yt.apiP;
+}
+
+// プレーヤーの時刻（秒）。止まっているときは読んだ値のまま。再生中は、読んだ値から経った分を足して滑らかにする
+function ytNow() {
+  const now = performance.now();
+  try {
+    const st = yt.player.getPlayerState();
+    if (now >= yt.hold) {
+      const t = yt.player.getCurrentTime();
+      if (typeof t === 'number' && isFinite(t) && t !== yt.last.t) yt.last = { t, at: now };
+    }
+    if (st === 1) return yt.last.t + Math.min(0.5, (now - yt.last.at) / 1000 * yt.rate);
+  } catch (e) { }
+  return yt.last.t;
+}
+// 動画の時刻から、アプリの位置（カウント）を決める。曲の読み込みと同じ軸（BPM と 1カウント目の時刻）
+const ytCount = () => (ytNow() - S.offset) / beatSec();
+
+// アプリから位置を動かす（タイムライン・戻る・作品の読み込みなど）
+function ytSeekCount(c) {
+  const t = Math.max(0, S.offset + c * beatSec());
+  try { yt.player.seekTo(t, true); } catch (e) { return; }
+  yt.last = { t, at: performance.now() };
+  yt.hold = performance.now() + YT_HOLD_MS;
+}
+
+// 再生の状態は、プレーヤーの知らせ（onStateChange）に従う
+function ytSetPlaying(on) {
+  if (on === ui.playing) return;
+  ui.playing = on;
+  if (on) {
+    lastBeat = null;
+    yt.last.at = performance.now();
+    if (navigator.wakeLock) navigator.wakeLock.request('screen').then(w => { wakeLock = w; }).catch(() => { });
+  } else {
+    try { if (wakeLock) { wakeLock.release(); wakeLock = null; } } catch (e) { }
+    if (ui.recording) stopRecording();
+  }
+  requestRender();
+}
+function ytOnState(e) {
+  yt.state = e.data;
+  if (e.data === 1) ytSetPlaying(true);
+  else if (e.data === 0 || e.data === 2 || e.data === 5) ytSetPlaying(false);
+  ytSay(e.data === 1 ? '再生中' : e.data === 3 ? '読み込み中…' : e.data === 0 ? '最後まで再生しました' : '止まっています');
+  if (e.data !== 1 && e.data !== 3) yt.poll = 0; // 止まったら、すぐ位置を読み直す
+}
+// 速さ：API は「頼む」だけで、変わる保証がない。変わったか（onPlaybackRateChange・getPlaybackRate）を見てから画面に反映する
+function ytOnRate(e) {
+  if (typeof e.data !== 'number') return;
+  yt.rate = e.data;
+  ui.rate = e.data;
+  syncRateUi();
+}
+function ytSetRate(r) {
+  try { yt.player.setPlaybackRate(r); } catch (e) { return; }
+  setTimeout(() => {
+    if (!ytActive()) return;
+    let got = r;
+    try { got = yt.player.getPlaybackRate(); } catch (e) { }
+    if (got !== r) {
+      yt.rate = ui.rate = got;
+      syncRateUi();
+      toast(`この動画は ${r}倍 にできませんでした。速さは YouTube の側（動画の歯車）で変えてください`, 5000);
+    }
+  }, 600);
+}
+
+// 再生の頼み：動画の枠が見えているときだけ。見えていなければ、見える所へ動かす（自動で再生はしない。押されたときだけ）
+function ytBoxFits() {
+  const r = $('#ytFrameWrap').getBoundingClientRect();
+  return !$('#ytBox').hidden && !document.body.classList.contains('proj') && r.width >= YT_MIN_PX && r.height >= YT_MIN_PX;
+}
+// 動画の枠が画面から外れているときは、全部見える所へ動かす（設定タブの下の方で URL を入れたときなど）
+function ytScrollIntoView() {
+  const w = $('#ytFrameWrap'), r = w.getBoundingClientRect();
+  if (r.top < 0 || r.bottom > window.innerHeight) w.scrollIntoView({ block: 'center' });
+}
+function ytPlay() {
+  if (!ytBoxFits()) {
+    toast('動画の枠が見える状態にしてから再生してください');
+    return;
+  }
+  ytScrollIntoView();
+  if (ui.count >= S.totalEights * 8 - 0.5) ytSeekCount(0);
+  try { yt.player.playVideo(); } catch (e) { toast('動画を再生できませんでした'); }
+  // 端末によっては、アプリのボタンからの再生を YouTube が受けないことがある（再生は動画の枠の中のボタンで確かめられる）
+  const mine = yt.seq;
+  setTimeout(() => {
+    if (mine === yt.seq && ytActive() && !ui.playing && yt.state !== 3 && yt.state !== 1) {
+      toast('始まらないときは、動画の枠の中の再生ボタンを直接押してください', 5000);
+    }
+  }, 2000);
+}
+function ytPause() { try { yt.player.pauseVideo(); } catch (e) { } }
+
+// 手動で合わせ直す：今のプレーヤーの時刻を読み直して、アプリの位置を合わせる
+function ytResync() {
+  if (!ytActive()) return;
+  yt.hold = 0;
+  try { yt.last = { t: yt.player.getCurrentTime(), at: performance.now() }; } catch (e) { return; }
+  ui.count = ytCount();
+  lastBeat = null;
+  requestRender();
+  toast('動画の今の位置に合わせ直しました');
+}
+// 止まっている間も、動画側（YouTube の再生バーなど）で位置を動かしたら追いかける（tick から呼ぶ）
+function ytFollowIdle() {
+  const now = performance.now();
+  if (now - yt.poll < YT_POLL_MS) return false;
+  yt.poll = now;
+  const c = ytCount();
+  if (Math.abs(c - ui.count) <= 0.02) return false;
+  ui.count = c;
+  return true;
+}
+
+function ytShow(on) { $('#ytBox').hidden = !on; }
+// 動画を出す
+async function ytOpen(text) {
+  const p = ytParseUrl(text);
+  if (!p.ok) {
+    ytNote(p.reason === 'empty' ? 'YouTube の URL を入れてください'
+      : 'YouTube の動画の URL（youtube.com/watch?v=… ・ youtu.be/… ・ youtube.com/shorts/…）だけ使えます');
+    return;
+  }
+  if (!ytCanEmbed()) {
+    ytNote('公開版（https）で使えます。ファイルとして開いている間は、YouTube の動画は出せません');
+    return;
+  }
+  // 初めて出すときだけ、規約とポリシーを見せて同意を1回とる（privacy.js）。同意されたら、同じ URL で続ける
+  if (!ytHasConsent()) {
+    ytAskConsent(() => ytOpen(text));
+    return;
+  }
+  ytClose(true);
+  pause();
+  if (audioReady) audio.pause();
+  const mine = ++yt.seq;
+  yt.id = p.id;
+  $('#ytMsg').textContent = '';
+  ytShow(true);
+  ytSay('動画の部品を読み込んでいます…');
+  const f = document.createElement('iframe');
+  f.id = 'ytFrame';
+  f.title = 'YouTube の動画';
+  f.src = YT_EMBED + p.id + '?enablejsapi=1&playsinline=1&rel=0&origin=' + encodeURIComponent(location.origin);
+  f.setAttribute('allow', 'encrypted-media; picture-in-picture; fullscreen');
+  f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+  f.setAttribute('allowfullscreen', '');
+  $('#ytFrameWrap').append(f);
+  try {
+    await ytLoadApi();
+    if (mine !== yt.seq) return;
+    yt.player = new window.YT.Player(f, {
+      events: {
+        onReady: () => ytOnReady(mine),
+        onStateChange: ytOnState,
+        onPlaybackRateChange: ytOnRate,
+        onError: e => ytFail(YT_ERRORS[e.data] || `動画を出せませんでした（エラー ${e.data}）`),
+      },
+    });
+    yt.timer = setTimeout(() => {
+      if (mine === yt.seq && !yt.ready) ytFail('動画の枠の準備ができませんでした（電波と、公開版（https）で開いているかを確かめてください）');
+    }, YT_READY_WAIT_MS);
+  } catch (e) {
+    if (mine === yt.seq) ytFail('YouTube の部品を読み込めませんでした（電波を確かめてください）');
+  }
+}
+function ytOnReady(mine) {
+  if (mine !== yt.seq) return;
+  clearTimeout(yt.timer);
+  yt.ready = true;
+  yt.rate = 1;
+  try { yt.rate = yt.player.getPlaybackRate() || 1; } catch (e) { }
+  ui.rate = yt.rate;
+  syncRateUi();
+  try { localStorage.setItem(YT_STORE_KEY, yt.id); } catch (e) { }
+  yt.last = { t: 0, at: performance.now() };
+  yt.hold = 0;
+  ytSay('準備ができました。動画を再生すると、アプリの位置が追いかけます');
+  ytScrollIntoView();
+  ui.count = ytCount();
+  requestRender();
+}
+// 出せなかったとき：画面は落とさず、知らせて、枠を閉じる
+function ytFail(msg) {
+  ytClose(true);
+  ytNote(msg);
+}
+// 動画を閉じる（keepStore：保存した ID を残す）
+function ytClose(keepStore) {
+  const was = ytActive();
+  yt.seq++;
+  clearTimeout(yt.timer);
+  if (was) pause();
+  try { if (yt.player && yt.player.destroy) yt.player.destroy(); } catch (e) { }
+  $('#ytFrameWrap').textContent = '';
+  yt.player = null;
+  yt.ready = false;
+  yt.state = -1;
+  ytShow(false);
+  if (was && ui.rate !== 1) setRate(1);
+  if (!keepStore) {
+    try { localStorage.removeItem(YT_STORE_KEY); } catch (e) { }
+  }
+}
+// 「大きく表示」の間は動画の枠が隠れる（隠したまま鳴らさない）ので、先に止める
+function ytBeforeProj() {
+  if (ytActive()) pause();
+}
+
+$('#btnYtOpen').addEventListener('click', () => ytOpen($('#ytUrl').value));
+$('#ytUrl').addEventListener('keydown', e => {
+  if (e.key === 'Enter') ytOpen($('#ytUrl').value);
+});
+$('#btnYtSync').addEventListener('click', ytResync);
+$('#btnYtClose').addEventListener('click', () => {
+  ytClose(false);
+  $('#ytUrl').value = '';
+  $('#ytMsg').textContent = '動画を閉じました';
+});
+// 前に出した動画があれば、入れ口に入れておく（自動では出さない。押すと出る）
+try {
+  const sid = localStorage.getItem(YT_STORE_KEY);
+  if (sid && YT_ID_RE.test(sid)) $('#ytUrl').value = 'youtu.be/' + sid;
+} catch (e) { }
 // 設定タブ・保存と読み込みの操作・タブ切り替え・起動
 /* ===== 設定タブ ===== */
 function fillSetup() {
@@ -2589,8 +4542,12 @@ function fillSetup() {
       renderAdvice();
       requestRender();
     });
-    box.append(el('div', { class: 'drow' }, [el('span', { class: 'sw', style: `background:${d.color}` }), inp]));
+    const sw = el('button', { type: 'button', class: 'sw swbtn', style: `background:${d.color}`, 'aria-label': `${i + 1}人目の色を選ぶ`, 'aria-expanded': 'false' });
+    const pal = el('div', { class: 'palrow', hidden: '' });
+    sw.addEventListener('click', () => togglePalette(sw, pal, i));
+    box.append(el('div', { class: 'drow' }, [sw, inp, hasGroups() ? groupSelect(i) : null]), pal);
   });
+  fillGroups();
 }
 // 設定の入力欄は、change のとき（打ち終わったとき）に1回だけ履歴に積む。値が変わらなければ積まない
 $('#title').addEventListener('change', e => {
@@ -2657,11 +4614,11 @@ $('#offP1').addEventListener('click', () => shiftOff(beatSec()));
 $('#offMs').addEventListener('click', () => shiftOff(-0.05));
 $('#offPs').addEventListener('click', () => shiftOff(0.05));
 $('#btnNowIsOne').addEventListener('click', () => {
-  if (!audioReady) {
-    toast('先に曲を読み込んでください');
+  if (!audioReady && !ytActive()) {
+    toast('先に曲を読み込むか、YouTube の動画を出してください');
     return;
   }
-  const v = r2(audio.currentTime);
+  const v = r2(ytActive() ? ytNow() : audio.currentTime);
   if (v !== S.offset) {
     pushUndo();
     S.offset = v;
@@ -2671,7 +4628,8 @@ $('#btnNowIsOne').addEventListener('click', () => {
 });
 // 止まっているとき、音の位置に合わせて ui.count を合わせ直す（offset・BPM・作品を替えたあと）
 function syncCountToAudio() {
-  if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
+  if (ytActive() && !ui.playing) ui.count = ytCount();
+  else if (audioReady && !ui.playing) ui.count = (audio.currentTime - S.offset) / beatSec();
 }
 function afterTempoChange() {
   if (analysis) {
@@ -2722,9 +4680,13 @@ $('#btnDelDancer').addEventListener('click', () => {
   ask(`${d.name} を削除しますか？`, '削除する', () => {
     pushUndo();
     S.dancers.pop();
-    S.keys.forEach(k => k.pos.pop());
+    const dropRef = k => {
+      k.pos.pop();
+      cleanDancerRefs(k, S.dancers.length); // 消した人へのロックの参照を残さない
+    };
+    S.keys.forEach(dropRef);
     (S.cues || []).forEach(q => { if (q.target >= S.dancers.length) q.target = -1; });
-    if (S.baseKeys) S.baseKeys.forEach(k => k.pos.pop());
+    if (S.baseKeys) S.baseKeys.forEach(dropRef);
     if (ui.me >= S.dancers.length) ui.me = -1;
     changed(true);
   });
@@ -2735,6 +4697,10 @@ $('#audioFile').addEventListener('change', async e => {
   const f = e.target.files && e.target.files[0];
   if (!f) return;
   pause();
+  if (ytActive()) {
+    ytClose(true); // 曲のファイルと動画は同時に使わない
+    toast('YouTube の動画を閉じて、曲のファイルを使います');
+  }
   if (audio.src) URL.revokeObjectURL(audio.src);
   audio.src = URL.createObjectURL(f);
   audioReady = true;
@@ -2762,7 +4728,7 @@ $('#audioFile').addEventListener('change', async e => {
 
 /* 保存・読み込み */
 $('#btnSave').addEventListener('click',
-  () => download(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), safeName(S.title) + '.json'));
+  () => download(new Blob([workJson(S, 1)],{ type: 'application/json' }), safeName(S.title) + '.json'));
 // 作品を丸ごと置き換える（読み込み・見本に戻す）。元に戻すと置き換える前の作品が丸ごと戻る（1つの単位）
 function replaceWork(st, count) {
   pushUndo();
@@ -2837,6 +4803,7 @@ function refreshAll() {
   renderKeyChips();
   fillKeyForm();
   renderAdvice();
+  syncCards();
   fitCanvas();
 }
 $('#btnPlay').addEventListener('click', toggle);
@@ -2846,15 +4813,8 @@ $('#btnBack').addEventListener('click', () => {
   pause();
   setCount(Math.max(0, k.at - 8));
 });
-$('#rate').addEventListener('change', e => {
-  ui.rate = parseFloat(e.target.value);
-  if (audioReady) audio.playbackRate = ui.rate;
-  if (ui.playing) {
-    ui.clockT0 = performance.now();
-    ui.clockC0 = ui.count;
-  }
-});
 $('#btnProj').addEventListener('click', () => {
+  ytBeforeProj();
   document.body.classList.add('proj');
   try {
     const p = document.documentElement.requestFullscreen && document.documentElement.requestFullscreen();
@@ -2920,9 +4880,10 @@ try {
   const v = localStorage.getItem(LS_KEY + '.view');
   if (v === 'dancer' || v === 'audience') {
     ui.view = v;
-    $('#viewSel').value = v;
   }
 } catch (e) { }
+syncViewUi();
+syncRateUi();
 refreshAll();
 setCount(S.keys[0].at);
 requestAnimationFrame(tick);

@@ -5,6 +5,7 @@
 - 開き方：GitHub Pages の URL を Safari で開き、「ホーム画面に追加」
 - 曲は端末の中だけで解析し、どこにも送りません
 - 作った隊形はその端末の中にだけ保存されます
+- YouTube の動画で練習するときだけ、YouTube（Google）の公式プレーヤーと通信します（設定タブのプライバシーポリシーを見てください）
 
 ## 作る人向け（置き場の形）
 ```text
@@ -22,7 +23,7 @@ source/            手で直すのはここだけ
       ├─ dancer-color.js / group-ui.js / lock-ui.js    色の選び（10色の丸ボタン）・グループの一覧と選び・ロックの付け外しとクロスの印
       ├─ timeline.js / playback.js     タイムライン・再生
       ├─ privacy.js                    プライバシーポリシーの開け閉め・初めて動画を出すときの同意（同意の印は別のキー）
-      ├─ youtube.js                    YouTube の動画の枠（試作。下の「YouTube で練習する」）
+      ├─ youtube.js                    YouTube の動画の枠（下の「YouTube で練習する」）
       ├─ history.js                    戻す・やり直す・変更のあとの描き直し
       ├─ tab-edit / tab-cues / tab-advice / tab-practice        各タブ
       ├─ export-common.js / export.js  書き出し（画像・動画）
@@ -138,11 +139,11 @@ node run_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\index.htm
 
 ### 入れなかった物（保存データに触れる、または別の決め）
 - 「グループの形で見分ける」・ダンサーの色を選ぶ機能（保存データの項目が増える。持ち主の承認待ち）
-- YouTube の埋め込み枠：このあとの「YouTube で練習する」で入れた（試作）
+- YouTube の埋め込み枠：このあとの「YouTube で練習する」で入れた
 - 横長（844px）のとき、ステージを動画の枠の隣に並べる2列（動画の枠が無いので入れていない）。ステージの高さの上限（画面の高さの58%）は前のまま
 - `manifest.webmanifest` の色（`#11151d`）と `sw.js`：このときは触っていない（起動画面の色が少し違った）。「公開の前の直し」の段2で、色を `#0a0c11` に・キャッシュの版を `formation-v2` にした
 
-## YouTube で練習する（2026-11-26・試作。公開していない）
+## YouTube で練習する（2026-11-26 に入れ、同じ日に公開）
 設定タブの「YouTube の動画」に URL を入れて「動画を出す」と、画面の上（見出しとステージの間）に YouTube の公式プレーヤーが出る。再生・停止・位置の移動（動画の枠の中でも、アプリの ▶・タイムライン・「戻る」でも）に、アプリの再生位置が追いかける。
 
 ### 作り
@@ -231,7 +232,7 @@ node run_compat_tests.js C:\Users\osm12\family\tools\.apps\formation-app\dist\in
 - 画面の画像（幅 390）：`C:\Users\osm12\family\tools\formation\tests\screens\privacy_390\`（`p1_setup_youtube_cards.png` 設定の YouTube のカード・`p2_consent.png` 同意の確認・`p3`〜`p5` ポリシーの上・途中・下・`p6` 同意のあと）
 - 確かめていない物：実機（iPhone・Android）での動き。iPhone のホーム画面アプリで外のリンクが新しいタブとして開くか・戻れるか。v1 の `sw.js` を持つ端末が v2 に入れ替わる動き（localhost で古い sw.js を入れた状態からの差し替えは未実施）
 
-## 保存データの形の変更 v=2（2026-11-26・作業ブランチ dev/p0-20261125。公開していない）
+## 保存データの形の変更 v=2（2026-11-26 に入れ、同じ日に公開）
 設計：`C:\Users\osm12\family\tools\formation\docs\03_保存データの形の設計_2026-11-26.md` の 2（色）・1（グループの形）・5（ロック）。4（個人別の時刻）・3（曲線）は入れていない（後の v=3）。持ち主の好み3つ：①ロック中は手のドラッグも止める ②色は既定の10色（`PALETTE`・赤なし）の丸ボタンの列から選ぶ（自由な色の入力は入れない） ③半カウントは入れない（時刻は整数のカウントのまま）。
 
 ### 版の付け方（使った項目の最大の版だけを書く）
